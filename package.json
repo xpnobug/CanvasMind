@@ -9,6 +9,10 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "vue": "^3.5.24"
   },

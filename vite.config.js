@@ -65,7 +65,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue': ['vue'],
-          'vendor': ['vue'],
         },
       },
     },

@@ -1,0 +1,86 @@
+name: 部署到服务器
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: 构建并部署
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建项目
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: 创建部署包
+        run: |
+          cd dist
+          tar -czf ../deploy.tar.gz .
+          cd ..
+
+      - name: 通过 SSH 上传文件到服务器
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: "deploy.tar.gz"
+          target: "/tmp/"
+
+      - name: 执行部署脚本
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
+
+            if [ -d "$DEPLOY_DIR" ]; then
+              echo "正在创建备份..."
+              BACKUP_DIR="${DEPLOY_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
+              cp -r "$DEPLOY_DIR" "$BACKUP_DIR"
+              echo "备份已创建: $BACKUP_DIR"
+            fi
+
+            mkdir -p "$DEPLOY_DIR"
+
+            echo "正在部署新版本..."
+            tar -xzf /tmp/deploy.tar.gz -C "$DEPLOY_DIR"
+
+            rm -f /tmp/deploy.tar.gz
+
+            chown -R www-data:www-data "$DEPLOY_DIR"
+            chmod -R 755 "$DEPLOY_DIR"
+
+            echo "部署完成！"
+
+      - name: 发送部署通知
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ 部署成功！"
+          else
+            echo "❌ 部署失败！"
+          fi

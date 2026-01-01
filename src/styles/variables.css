@@ -1,0 +1,69 @@
+/* 即梦 AI 画布编辑器 - CSS 变量设计系统 */
+:root {
+  /* 主色调 */
+  --color-primary: #00CAE0;
+  --color-primary-hover: #00b8cc;
+  --color-primary-light: rgba(0, 202, 224, 0.12);
+  
+  /* 背景色 */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #141419;
+  --bg-tertiary: #1a1a22;
+  --bg-elevated: #202028;
+  --bg-canvas: #0d0d12;
+  --canvas-frame: #1a1a22;
+  
+  /* 文字颜色 */
+  --text-primary: rgba(224, 245, 255, 0.92);
+  --text-secondary: rgba(224, 245, 255, 0.72);
+  --text-tertiary: rgba(224, 245, 255, 0.48);
+  --text-placeholder: rgba(224, 245, 255, 0.36);
+  
+  /* 边框 */
+  --border-primary: rgba(204, 221, 255, 0.12);
+  --border-hover: rgba(204, 221, 255, 0.24);
+  --border-focus: var(--color-primary);
+  
+  /* 按钮 */
+  --btn-secondary-bg: rgba(224, 245, 255, 0.08);
+  --btn-secondary-hover: rgba(224, 245, 255, 0.12);
+  --btn-disabled-bg: rgba(224, 245, 255, 0.04);
+  --btn-disabled-text: rgba(224, 245, 255, 0.24);
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-circle: 50%;
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.35s cubic-bezier(0.15, 0.75, 0.3, 1);
+  
+  /* 布局尺寸 */
+  --header-height: 56px;
+  --left-toolbar-width: 48px;
+  --right-panel-width: 0px;
+  --bottom-toolbar-height: 64px;
+  
+  /* 字体 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+}

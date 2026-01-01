@@ -1,0 +1,57 @@
+@import './styles/variables.css';
+@import './styles/reset.css';
+
+/* 全局主题变量 - 来自原 Dreamina */
+:root {
+  /* 背景色 */
+  --bg-primary: #0a0a0f;
+  --bg-dropdown-menu: #1c1e22;
+  --bg-block-primary-default: rgba(204, 221, 255, 0.08);
+  --bg-block-primary-hover: rgba(204, 221, 255, 0.12);
+  --bg-block-primary-pressed: rgba(204, 221, 255, 0.16);
+  --bg-mask-60: rgba(0, 0, 0, 0.6);
+  --bg-surface: #141419;
+  
+  /* 画布相关 */
+  --canvas-bg: #0f0f12;
+  --canvas-bg-block-default: rgba(15, 15, 18, 0.72);
+  --canvas-float-block-default: rgba(32, 33, 39, 0.72);
+  --canvas-float-backdrop-blur: 20px;
+  --canvas-sidebar-bg: #141419;
+  
+  /* 文字颜色 */
+  --text-primary: rgba(224, 245, 255, 0.92);
+  --text-secondary: rgba(224, 245, 255, 0.6);
+  --text-tertiary: rgba(224, 245, 255, 0.48);
+  --text-placeholder: rgba(224, 245, 255, 0.36);
+  --text-disabled: rgba(224, 245, 255, 0.2);
+  --onmedia-text-primary: #f5fbff;
+  
+  /* 边框 */
+  --stroke-primary: rgba(204, 221, 255, 0.16);
+  --stroke-secondary: rgba(204, 221, 255, 0.12);
+  --stroke-tertiary: rgba(204, 221, 255, 0.08);
+  --stroke-focus: #00CAE0;
+  
+  /* 品牌色 */
+  --brand-main-default: #00CAE0;
+  --brand-main-hover: #00b8cc;
+  --brand-main-pressed: #009eb0;
+  
+  /* 组件 */
+  --component-secondary-button-bg-hover: rgba(204, 221, 255, 0.12);
+  --component-secondary-button-bg-pressed: rgba(204, 221, 255, 0.16);
+  --component-float-block-default: rgba(32, 33, 39, 0.72);
+  
+  /* 阴影 */
+  --shadow-dropdown-menu: 0 8px 56px 0 rgba(0, 0, 0, 0.24);
+  --shadow-generator-float-block: 0 4px 8px 0 rgba(0, 0, 0, 0.03), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  
+  /* 布局 */
+  --right-panel-width: 440px;
+}
+
+/* 全局字体 */
+body {
+  font-family: PingFang SC, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

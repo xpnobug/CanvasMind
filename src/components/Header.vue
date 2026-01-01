@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import SettingsModal from './SettingsModal.vue'
 
 const props = defineProps({
   title: {
@@ -12,6 +13,54 @@ const emit = defineEmits(['update:title', 'toggle-panel'])
 
 const isEditing = ref(false)
 const editTitle = ref(props.title)
+const showMenu = ref(false)
+const menuRef = ref(null)
+const showSettingsModal = ref(false)
+const projectDescription = ref('')
+
+// 主题模式: 'light' | 'dark' | 'system'
+const themeMode = ref(localStorage.getItem('theme-mode') || 'dark')
+const showThemeSubmenu = ref(false)
+
+// 获取系统主题
+const getSystemTheme = () => {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+// 当前实际主题
+const currentTheme = computed(() => {
+  if (themeMode.value === 'system') {
+    return getSystemTheme()
+  }
+  return themeMode.value
+})
+
+// 主题显示文本
+const themeLabel = computed(() => {
+  const labels = { light: '浅色模式', dark: '深色模式', system: '跟随系统' }
+  return labels[themeMode.value]
+})
+
+// 应用主题
+const applyTheme = (theme) => {
+  document.documentElement.setAttribute('data-theme', theme)
+}
+
+// 切换主题
+const setTheme = (mode) => {
+  themeMode.value = mode
+  localStorage.setItem('theme-mode', mode)
+  applyTheme(currentTheme.value)
+  showThemeSubmenu.value = false
+  showMenu.value = false
+}
+
+// 监听系统主题变化
+const handleSystemThemeChange = (e) => {
+  if (themeMode.value === 'system') {
+    applyTheme(e.matches ? 'dark' : 'light')
+  }
+}
 
 watch(() => props.title, (val) => {
   editTitle.value = val
@@ -37,6 +86,45 @@ const handleKeydown = (e) => {
     isEditing.value = false
   }
 }
+
+const toggleMenu = () => {
+  showMenu.value = !showMenu.value
+}
+
+const closeMenu = (e) => {
+  if (showMenu.value && menuRef.value && !menuRef.value.contains(e.target)) {
+    showMenu.value = false
+  }
+}
+
+const handleMenuClick = (action) => {
+  showMenu.value = false
+  if (action === 'settings') {
+    showSettingsModal.value = true
+  } else {
+    console.log('Menu action:', action)
+  }
+}
+
+const handleSettingsSave = (data) => {
+  if (data.title.trim()) {
+    emit('update:title', data.title.trim())
+  }
+  projectDescription.value = data.description
+}
+
+onMounted(() => {
+  document.addEventListener('mousedown', closeMenu)
+  // 初始化主题
+  applyTheme(currentTheme.value)
+  // 监听系统主题变化
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleSystemThemeChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', closeMenu)
+  window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', handleSystemThemeChange)
+})
 </script>
 
 <template>
@@ -62,11 +150,100 @@ const handleKeydown = (e) => {
           />
         </div>
         
-        <button class="back-button" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M5 6.3a1.2 1.2 0 0 0 0 2.4h14a1.2 1.2 0 1 0 0-2.4H5Zm0 9a1.2 1.2 0 0 0 0 2.4h8a1.2 1.2 0 1 0 0-2.4H5Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
-          </svg>
-        </button>
+        <div class="menu-trigger" ref="menuRef">
+          <button class="back-button" type="button" @click.stop="toggleMenu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M5 6.3a1.2 1.2 0 0 0 0 2.4h14a1.2 1.2 0 1 0 0-2.4H5Zm0 9a1.2 1.2 0 0 0 0 2.4h8a1.2 1.2 0 1 0 0-2.4H5Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
+            </svg>
+          </button>
+          
+          <!-- 下拉菜单 -->
+          <Transition name="menu">
+            <div v-if="showMenu" class="dropdown-menu">
+              <!-- 项目设定 -->
+              <div class="menu-item" @click="handleMenuClick('settings')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.07-5.07-.707.707M5.636 18.364l-.707.707m14.142 0-.707-.707M5.636 5.636l-.707-.707" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>项目设定</span>
+              </div>
+              <div class="menu-divider"></div>
+              <!-- 新建项目 -->
+              <div class="menu-item" @click="handleMenuClick('new')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5ZM4 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4Zm13-1a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2h-2a1 1 0 1 1 0-2h2v-2a1 1 0 0 1 1-1Z" fill="currentColor"/>
+                </svg>
+                <span>新建项目</span>
+              </div>
+              <!-- 深色模式 -->
+              <div 
+                class="menu-item has-submenu" 
+                @mouseenter="showThemeSubmenu = true"
+                @mouseleave="showThemeSubmenu = false"
+              >
+                <!-- 根据当前主题显示不同图标 -->
+                <svg v-if="themeMode === 'light'" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 2v2m0 16v2M4 12H2m20 0h-2m-2.93-7.07l-1.41 1.41m-9.32 9.32l-1.41 1.41m0-12.14l1.41 1.41m9.32 9.32l1.41 1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>{{ themeLabel }}</span>
+                <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                
+                <!-- 主题子菜单 -->
+                <Transition name="submenu">
+                  <div v-if="showThemeSubmenu" class="theme-submenu" @click.stop>
+                    <!-- 浅色模式 -->
+                    <div class="menu-item" @click="setTheme('light')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 2v2m0 16v2M4 12H2m20 0h-2m-2.93-7.07l-1.41 1.41m-9.32 9.32l-1.41 1.41m0-12.14l1.41 1.41m9.32 9.32l1.41 1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      <span>浅色模式</span>
+                      <svg v-if="themeMode === 'light'" class="check" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                    <!-- 深色模式 -->
+                    <div class="menu-item" @click="setTheme('dark')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>深色模式</span>
+                      <svg v-if="themeMode === 'dark'" class="check" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                    <!-- 跟随系统 -->
+                    <div class="menu-item" @click="setTheme('system')">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <rect x="2" y="4" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M8 21h8m-4-3v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      <span>跟随系统 · {{ getSystemTheme() === 'dark' ? '深色' : '浅色' }}</span>
+                      <svg v-if="themeMode === 'system'" class="check" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+                </Transition>
+              </div>
+              <!-- 回到画布首页 -->
+              <!-- <div class="menu-item" @click="handleMenuClick('home')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 14L4 9l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v.5a5.5 5.5 0 0 1-5.5 5.5H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>回到画布首页</span>
+              </div> -->
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
     
@@ -106,6 +283,14 @@ const handleKeydown = (e) => {
       </div>
     </div>
   </header>
+  
+  <!-- 项目设定弹窗 -->
+  <SettingsModal 
+    v-model:visible="showSettingsModal"
+    :title="title"
+    :description="projectDescription"
+    @save="handleSettingsSave"
+  />
 </template>
 
 <style scoped>
@@ -160,6 +345,10 @@ const handleKeydown = (e) => {
 
 .back-button:hover {
   background: var(--bg-block-primary-hover);
+}
+
+.menu-trigger {
+  position: relative;
 }
 
 .title-container {
@@ -282,5 +471,116 @@ const handleKeydown = (e) => {
 
 .conversation-button:hover {
   background: var(--bg-block-primary-hover);
+}
+
+/* 下拉菜单 */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -120px;
+  min-width: 180px;
+  padding: 8px;
+  background: var(--menu-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--menu-border);
+  border-radius: 12px;
+  box-shadow: var(--menu-shadow);
+  z-index: 1000;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  position: relative;
+}
+
+.menu-item:hover {
+  background: var(--menu-item-hover);
+}
+
+.menu-item svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.menu-item.has-submenu {
+  justify-content: flex-start;
+}
+
+.menu-item .chevron {
+  margin-left: auto;
+  opacity: 0.4;
+}
+
+.menu-item .check {
+  margin-left: auto;
+  color: var(--brand-main-default);
+}
+
+.menu-divider {
+  height: 1px;
+  margin: 6px 12px;
+  background: var(--menu-border);
+}
+
+/* 主题子菜单 */
+.theme-submenu {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: -8px;
+  min-width: 200px;
+  padding: 8px;
+  background: var(--menu-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--menu-border);
+  border-radius: 12px;
+  box-shadow: var(--menu-shadow);
+}
+
+/* 子菜单动画 */
+.submenu-enter-active {
+  animation: submenu-in 0.15s ease-out;
+}
+
+.submenu-leave-active {
+  animation: submenu-in 0.1s ease-in reverse;
+}
+
+@keyframes submenu-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 菜单动画 */
+.menu-enter-active {
+  animation: menu-in 0.2s ease-out;
+}
+
+.menu-leave-active {
+  animation: menu-in 0.15s ease-in reverse;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>

@@ -98,7 +98,7 @@ const selectTool = (toolId) => {
   justify-content: center;
   gap: 4px;
   padding: 4px;
-  width: 36px;
+  width: 44px;
   min-height: auto;
   background: var(--canvas-float-block-default);
   backdrop-filter: blur(var(--canvas-float-backdrop-blur));
@@ -184,7 +184,9 @@ const selectTool = (toolId) => {
   flex-direction: column;
   padding: 10px 16px;
   background: var(--component-tooltips, #22252a);
+  border: 1px solid var(--stroke-tertiary);
   border-radius: 8px;
+  box-shadow: var(--menu-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
 }
 
 .simple-tooltip-content-inner {

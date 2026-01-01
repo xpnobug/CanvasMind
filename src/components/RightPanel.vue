@@ -698,10 +698,11 @@ watch(() => props.initialMessage, (newMessage) => {
   background: linear-gradient(to top, var(--canvas-sidebar-bg, #141419) 80%, transparent);
 }
 .input-container {
-  background: rgba(32, 33, 39, 0.72);
+  background: var(--input-bg, rgba(32, 33, 39, 0.72));
   backdrop-filter: blur(20px);
   border-radius: 20px;
   padding: 14px 16px;
+  border: 1px solid var(--input-border, transparent);
 }
 .input-row {
   display: flex;
@@ -767,7 +768,7 @@ watch(() => props.initialMessage, (newMessage) => {
   display: flex;
   align-items: center;
   padding: 8px 16px;
-  background: rgba(50, 54, 62, 0.95);
+  background: var(--menu-bg, rgba(50, 54, 62, 0.95));
   border-radius: 8px;
   font-size: 14px;
   color: var(--text-primary);
@@ -794,7 +795,7 @@ watch(() => props.initialMessage, (newMessage) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(30, 32, 38, 0.95);
+  background: var(--menu-bg, rgba(30, 32, 38, 0.95));
   border: none;
   border-radius: 50%;
   color: var(--text-primary);
@@ -809,7 +810,7 @@ watch(() => props.initialMessage, (newMessage) => {
   transform: scale(1);
 }
 .close-image-btn:hover {
-  background: rgba(60, 64, 72, 1);
+  background: var(--bg-block-primary-hover);
 }
 
 /* 添加按钮 */
@@ -820,7 +821,7 @@ watch(() => props.initialMessage, (newMessage) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(80, 84, 92, 0.95);
+  background: var(--bg-block-primary-pressed, rgba(80, 84, 92, 0.95));
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
@@ -838,11 +839,11 @@ watch(() => props.initialMessage, (newMessage) => {
   height: 72px;
   border-radius: 6px;
   border: 2px solid var(--stroke-secondary);
-  background: rgba(60, 64, 72, 0.8);
+  background: var(--bg-block-primary-default);
   transform: translateX(var(--translate-x));
 }
 .add-btn:hover {
-  background: rgba(100, 104, 112, 1);
+  background: var(--bg-block-primary-hover);
   color: var(--text-primary);
 }
 
@@ -893,7 +894,7 @@ watch(() => props.initialMessage, (newMessage) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(204, 221, 255, 0.08);
+  background: var(--bg-block-primary-default);
   border: 1px solid var(--stroke-secondary);
   border-radius: 10px;
   color: var(--text-secondary);
@@ -901,7 +902,7 @@ watch(() => props.initialMessage, (newMessage) => {
   transition: all 0.15s ease;
 }
 .toolbar-btn:hover {
-  background: rgba(204, 221, 255, 0.12);
+  background: var(--bg-block-primary-hover);
   color: var(--text-primary);
 }
 .toolbar-btn.active {
@@ -913,16 +914,16 @@ watch(() => props.initialMessage, (newMessage) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--brand-main-default);
   border: none;
   border-radius: 50%;
-  color: #000;
+  color: #fff;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 .send-btn:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: var(--brand-main-hover);
 }
 .send-btn:disabled {
   opacity: 0.5;

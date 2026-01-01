@@ -11,6 +11,8 @@ const zoom = ref(10)
 const projectTitle = ref('生成二次元手办多风格图片')
 const rightPanelOpen = ref(false)
 const selectedImage = ref(null)
+const canvasRef = ref(null)
+const canvasCreated = ref(false)
 
 const handleZoomChange = (newZoom) => {
   zoom.value = Math.max(1, Math.min(200, newZoom))
@@ -29,6 +31,16 @@ const pendingMessage = ref('')
 const handlePromptSend = (message) => {
   pendingMessage.value = message
   rightPanelOpen.value = true
+  // 创建画布并生成图片
+  if (!canvasCreated.value) {
+    canvasCreated.value = true
+    // 等待画布渲染后再生成
+    setTimeout(() => {
+      canvasRef.value?.generateImages()
+    }, 100)
+  } else {
+    canvasRef.value?.generateImages()
+  }
 }
 </script>
 
@@ -87,7 +99,36 @@ const handlePromptSend = (message) => {
             
             <!-- 画布容器 -->
             <div class="canvas-container">
-              <InfiniteCanvas :zoom="zoom" @zoom-change="handleZoomChange" @selection-change="handleSelectionChange" />
+              <!-- 空状态 -->
+              <div v-if="!canvasCreated" class="empty-state">
+                <div class="empty-icon">
+                  <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <rect x="8" y="12" width="48" height="40" rx="4" fill="rgba(0, 202, 224, 0.1)" stroke="rgba(0, 202, 224, 0.3)" stroke-width="2"/>
+                    <rect x="14" y="18" width="16" height="20" rx="2" fill="rgba(0, 202, 224, 0.2)"/>
+                    <rect x="34" y="18" width="16" height="12" rx="2" fill="rgba(0, 202, 224, 0.15)"/>
+                    <rect x="34" y="34" width="16" height="8" rx="2" fill="rgba(0, 202, 224, 0.15)"/>
+                    <path d="M14 44L22 36L30 42" stroke="rgba(0, 202, 224, 0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="empty-text">使用已有素材开启创作</p>
+                <div class="empty-actions">
+                  <button class="empty-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 14.586V6a1 1 0 1 1 2 0v8.586l2.293-2.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L11 14.586Z" fill="currentColor"/>
+                      <path d="M5 18a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2H5Z" fill="currentColor"/>
+                    </svg>
+                    <span>本地上传</span>
+                  </button>
+                  <button class="empty-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2Zm0 16H5V5h14v14Zm-5-7 3 4H7l3-4 2.25 3 2.75-3Z" fill="currentColor"/>
+                    </svg>
+                    <span>选择资产</span>
+                  </button>
+                </div>
+              </div>
+              <!-- 画布 -->
+              <InfiniteCanvas v-else ref="canvasRef" :zoom="zoom" @zoom-change="handleZoomChange" @selection-change="handleSelectionChange" />
             </div>
             
             <div class="toolbar bottom-toolbar"></div>
@@ -232,5 +273,55 @@ const handlePromptSend = (message) => {
   bottom: 0;
   left: 0;
   right: 0;
+}
+
+/* 空状态 */
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.empty-icon {
+  opacity: 0.8;
+}
+
+.empty-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.empty-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--btn-secondary-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--btn-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.empty-btn:hover {
+  background: var(--btn-secondary-hover, rgba(255, 255, 255, 0.1));
+}
+
+.empty-btn svg {
+  opacity: 0.8;
 }
 </style>

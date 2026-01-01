@@ -1,7 +1,7 @@
 @import './styles/variables.css';
 @import './styles/reset.css';
 
-/* 全局主题变量 - 来自原 Dreamina */
+/* 全局主题变量 - 深色模式（默认） */
 :root {
   /* 背景色 */
   --bg-primary: #0a0a0f;
@@ -47,8 +47,91 @@
   --shadow-dropdown-menu: 0 8px 56px 0 rgba(0, 0, 0, 0.24);
   --shadow-generator-float-block: 0 4px 8px 0 rgba(0, 0, 0, 0.03), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
   
+  /* 菜单 */
+  --menu-bg: rgba(30, 33, 38, 0.95);
+  --menu-border: rgba(255, 255, 255, 0.08);
+  --menu-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --menu-item-hover: rgba(255, 255, 255, 0.06);
+  
+  /* 输入框 */
+  --input-bg: rgba(32, 33, 39, 0.72);
+  --input-border: rgba(255, 255, 255, 0.08);
+  
+  /* 按钮 */
+  --btn-secondary-bg: rgba(255, 255, 255, 0.06);
+  --btn-secondary-border: rgba(255, 255, 255, 0.1);
+  --btn-secondary-hover: rgba(255, 255, 255, 0.1);
+  
   /* 布局 */
   --right-panel-width: 440px;
+}
+
+/* 浅色主题 */
+:root[data-theme="light"] {
+  /* 背景色 */
+  --bg-primary: #f5f5f7;
+  --bg-dropdown-menu: #ffffff;
+  --bg-block-primary-default: rgba(0, 0, 0, 0.04);
+  --bg-block-primary-hover: rgba(0, 0, 0, 0.08);
+  --bg-block-primary-pressed: rgba(0, 0, 0, 0.12);
+  --bg-mask-60: rgba(0, 0, 0, 0.4);
+  --bg-surface: #ffffff;
+  
+  /* 画布相关 */
+  --canvas-bg: #e8e8ec;
+  --canvas-bg-block-default: rgba(255, 255, 255, 0.85);
+  --canvas-float-block-default: rgba(255, 255, 255, 0.9);
+  --canvas-sidebar-bg: #ffffff;
+  
+  /* 文字颜色 */
+  --text-primary: rgba(0, 0, 0, 0.88);
+  --text-secondary: rgba(0, 0, 0, 0.65);
+  --text-tertiary: rgba(0, 0, 0, 0.45);
+  --text-placeholder: rgba(0, 0, 0, 0.25);
+  --text-disabled: rgba(0, 0, 0, 0.15);
+  --onmedia-text-primary: #1a1a1a;
+  
+  /* 边框 */
+  --stroke-primary: rgba(0, 0, 0, 0.12);
+  --stroke-secondary: rgba(0, 0, 0, 0.08);
+  --stroke-tertiary: rgba(0, 0, 0, 0.06);
+  --stroke-focus: #00a5b8;
+  
+  /* 品牌色 */
+  --brand-main-default: #00a5b8;
+  --brand-main-hover: #0095a5;
+  --brand-main-pressed: #008592;
+  
+  /* 组件 */
+  --component-secondary-button-bg-hover: rgba(0, 0, 0, 0.06);
+  --component-secondary-button-bg-pressed: rgba(0, 0, 0, 0.1);
+  --component-float-block-default: rgba(255, 255, 255, 0.9);
+  
+  /* 阴影 */
+  --shadow-dropdown-menu: 0 8px 56px 0 rgba(0, 0, 0, 0.12);
+  --shadow-generator-float-block: 0 4px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px 0 rgba(0, 0, 0, 0.06);
+  
+  /* 菜单 */
+  --menu-bg: rgba(255, 255, 255, 0.98);
+  --menu-border: rgba(0, 0, 0, 0.08);
+  --menu-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --menu-item-hover: rgba(0, 0, 0, 0.04);
+  
+  /* 输入框 */
+  --input-bg: rgba(255, 255, 255, 0.95);
+  --input-border: rgba(0, 0, 0, 0.1);
+  
+  /* 按钮 */
+  --btn-secondary-bg: rgba(0, 0, 0, 0.04);
+  --btn-secondary-border: rgba(0, 0, 0, 0.08);
+  --btn-secondary-hover: rgba(0, 0, 0, 0.08);
+  
+  /* 画布框架 */
+  --canvas-frame: #ffffff;
+  
+  /* Tooltip */
+  --component-tooltips: rgba(255, 255, 255, 0.98);
+  --onmedia-text-primary: rgba(0, 0, 0, 0.88);
 }
 
 /* 全局字体 */

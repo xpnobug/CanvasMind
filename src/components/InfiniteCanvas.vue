@@ -1,414 +1,524 @@
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { 
+  useViewport, 
+  useGridLayout, 
+  useCanvasState, 
+  useDragSort,
+  useImageResize,
+  useHistory,
+  usePointerEvents
+} from '@/composables'
 
 const props = defineProps({
-  zoom: { type: Number, default: 100 }
+  zoom: { type: Number, default: 100 },
+  // 网格配置
+  gridCols: { type: Number, default: 4 },
+  cellWidth: { type: Number, default: 1728 },
+  cellHeight: { type: Number, default: 2304 },
+  gap: { type: Number, default: 96 },
+  padding: { type: Number, default: 192 },
+  // 缩放限制
+  minZoom: { type: Number, default: 1 },
+  maxZoom: { type: Number, default: 200 }
 })
 
 const emit = defineEmits(['zoom-change', 'selection-change'])
 
-// 画布状态
+// ============ 数据 ============
 const containerRef = ref(null)
-const isPanning = ref(false)
-const spacePressed = ref(false)
 
-// 选中和拖拽状态
-const selectedImageId = ref(null)
-const isDraggingImage = ref(false)
-const draggedImageId = ref(null)
-const dragOriginalIndex = ref(null)
-const currentHoverIndex = ref(null)
-const hasMoved = ref(false) // 是否真正移动过
+const images = ref([])
 
-// 缩放状态
-const isResizing = ref(false)
-const resizeHandle = ref(null)
-const resizeStart = reactive({ mouseX: 0, mouseY: 0, width: 0, height: 0 })
+// 模拟数据
+const mockImages = [
+  { id: 1, src: 'https://picsum.photos/seed/a1/1728/2304', w: 1728, h: 2304 },
+  { id: 2, src: 'https://picsum.photos/seed/a2/1728/2304', w: 1728, h: 2304 },
+  { id: 3, src: 'https://picsum.photos/seed/a3/1728/2304', w: 1728, h: 2304 },
+  { id: 4, src: 'https://picsum.photos/seed/a4/1728/2304', w: 1728, h: 2304 },
+  { id: 5, src: 'https://picsum.photos/seed/a5/1728/2304', w: 1728, h: 2304 },
+  { id: 6, src: 'https://picsum.photos/seed/a6/1728/2304', w: 1728, h: 2304 },
+  { id: 7, src: 'https://picsum.photos/seed/a7/1728/2304', w: 1728, h: 2304 },
+  { id: 8, src: 'https://picsum.photos/seed/a8/1728/2304', w: 1728, h: 2304 },
+  { id: 9, src: 'https://picsum.photos/seed/a9/1728/2304', w: 1728, h: 2304 },
+  { id: 10, src: 'https://picsum.photos/seed/a10/1728/2304', w: 1728, h: 2304 },
+  { id: 11, src: 'https://picsum.photos/seed/a11/1728/2304', w: 1728, h: 2304 },
+  { id: 12, src: 'https://picsum.photos/seed/a12/1728/2304', w: 1728, h: 2304 },
+]
 
-// 网格配置
-const GRID_COLS = 4
-const CELL_WIDTH = 1728
-const CELL_HEIGHT = 2304
-const GAP = 96
-const PADDING = 192
+let mockIndex = 0
+let generating = false
 
-// 视口变换状态
-const viewport = reactive({ x: 0, y: 0, scale: 1 })
-const dragStart = reactive({ x: 0, y: 0, viewportX: 0, viewportY: 0 })
-const imageDragStart = reactive({ mouseX: 0, mouseY: 0, offsetX: 0, offsetY: 0 })
-
-// 拖拽中的图片位置（屏幕坐标）
-const draggingPosition = reactive({ x: 0, y: 0 })
-
-// 图片数据 - 使用 index 来确定网格位置，添加宽高属性
-const images = ref([
-  { id: 1, src: 'https://picsum.photos/seed/a1/1728/2304', index: 0, w: 1728, h: 2304 },
-  { id: 2, src: 'https://picsum.photos/seed/a2/1728/2304', index: 1, w: 1728, h: 2304 },
-  { id: 3, src: 'https://picsum.photos/seed/a3/1728/2304', index: 2, w: 1728, h: 2304 },
-  { id: 4, src: 'https://picsum.photos/seed/a4/1728/2304', index: 3, w: 1728, h: 2304 },
-  { id: 5, src: 'https://picsum.photos/seed/a5/1728/2304', index: 4, w: 1728, h: 2304 },
-  { id: 6, src: 'https://picsum.photos/seed/a6/1728/2304', index: 5, w: 1728, h: 2304 },
-  { id: 7, src: 'https://picsum.photos/seed/a7/1728/2304', index: 6, w: 1728, h: 2304 },
-  { id: 8, src: 'https://picsum.photos/seed/a8/1728/2304', index: 7, w: 1728, h: 2304 },
-  { id: 9, src: 'https://picsum.photos/seed/a9/1728/2304', index: 8, w: 1728, h: 2304 },
-  { id: 10, src: 'https://picsum.photos/seed/a10/1728/2304', index: 9, w: 1728, h: 2304 },
-  { id: 11, src: 'https://picsum.photos/seed/a11/1728/2304', index: 10, w: 1728, h: 2304 },
-  { id: 12, src: 'https://picsum.photos/seed/a12/1728/2304', index: 11, w: 1728, h: 2304 },
-])
-
-// 根据 index 计算网格位置
-const getGridPosition = (index) => {
-  const col = index % GRID_COLS
-  const row = Math.floor(index / GRID_COLS)
-  return {
-    x: PADDING + col * (CELL_WIDTH + GAP),
-    y: PADDING + row * (CELL_HEIGHT + GAP)
-  }
-}
-
-// 根据坐标计算目标 index
-const getTargetIndex = (canvasX, canvasY) => {
-  const col = Math.round((canvasX - PADDING) / (CELL_WIDTH + GAP))
-  const row = Math.round((canvasY - PADDING) / (CELL_HEIGHT + GAP))
-  const clampedCol = Math.max(0, Math.min(GRID_COLS - 1, col))
-  const clampedRow = Math.max(0, row)
-  const maxIndex = images.value.length - 1
-  return Math.min(clampedRow * GRID_COLS + clampedCol, maxIndex)
-}
-
-// 计算拖拽时的显示位置（考虑避让）
-const getDisplayIndex = (img) => {
-  if (!isDraggingImage.value || currentHoverIndex.value === null) {
-    return img.index
+// 模拟生成图片（逐个添加）
+async function generateImages() {
+  if (generating || mockIndex >= mockImages.length) return
+  generating = true
+  
+  // 每次生成 4 张
+  const count = Math.min(4, mockImages.length - mockIndex)
+  
+  for (let i = 0; i < count; i++) {
+    await new Promise(r => setTimeout(r, 300 + Math.random() * 200))
+    const img = mockImages[mockIndex]
+    images.value.push({ ...img, index: mockIndex })
+    mockIndex++
   }
   
-  const draggedImg = images.value.find(i => i.id === draggedImageId.value)
-  if (!draggedImg) return img.index
-  
-  const originalIdx = dragOriginalIndex.value
-  const hoverIdx = currentHoverIndex.value
-  
-  // 被拖拽的图片不显示在网格中
-  if (img.id === draggedImageId.value) {
-    return -1
-  }
-  
-  // 计算其他图片的避让位置
-  if (hoverIdx < originalIdx) {
-    // 向前拖拽
-    if (img.index >= hoverIdx && img.index < originalIdx) {
-      return img.index + 1
-    }
-  } else if (hoverIdx > originalIdx) {
-    // 向后拖拽
-    if (img.index > originalIdx && img.index <= hoverIdx) {
-      return img.index - 1
-    }
-  }
-  
-  return img.index
-}
-
-// 获取选中的图片
-const selectedImage = computed(() => {
-  if (!selectedImageId.value) return null
-  return images.value.find(img => img.id === selectedImageId.value)
-})
-
-// 计算画布帧尺寸
-const frameWidth = computed(() => {
-  const cols = GRID_COLS
-  return PADDING * 2 + cols * CELL_WIDTH + (cols - 1) * GAP
-})
-
-const frameHeight = computed(() => {
-  const rows = Math.ceil(images.value.length / GRID_COLS)
-  return PADDING * 2 + rows * CELL_HEIGHT + (rows - 1) * GAP
-})
-
-// 同步外部 zoom
-watch(() => props.zoom, (newZoom) => {
-  const newScale = newZoom / 100
-  if (Math.abs(newScale - viewport.scale) > 0.001) {
+  // 生成后居中显示
+  setTimeout(() => {
     if (containerRef.value) {
       const rect = containerRef.value.getBoundingClientRect()
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-      const oldScale = viewport.scale
-      const scaleRatio = newScale / oldScale
-      viewport.x = centerX - (centerX - viewport.x) * scaleRatio
-      viewport.y = centerY - (centerY - viewport.y) * scaleRatio
+      viewport.centerContent(gridLayout.frameWidth.value, gridLayout.frameHeight.value, rect)
     }
-    viewport.scale = newScale
+  }, 100)
+  
+  generating = false
+}
+
+// 暴露给父组件
+defineExpose({ generateImages })
+
+// ============ Composables ============
+const viewport = useViewport({
+  minScale: props.minZoom / 100,
+  maxScale: props.maxZoom / 100
+})
+const gridLayout = useGridLayout(images, {
+  cols: props.gridCols,
+  cellWidth: props.cellWidth,
+  cellHeight: props.cellHeight,
+  gap: props.gap,
+  padding: props.padding
+})
+const canvasState = useCanvasState()
+const dragSort = useDragSort(images, gridLayout)
+const imageResize = useImageResize(images)
+const history = useHistory()
+const pointer = usePointerEvents()
+
+// ============ 计算属性 ============
+const selectedImage = computed(() => {
+  if (!canvasState.selectedId.value) return null
+  return images.value.find(img => img.id === canvasState.selectedId.value)
+})
+
+const draggingImage = computed(() => {
+  if (!canvasState.draggedId.value) return null
+  return images.value.find(img => img.id === canvasState.draggedId.value)
+})
+
+// 虚拟化：只渲染视口内的图片
+// 显式依赖 viewport 状态以确保响应性
+const visibleImages = computed(() => {
+  // 显式读取 viewport 状态触发响应式更新
+  const { x, y, scale } = viewport.viewport
+  
+  if (!containerRef.value || !scale) return images.value
+  
+  const rect = containerRef.value.getBoundingClientRect()
+  // 手动计算视口边界（避免函数调用丢失响应性）
+  const viewportLeft = -x / scale
+  const viewportTop = -y / scale
+  const viewportRight = (rect.width - x) / scale
+  const viewportBottom = (rect.height - y) / scale
+  
+  // 添加缓冲区（画布坐标系）
+  const buffer = 500 / scale
+  const bounds = {
+    left: viewportLeft - buffer,
+    top: viewportTop - buffer,
+    right: viewportRight + buffer,
+    bottom: viewportBottom + buffer
   }
-}, { immediate: true })
-
-watch(selectedImageId, (newId) => {
-  emit('selection-change', newId ? selectedImage.value : null)
+  
+  return images.value.filter(img => {
+    const pos = gridLayout.getGridPosition(img.index)
+    const imgRight = pos.x + img.w
+    const imgBottom = pos.y + img.h
+    
+    // 检查是否与视口相交
+    return !(
+      imgRight < bounds.left ||
+      pos.x > bounds.right ||
+      imgBottom < bounds.top ||
+      pos.y > bounds.bottom
+    )
+  })
 })
 
-// 画布层样式
-const canvasLayerStyle = computed(() => ({
-  transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`,
-  transformOrigin: 'left top'
-}))
-
-// 计算浮动工具栏位置
+// 浮动工具栏位置
 const floatingToolbarStyle = computed(() => {
-  if (!selectedImage.value || !containerRef.value || isDraggingImage.value) return { display: 'none' }
-  const pos = getGridPosition(selectedImage.value.index)
-  const imgCenterX = viewport.x + (pos.x + CELL_WIDTH / 2) * viewport.scale
-  const imgTopY = viewport.y + pos.y * viewport.scale
-  return { left: imgCenterX + 'px', top: (imgTopY - 52) + 'px', transform: 'translateX(-50%)' }
+  if (!selectedImage.value || !containerRef.value || canvasState.isDragging.value) {
+    return { display: 'none' }
+  }
+  
+  const img = selectedImage.value
+  if (typeof img.index !== 'number') return { display: 'none' }
+  
+  const pos = gridLayout.getGridPosition(img.index)
+  const screen = viewport.canvasToScreen(pos.x + gridLayout.cellWidth / 2, pos.y)
+  
+  // 确保位置值有效
+  if (!isFinite(screen.x) || !isFinite(screen.y)) {
+    return { display: 'none' }
+  }
+  
+  return { 
+    left: screen.x + 'px', 
+    top: (screen.y - 52) + 'px', 
+    transform: 'translateX(-50%)' 
+  }
 })
 
-// 计算尺寸标签位置
+// 尺寸标签位置
 const sizeLabelStyle = computed(() => {
   if (!selectedImage.value || !containerRef.value) return { display: 'none' }
-  if (isDraggingImage.value) {
-    return { left: (draggingPosition.x + CELL_WIDTH * viewport.scale / 2) + 'px', top: (draggingPosition.y + CELL_HEIGHT * viewport.scale + 8) + 'px', transform: 'translateX(-50%)' }
+  
+  const img = selectedImage.value
+  if (typeof img.index !== 'number') return { display: 'none' }
+  
+  const scale = viewport.viewport.scale || 1
+  
+  if (canvasState.isDragging.value) {
+    const pos = dragSort.draggingPosition.value
+    if (!isFinite(pos.x) || !isFinite(pos.y)) return { display: 'none' }
+    return { 
+      left: (pos.x + gridLayout.cellWidth * scale / 2) + 'px', 
+      top: (pos.y + gridLayout.cellHeight * scale + 8) + 'px', 
+      transform: 'translateX(-50%)' 
+    }
   }
-  const pos = getGridPosition(selectedImage.value.index)
-  const imgCenterX = viewport.x + (pos.x + CELL_WIDTH / 2) * viewport.scale
-  const imgBottomY = viewport.y + (pos.y + CELL_HEIGHT) * viewport.scale
-  return { left: imgCenterX + 'px', top: (imgBottomY + 8) + 'px', transform: 'translateX(-50%)' }
+  
+  const pos = gridLayout.getGridPosition(img.index)
+  const screen = viewport.canvasToScreen(pos.x + gridLayout.cellWidth / 2, pos.y + gridLayout.cellHeight)
+  
+  if (!isFinite(screen.x) || !isFinite(screen.y)) return { display: 'none' }
+  
+  return { 
+    left: screen.x + 'px', 
+    top: (screen.y + 8) + 'px', 
+    transform: 'translateX(-50%)' 
+  }
 })
 
-// 计算选中框覆盖层位置（屏幕坐标系）
+// 选中框位置
 const selectionOverlayStyle = computed(() => {
   if (!selectedImage.value || !containerRef.value) return { display: 'none' }
-  const pos = getGridPosition(selectedImage.value.index)
-  const left = viewport.x + pos.x * viewport.scale
-  const top = viewport.y + pos.y * viewport.scale
-  const width = selectedImage.value.w * viewport.scale
-  const height = selectedImage.value.h * viewport.scale
-  return { left: left + 'px', top: top + 'px', width: width + 'px', height: height + 'px' }
+  
+  const img = selectedImage.value
+  if (typeof img.index !== 'number') return { display: 'none' }
+  
+  const pos = gridLayout.getGridPosition(img.index)
+  const screen = viewport.canvasToScreen(pos.x, pos.y)
+  const scale = viewport.viewport.scale || 1
+  
+  // 确保位置值有效
+  if (!isFinite(screen.x) || !isFinite(screen.y)) {
+    return { display: 'none' }
+  }
+  
+  return { 
+    left: screen.x + 'px', 
+    top: screen.y + 'px', 
+    width: (img.w * scale) + 'px', 
+    height: (img.h * scale) + 'px' 
+  }
 })
 
-// 拖拽中图片的样式
+// 拖拽中图片样式
 const draggingImageStyle = computed(() => {
-  if (!isDraggingImage.value) return { display: 'none' }
+  if (!canvasState.isDragging.value) return { display: 'none' }
+  const pos = dragSort.draggingPosition.value
   return {
-    left: draggingPosition.x + 'px',
-    top: draggingPosition.y + 'px',
-    width: (CELL_WIDTH * viewport.scale) + 'px',
-    height: (CELL_HEIGHT * viewport.scale) + 'px'
+    left: pos.x + 'px',
+    top: pos.y + 'px',
+    width: (gridLayout.cellWidth * viewport.viewport.scale) + 'px',
+    height: (gridLayout.cellHeight * viewport.viewport.scale) + 'px'
   }
 })
 
-// 获取正在拖拽的图片
-const draggingImage = computed(() => {
-  if (!draggedImageId.value) return null
-  return images.value.find(img => img.id === draggedImageId.value)
-})
-
-// 点击图片选中
-const handleImageClick = (e, img) => {
-  e.stopPropagation()
-  // 点击选中由 mouseup 处理
-}
-
-// 开始缩放图片
-const handleResizeStart = (e, handle) => {
-  if (e.button !== 0 || !selectedImage.value) return
-  e.stopPropagation()
-  
-  isResizing.value = true
-  resizeHandle.value = handle
-  resizeStart.mouseX = e.clientX
-  resizeStart.mouseY = e.clientY
-  resizeStart.width = selectedImage.value.w
-  resizeStart.height = selectedImage.value.h
-}
-
-// 开始拖拽图片
-const handleImageDragStart = (e, img) => {
-  if (e.button !== 0) return
-  e.stopPropagation()
-  
-  selectedImageId.value = img.id
-  draggedImageId.value = img.id
-  dragOriginalIndex.value = img.index
-  currentHoverIndex.value = img.index
-  hasMoved.value = false
-  
-  const pos = getGridPosition(img.index)
-  const screenX = viewport.x + pos.x * viewport.scale
-  const screenY = viewport.y + pos.y * viewport.scale
-  
-  imageDragStart.mouseX = e.clientX
-  imageDragStart.mouseY = e.clientY
-  imageDragStart.offsetX = e.clientX - screenX
-  imageDragStart.offsetY = e.clientY - screenY
-  
-  draggingPosition.x = screenX
-  draggingPosition.y = screenY
-}
-
-// 点击画布空白处取消选中
-const handleCanvasClick = () => {
-  if (!isDraggingImage.value) {
-    selectedImageId.value = null
-  }
-}
-
-// 鼠标按下 - 画布拖拽
-const handleMouseDown = (e) => {
-  if (e.button === 1 || (e.button === 0 && (spacePressed.value || e.altKey))) {
+// ============ 事件处理 ============
+function handleMouseDown(e) {
+  // 检查是否应该平移
+  if (e.button === 1 || (e.button === 0 && (canvasState.spacePressed.value || e.altKey))) {
     e.preventDefault()
-    isPanning.value = true
-    dragStart.x = e.clientX
-    dragStart.y = e.clientY
-    dragStart.viewportX = viewport.x
-    dragStart.viewportY = viewport.y
+    canvasState.startPan()
+    viewport.startPan(e.clientX, e.clientY)
   }
 }
 
-// 鼠标移动
-const handleMouseMove = (e) => {
-  if (isPanning.value) {
-    viewport.x = dragStart.viewportX + (e.clientX - dragStart.x)
-    viewport.y = dragStart.viewportY + (e.clientY - dragStart.y)
+function handleMouseMove(e) {
+  // 平移
+  if (canvasState.isPanning.value) {
+    viewport.updatePan(e.clientX, e.clientY)
     return
   }
   
   // 缩放图片
-  if (isResizing.value && selectedImage.value) {
-    const dx = (e.clientX - resizeStart.mouseX) / viewport.scale
-    const dy = (e.clientY - resizeStart.mouseY) / viewport.scale
-    const aspectRatio = resizeStart.width / resizeStart.height
-    
-    let newW = resizeStart.width
-    let newH = resizeStart.height
-    
-    // 根据拖拽的角计算新尺寸，保持宽高比
-    if (resizeHandle.value === 'bottom-right') {
-      newW = Math.max(200, resizeStart.width + dx)
-    } else if (resizeHandle.value === 'bottom-left') {
-      newW = Math.max(200, resizeStart.width - dx)
-    } else if (resizeHandle.value === 'top-right') {
-      newW = Math.max(200, resizeStart.width + dx)
-    } else if (resizeHandle.value === 'top-left') {
-      newW = Math.max(200, resizeStart.width - dx)
-    }
-    
-    newH = newW / aspectRatio
-    selectedImage.value.w = Math.round(newW)
-    selectedImage.value.h = Math.round(newH)
+  if (canvasState.isResizing.value && selectedImage.value) {
+    imageResize.updateResize(
+      canvasState.selectedId.value,
+      e.clientX,
+      e.clientY,
+      canvasState.resizeHandle.value,
+      viewport.viewport.scale
+    )
     return
   }
   
-  if (draggedImageId.value) {
-    const dx = e.clientX - imageDragStart.mouseX
-    const dy = e.clientY - imageDragStart.mouseY
-    
-    // 移动超过 5px 才算真正开始拖拽
-    if (!isDraggingImage.value && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-      isDraggingImage.value = true
-      hasMoved.value = true
+  // 拖拽图片
+  if (canvasState.draggedId.value) {
+    // 检查是否超过阈值
+    if (!canvasState.isDragging.value && dragSort.hasMovedBeyondThreshold(e.clientX, e.clientY)) {
+      canvasState.markMoved()
+      canvasState.startDrag(canvasState.draggedId.value)
     }
     
-    if (isDraggingImage.value) {
-      draggingPosition.x = e.clientX - imageDragStart.offsetX
-      draggingPosition.y = e.clientY - imageDragStart.offsetY
-      
-      // 实时计算当前悬停位置，触发避让效果
-      const canvasX = (draggingPosition.x - viewport.x) / viewport.scale + CELL_WIDTH / 2
-      const canvasY = (draggingPosition.y - viewport.y) / viewport.scale + CELL_HEIGHT / 2
-      const newHoverIndex = getTargetIndex(canvasX, canvasY)
-      
-      if (newHoverIndex !== currentHoverIndex.value) {
-        currentHoverIndex.value = newHoverIndex
-      }
+    if (canvasState.isDragging.value) {
+      dragSort.updateDrag(e.clientX, e.clientY, viewport.viewport)
     }
   }
 }
 
-// 鼠标松开
-const handleMouseUp = (e) => {
+function handleMouseUp() {
   // 结束缩放
-  if (isResizing.value) {
-    isResizing.value = false
-    resizeHandle.value = null
-    return
-  }
-  
-  if (draggedImageId.value) {
-    if (isDraggingImage.value && currentHoverIndex.value !== null) {
-      const targetIndex = currentHoverIndex.value
-      const currentIndex = dragOriginalIndex.value
+  if (canvasState.isResizing.value) {
+    // 记录缩放历史
+    const img = selectedImage.value
+    if (img) {
+      const oldW = imageResize.resizeState.startWidth
+      const oldH = imageResize.resizeState.startHeight
+      const newW = img.w
+      const newH = img.h
+      const imgId = img.id
       
-      if (targetIndex !== currentIndex) {
-        // 重新排列图片 - 更新实际的 index 值
-        const draggedItem = images.value.find(img => img.id === draggedImageId.value)
-        
-        if (targetIndex < currentIndex) {
-          // 向前移动
-          images.value.forEach(img => {
-            if (img.id !== draggedImageId.value && img.index >= targetIndex && img.index < currentIndex) {
-              img.index++
-            }
-          })
-        } else {
-          // 向后移动
-          images.value.forEach(img => {
-            if (img.id !== draggedImageId.value && img.index > currentIndex && img.index <= targetIndex) {
-              img.index--
-            }
-          })
-        }
-        draggedItem.index = targetIndex
+      if (oldW !== newW || oldH !== newH) {
+        history.push({
+          type: 'resize',
+          data: { imgId, oldW, oldH, newW, newH },
+          undo: (data) => {
+            const target = images.value.find(i => i.id === data.imgId)
+            if (target) { target.w = data.oldW; target.h = data.oldH }
+          },
+          redo: (data) => {
+            const target = images.value.find(i => i.id === data.imgId)
+            if (target) { target.w = data.newW; target.h = data.newH }
+          }
+        })
       }
     }
     
-    // 如果没有移动过，保持选中状态
-    if (!hasMoved.value) {
-      selectedImageId.value = draggedImageId.value
-    }
+    imageResize.endResize()
+    canvasState.endResize()
+    return
   }
   
-  isPanning.value = false
-  isDraggingImage.value = false
-  draggedImageId.value = null
-  dragOriginalIndex.value = null
-  currentHoverIndex.value = null
-  hasMoved.value = false
+  // 结束拖拽
+  if (canvasState.draggedId.value) {
+    const currentDraggedId = canvasState.draggedId.value
+    
+    if (canvasState.isDragging.value) {
+      // 记录排序前的状态
+      const oldIndices = images.value.map(img => ({ id: img.id, index: img.index }))
+      
+      dragSort.endDrag(currentDraggedId)
+      
+      // 记录排序后的状态
+      const newIndices = images.value.map(img => ({ id: img.id, index: img.index }))
+      
+      // 检查是否有变化
+      const hasChanged = oldIndices.some((old, i) => old.index !== newIndices[i].index)
+      
+      if (hasChanged) {
+        history.push({
+          type: 'reorder',
+          data: { oldIndices, newIndices },
+          undo: (data) => {
+            data.oldIndices.forEach(({ id, index }) => {
+              const img = images.value.find(i => i.id === id)
+              if (img) img.index = index
+            })
+          },
+          redo: (data) => {
+            data.newIndices.forEach(({ id, index }) => {
+              const img = images.value.find(i => i.id === id)
+              if (img) img.index = index
+            })
+          }
+        })
+      }
+    }
+    
+    const moved = canvasState.endDrag()
+    
+    // 如果没有移动过，保持选中状态（点击选中）
+    if (!moved) {
+      canvasState.select(currentDraggedId)
+    }
+    return
+  }
+  
+  // 结束平移
+  if (canvasState.isPanning.value) {
+    canvasState.endPan()
+  }
 }
 
-// 滚轮事件
-const handleWheel = (e) => {
+function handleWheel(e) {
   e.preventDefault()
+  const rect = containerRef.value.getBoundingClientRect()
+  
   if (e.metaKey || e.ctrlKey) {
-    const rect = containerRef.value.getBoundingClientRect()
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
-    const delta = -e.deltaY * 0.010
-    const oldScale = viewport.scale
-    let newScale = Math.max(0.01, Math.min(2, oldScale * (1 + delta)))
-    const scaleRatio = newScale / oldScale
-    viewport.x = mouseX - (mouseX - viewport.x) * scaleRatio
-    viewport.y = mouseY - (mouseY - viewport.y) * scaleRatio
-    viewport.scale = newScale
+    const newScale = viewport.zoomAt(e.clientX, e.clientY, e.deltaY, rect)
     emit('zoom-change', Math.round(newScale * 100))
   } else {
-    viewport.x -= e.deltaX
-    viewport.y -= e.deltaY
+    viewport.pan(e.deltaX, e.deltaY)
   }
 }
 
-// 键盘事件
-const handleKeyDown = (e) => {
-  if (e.code === 'Space' && !e.repeat) { e.preventDefault(); spacePressed.value = true }
-  if (e.code === 'Escape') { selectedImageId.value = null }
+function handleKeyDown(e) {
+  if (e.code === 'Space' && !e.repeat) {
+    e.preventDefault()
+    canvasState.setSpacePressed(true)
+  }
+  if (e.code === 'Escape') {
+    // 取消当前操作或取消选中
+    if (canvasState.isDragging.value || canvasState.isResizing.value) {
+      canvasState.cancel()
+    } else {
+      canvasState.deselect()
+    }
+  }
+  // Ctrl/Cmd + Z 撤销
+  if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ' && !e.shiftKey) {
+    e.preventDefault()
+    history.undo()
+  }
+  // Ctrl/Cmd + Shift + Z 或 Ctrl/Cmd + Y 重做
+  if ((e.metaKey || e.ctrlKey) && (e.code === 'KeyZ' && e.shiftKey || e.code === 'KeyY')) {
+    e.preventDefault()
+    history.redo()
+  }
 }
-const handleKeyUp = (e) => { if (e.code === 'Space') spacePressed.value = false }
-const handleContextMenu = (e) => { e.preventDefault() }
 
-const initCanvasPosition = () => {
+function handleKeyUp(e) {
+  if (e.code === 'Space') {
+    canvasState.setSpacePressed(false)
+  }
+}
+
+// ============ 触摸事件处理 ============
+function handleTouchStart(e) {
+  pointer.handleTouchStart(e, {
+    onPinchStart: () => {
+      // 双指缩放开始
+    },
+    onPointerDown: (x, y) => {
+      // 单指触摸 - 可能是平移或选择
+      if (!e.target.closest('.image-item')) {
+        canvasState.startPan()
+        viewport.startPan(x, y)
+      }
+    }
+  })
+}
+
+function handleTouchMove(e) {
+  pointer.handleTouchMove(e, {
+    onPinch: (centerX, centerY, scale, dx, dy) => {
+      // 双指缩放和平移
+      const rect = containerRef.value.getBoundingClientRect()
+      
+      // 应用缩放
+      const oldScale = viewport.viewport.scale
+      const newScale = Math.max(props.minZoom / 100, Math.min(props.maxZoom / 100, oldScale * scale))
+      
+      if (newScale !== oldScale) {
+        const mouseX = centerX - rect.left
+        const mouseY = centerY - rect.top
+        const scaleRatio = newScale / oldScale
+        
+        viewport.viewport.x = mouseX - (mouseX - viewport.viewport.x) * scaleRatio
+        viewport.viewport.y = mouseY - (mouseY - viewport.viewport.y) * scaleRatio
+        viewport.viewport.scale = newScale
+        
+        emit('zoom-change', Math.round(newScale * 100))
+      }
+      
+      // 应用平移
+      viewport.viewport.x += dx
+      viewport.viewport.y += dy
+    },
+    onPointerMove: (x, y) => {
+      if (canvasState.isPanning.value) {
+        viewport.updatePan(x, y)
+      }
+    }
+  })
+}
+
+function handleTouchEnd(e) {
+  pointer.handleTouchEnd(e, {
+    onPinchEnd: () => {
+      // 双指缩放结束
+    },
+    onPointerUp: () => {
+      if (canvasState.isPanning.value) {
+        canvasState.endPan()
+      }
+    }
+  })
+}
+
+function handleCanvasClick(e) {
+  // 如果点击的是图片，不取消选中
+  if (e.target.closest('.image-item')) return
+  if (!canvasState.isDragging.value) {
+    canvasState.deselect()
+  }
+}
+
+function handleImageDragStart(e, img) {
+  if (e.button !== 0) return
+  
+  canvasState.select(img.id)
+  dragSort.startDrag(img.id, e.clientX, e.clientY, viewport.viewport)
+  
+  // 先记录 draggedId，等移动超过阈值再真正进入拖拽状态
+  canvasState.prepareDrag(img.id)
+}
+
+function handleResizeStart(e, handle) {
+  if (e.button !== 0 || !selectedImage.value) return
+  e.stopPropagation()
+  
+  imageResize.startResize(canvasState.selectedId.value, e.clientX, e.clientY)
+  canvasState.startResize(handle)
+}
+
+// ============ 同步外部 zoom ============
+watch(() => props.zoom, (newZoom) => {
+  if (!containerRef.value) {
+    // 初始化时直接设置 scale
+    viewport.viewport.scale = newZoom / 100
+    return
+  }
+  const rect = containerRef.value.getBoundingClientRect()
+  viewport.setZoom(newZoom, rect)
+}, { immediate: true })
+
+// ============ 选中变化通知 ============
+watch(() => canvasState.selectedId.value, (newId) => {
+  emit('selection-change', newId ? selectedImage.value : null)
+})
+
+// ============ 生命周期 ============
+function initCanvasPosition() {
   if (containerRef.value) {
     const rect = containerRef.value.getBoundingClientRect()
-    viewport.x = (rect.width - frameWidth.value * viewport.scale) / 2
-    viewport.y = (rect.height - frameHeight.value * viewport.scale) / 2
+    // 确保 scale 已正确设置
+    viewport.viewport.scale = props.zoom / 100
+    viewport.centerContent(gridLayout.frameWidth.value, gridLayout.frameHeight.value, rect)
   }
 }
 
@@ -426,64 +536,72 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleKeyUp)
 })
+
+// 获取显示位置的辅助函数
+function getDisplayIndex(img) {
+  return dragSort.getDisplayIndex(img, canvasState.draggedId.value, canvasState.isDragging.value)
+}
 </script>
 
 <template>
   <div 
     ref="containerRef"
     class="canvas-container"
-    :class="{ panning: isPanning, 'space-pressed': spacePressed }"
+    :class="{ 
+      panning: canvasState.isPanning.value, 
+      'space-pressed': canvasState.spacePressed.value 
+    }"
     @mousedown="handleMouseDown"
     @wheel.prevent="handleWheel"
-    @contextmenu="handleContextMenu"
+    @contextmenu.prevent
     @click="handleCanvasClick"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
   >
     <div class="main-container">
-      <div class="canvas-layer" :style="canvasLayerStyle">
-        <div class="canvas-frame" :style="{ width: frameWidth + 'px', height: frameHeight + 'px' }">
-          <!-- 网格图片 -->
+      <div class="canvas-layer" :style="viewport.transformStyle.value">
+        <div 
+          class="canvas-frame" 
+          :style="{ 
+            width: gridLayout.frameWidth.value + 'px', 
+            height: gridLayout.frameHeight.value + 'px' 
+          }"
+        >
+          <!-- 网格图片 (虚拟化渲染) -->
           <div 
-            v-for="img in images"
+            v-for="img in visibleImages"
             :key="img.id"
             class="image-item"
-            :class="{ hidden: isDraggingImage && draggedImageId === img.id }"
+            :class="{ hidden: canvasState.isDragging.value && canvasState.draggedId.value === img.id }"
             :style="{ 
-              left: getGridPosition(getDisplayIndex(img)).x + 'px', 
-              top: getGridPosition(getDisplayIndex(img)).y + 'px', 
+              left: gridLayout.getGridPosition(getDisplayIndex(img)).x + 'px', 
+              top: gridLayout.getGridPosition(getDisplayIndex(img)).y + 'px', 
               width: img.w + 'px', 
               height: img.h + 'px',
-              transition: isDraggingImage ? 'left 0.2s ease, top 0.2s ease' : 'none',
+              transition: canvasState.isDragging.value ? 'left 0.2s ease, top 0.2s ease' : 'none',
               visibility: getDisplayIndex(img) === -1 ? 'hidden' : 'visible'
             }"
-            @click="handleImageClick($event, img)"
-            @mousedown="handleImageDragStart($event, img)"
+            @mousedown.stop="handleImageDragStart($event, img)"
           >
-            <img :src="img.src" crossorigin="anonymous" loading="lazy" />
+            <img :src="img.src" crossorigin="anonymous" loading="lazy" draggable="false" />
             <div class="ai-tag">AI生成</div>
-          </div>
-          
-          <div v-if="images.length === 0" class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" class="empty-icon">
-              <path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" opacity="0.3"/>
-              <path d="M11 8a1 1 0 0 1 2 0v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 1 1 0-2h3V8Z" fill="currentColor"/>
-            </svg>
-            <p class="empty-text">在下方输入提示词开始创作</p>
           </div>
         </div>
       </div>
     </div>
     
     <!-- 拖拽中的图片 -->
-    <div v-if="isDraggingImage && draggingImage" class="dragging-image" :style="draggingImageStyle">
-      <img :src="draggingImage.src" crossorigin="anonymous" />
+    <div v-if="canvasState.isDragging.value && draggingImage" class="dragging-image" :style="draggingImageStyle">
+      <img :src="draggingImage.src" crossorigin="anonymous" draggable="false" />
       <div class="corner-handle top-left"></div>
       <div class="corner-handle top-right"></div>
       <div class="corner-handle bottom-left"></div>
       <div class="corner-handle bottom-right"></div>
     </div>
     
-    <!-- 选中框覆盖层（屏幕坐标系） -->
-    <div v-if="selectedImage && !isDraggingImage" class="selection-overlay" :style="selectionOverlayStyle">
+    <!-- 选中框覆盖层 -->
+    <div v-if="selectedImage && !canvasState.isDragging.value" class="selection-overlay" :style="selectionOverlayStyle">
       <div class="selection-border"></div>
       <div class="corner-handle top-left" @mousedown="handleResizeStart($event, 'top-left')"></div>
       <div class="corner-handle top-right" @mousedown="handleResizeStart($event, 'top-right')"></div>
@@ -492,17 +610,32 @@ onUnmounted(() => {
     </div>
     
     <!-- 浮动工具栏 -->
-    <div v-if="selectedImage && !isDraggingImage" class="floating-toolbar" :style="floatingToolbarStyle" @click.stop>
-      <button class="toolbar-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>重新编辑</span></button>
-      <button class="toolbar-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4V2.5a.5.5 0 0 1 .854-.354l2.646 2.647a.5.5 0 0 1 0 .707L12.854 8.146A.5.5 0 0 1 12 7.793V6a6 6 0 1 0 6 6 1 1 0 1 1 2 0 8 8 0 1 1-8-8Z" fill="currentColor"/></svg><span>再次生成</span></button>
-      <button class="toolbar-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17.67 16.55a1 1 0 0 1 1.414 0l2.121 2.12a1.007 1.007 0 0 1 0 1.415l-2.121 2.122a1 1 0 0 1-1.414-1.415l.414-.414h-4.211a1 1 0 0 1 0-2h4.211l-.414-.414a1 1 0 0 1 0-1.414Z" fill="currentColor"/><path d="M16.39 2.607a5 5 0 0 1 5 5v8.421l-.892-.891a2.985 2.985 0 0 0-1.108-.7v-6.83a3 3 0 0 0-3-3H7.604a3 3 0 0 0-3 3v8.786c0 .188.02.372.052.55.143-.418.381-.813.719-1.151l2.797-2.797a3 3 0 0 1 4.092-.14l3.13 2.726c.113.1.215.206.31.314-.08.156-.145.319-.195.484h-1.636a3 3 0 0 0-3 3c0 .776.298 1.481.781 2.014h-4.05l-.256-.007a5 5 0 0 1-4.737-4.737l-.007-.256V7.607a5 5 0 0 1 5-5h8.786Z" fill="currentColor"/></svg><span>添加到对话</span></button>
+    <div v-if="selectedImage && !canvasState.isDragging.value" class="floating-toolbar" :style="floatingToolbarStyle" @click.stop>
+      <button class="toolbar-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        <span>重新编辑</span>
+      </button>
+      <button class="toolbar-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4V2.5a.5.5 0 0 1 .854-.354l2.646 2.647a.5.5 0 0 1 0 .707L12.854 8.146A.5.5 0 0 1 12 7.793V6a6 6 0 1 0 6 6 1 1 0 1 1 2 0 8 8 0 1 1-8-8Z" fill="currentColor"/></svg>
+        <span>再次生成</span>
+      </button>
+      <button class="toolbar-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17.67 16.55a1 1 0 0 1 1.414 0l2.121 2.12a1.007 1.007 0 0 1 0 1.415l-2.121 2.122a1 1 0 0 1-1.414-1.415l.414-.414h-4.211a1 1 0 0 1 0-2h4.211l-.414-.414a1 1 0 0 1 0-1.414Z" fill="currentColor"/><path d="M16.39 2.607a5 5 0 0 1 5 5v8.421l-.892-.891a2.985 2.985 0 0 0-1.108-.7v-6.83a3 3 0 0 0-3-3H7.604a3 3 0 0 0-3 3v8.786c0 .188.02.372.052.55.143-.418.381-.813.719-1.151l2.797-2.797a3 3 0 0 1 4.092-.14l3.13 2.726c.113.1.215.206.31.314-.08.156-.145.319-.195.484h-1.636a3 3 0 0 0-3 3c0 .776.298 1.481.781 2.014h-4.05l-.256-.007a5 5 0 0 1-4.737-4.737l-.007-.256V7.607a5 5 0 0 1 5-5h8.786Z" fill="currentColor"/></svg>
+        <span>添加到对话</span>
+      </button>
       <div class="toolbar-divider"></div>
-      <button class="toolbar-icon-btn" title="详情"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9-3a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm0 4a1 1 0 0 1 2 0v4a1 1 0 1 1-2 0v-4Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/></svg></button>
-      <button class="toolbar-icon-btn" title="下载"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2a1 1 0 0 1 1 1v10.586l2.293-2.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L11 13.586V3a1 1 0 0 1 1-1ZM5 17a1 1 0 0 1 1 1v2h12v-2a1 1 0 1 1 2 0v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a1 1 0 0 1 1-1Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/></svg></button>
+      <button class="toolbar-icon-btn" title="详情">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9-3a1 1 0 1 1 2 0 1 1 0 0 1-2 0Zm0 4a1 1 0 0 1 2 0v4a1 1 0 1 1-2 0v-4Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+      </button>
+      <button class="toolbar-icon-btn" title="下载">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2a1 1 0 0 1 1 1v10.586l2.293-2.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L11 13.586V3a1 1 0 0 1 1-1ZM5 17a1 1 0 0 1 1 1v2h12v-2a1 1 0 1 1 2 0v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a1 1 0 0 1 1-1Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+      </button>
     </div>
     
     <!-- 尺寸标签 -->
-    <div v-if="selectedImage" class="size-label" :style="sizeLabelStyle">{{ selectedImage.w }} × {{ selectedImage.h }}</div>
+    <div v-if="selectedImage" class="size-label" :style="sizeLabelStyle">
+      {{ selectedImage.w }} × {{ selectedImage.h }}
+    </div>
   </div>
 </template>
 
@@ -516,6 +649,7 @@ onUnmounted(() => {
   z-index: 1;
   background-color: var(--canvas-bg);
   cursor: default;
+  touch-action: none;
 }
 .canvas-container.space-pressed { cursor: grab; }
 .canvas-container.panning { cursor: grabbing; }
@@ -538,7 +672,7 @@ onUnmounted(() => {
   position: relative;
   box-sizing: border-box;
   background-color: var(--canvas-frame);
-  outline: rgba(204, 221, 255, 0.12) solid 4px;
+  outline: var(--stroke-secondary) solid 4px;
   outline-offset: -4px;
   border-radius: 16px;
   overflow: visible;
@@ -564,7 +698,6 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-/* 选中框覆盖层 */
 .selection-overlay {
   position: absolute;
   pointer-events: none;
@@ -621,18 +754,6 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-.empty-state {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.empty-icon { color: var(--text-tertiary); }
-.empty-text { color: var(--text-tertiary); font-size: 14px; white-space: nowrap; }
-
 .floating-toolbar {
   position: absolute;
   z-index: 100001;
@@ -662,7 +783,7 @@ onUnmounted(() => {
   transition: all 0.2s;
   white-space: nowrap;
 }
-.toolbar-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.toolbar-btn:hover { background: var(--menu-item-hover); }
 .toolbar-btn svg { flex-shrink: 0; }
 
 .toolbar-divider {
@@ -683,7 +804,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
 }
-.toolbar-icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.toolbar-icon-btn:hover { background: var(--menu-item-hover); }
 
 .size-label {
   position: absolute;

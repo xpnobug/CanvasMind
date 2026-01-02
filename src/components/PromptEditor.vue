@@ -25,14 +25,16 @@ const selectMode = (modeId) => {
   showModeMenu.value = false
 }
 
-const toggleModeMenu = () => {
+const toggleModeMenu = (e) => {
+  e.stopPropagation()
   showModeMenu.value = !showModeMenu.value
 }
 
 const closeModeMenu = (e) => {
-  if (showModeMenu.value && modeMenuRef.value && !modeMenuRef.value.contains(e.target)) {
-    showModeMenu.value = false
-  }
+  if (!showModeMenu.value) return
+  // 检查点击是否在菜单容器内（包括触发器和下拉菜单）
+  if (modeMenuRef.value && modeMenuRef.value.contains(e.target)) return
+  showModeMenu.value = false
 }
 
 const currentMode = () => modeOptions.find(m => m.id === selectedMode.value)
@@ -74,12 +76,12 @@ const expandEditor = () => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  document.addEventListener('mousedown', closeModeMenu)
+  document.addEventListener('click', closeModeMenu)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('mousedown', closeModeMenu)
+  document.removeEventListener('click', closeModeMenu)
 })
 </script>
 
@@ -158,7 +160,7 @@ onUnmounted(() => {
                     :key="mode.id"
                     class="mode-option"
                     :class="{ selected: selectedMode === mode.id }"
-                    @click.stop="selectMode(mode.id)"
+                    @mousedown.prevent="selectMode(mode.id)"
                   >
                     <span class="mode-option-icon">
                       <svg v-if="mode.icon === 'agent'" width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -246,7 +248,13 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* CSS 变量 */
 .content-generator {
+  --content-generator-collapse-transition-duration: 0.35s;
+  --content-generator-collapse-transition-timing-function: cubic-bezier(0.15, 0.75, 0.3, 1);
+  --content-generator-max-width: 840px;
+  --content-generator-min-width: 440px;
+  
   position: absolute;
   bottom: 12px;
   left: 50%;
@@ -254,27 +262,56 @@ onUnmounted(() => {
   z-index: 1000000;
   pointer-events: auto;
   box-sizing: border-box;
-  /* 展开状态宽度 */
   width: 100%;
-  max-width: 680px;
-  padding: 0 12px;
-  transition: max-width 0.35s cubic-bezier(0.15, 0.75, 0.3, 1);
+  max-width: clamp(
+    var(--content-generator-min-width),
+    100% - 376px,
+    var(--content-generator-max-width)
+  );
+  min-width: var(--content-generator-min-width);
+  transition: max-width var(--content-generator-collapse-transition-duration)
+    var(--content-generator-collapse-transition-timing-function);
+  will-change: max-width;
 }
 
-/* 折叠状态 - 更窄的胶囊 */
+/* 响应式宽度 */
+@media screen and (max-width: 1920px) {
+  .content-generator:not(.collapsed) {
+    --content-generator-max-width: 720px;
+  }
+}
+
+@media screen and (max-width: 1280px) {
+  .content-generator:not(.collapsed) {
+    --content-generator-max-width: 680px;
+  }
+}
+
+/* 折叠状态 */
 .content-generator.collapsed {
-  max-width: 480px;
+  --content-generator-max-width: var(--content-generator-min-width);
 }
 
 .layout {
-  -webkit-backdrop-filter: blur(var(--canvas-float-backdrop-blur));
-  backdrop-filter: blur(var(--canvas-float-backdrop-blur));
-  background: var(--canvas-float-block-default);
-  border: 1px solid var(--stroke-secondary);
-  border-radius: 16px;
-  box-shadow: var(--shadow-generator-float-block);
+  -webkit-backdrop-filter: blur(80px);
+  backdrop-filter: blur(80px);
+  background: var(--component-input-bg, var(--canvas-float-block-default));
+  border: 1px solid var(--component-input-stroke, var(--stroke-secondary));
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  outline: 0.5px solid var(--stroke-tertiary);
+  /* 移除 overflow: hidden，允许下拉菜单超出容器显示 */
   overflow: visible;
-  transition: border-radius 0.35s cubic-bezier(0.15, 0.75, 0.3, 1);
+  width: 100%;
+  z-index: 2;
+  transition: border-radius var(--content-generator-collapse-transition-duration)
+    var(--content-generator-collapse-transition-timing-function),
+    box-shadow 0.2s ease;
+}
+
+.layout:hover {
+  box-shadow: var(--shadow-input-hover, 0 4px 16px rgba(0, 0, 0, 0.12));
 }
 
 /* 折叠状态 - 胶囊形状 */
@@ -328,6 +365,10 @@ onUnmounted(() => {
 /* 折叠状态的提交按钮容器 */
 .collapsed-submit-button-container {
   flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  transition: transform var(--content-generator-collapse-transition-duration)
+    var(--content-generator-collapse-transition-timing-function);
 }
 
 /* 提交按钮 */
@@ -342,11 +383,15 @@ onUnmounted(() => {
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .submit-button:hover:not(.disabled) {
   background: var(--brand-main-hover);
+}
+
+.submit-button:active:not(.disabled) {
+  transform: scale(0.95);
 }
 
 .submit-button.disabled {
@@ -355,19 +400,39 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
+/* 折叠状态的提交按钮 */
+.collapsed-submit-button {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
 /* 工具栏 */
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-top: 1px solid var(--stroke-tertiary);
+  /* 去掉分隔横线 */
+  border-top: none;
   gap: 8px;
+  opacity: 1;
+  max-height: 60px;
+  transition: opacity var(--content-generator-collapse-transition-duration)
+      var(--content-generator-collapse-transition-timing-function),
+    max-height var(--content-generator-collapse-transition-duration)
+      var(--content-generator-collapse-transition-timing-function),
+    padding var(--content-generator-collapse-transition-duration)
+      var(--content-generator-collapse-transition-timing-function);
+  will-change: opacity, max-height;
+  /* 移除 overflow: hidden，允许下拉菜单显示 */
+  overflow: visible;
 }
 
 .toolbar-settings {
   flex: 1;
-  overflow: hidden;
+  /* 移除 overflow: hidden，确保下拉菜单不被裁剪 */
+  overflow: visible;
 }
 
 .toolbar-settings-content {
@@ -434,6 +499,8 @@ onUnmounted(() => {
   border-radius: 12px;
   box-shadow: var(--menu-shadow);
   z-index: 1001;
+  -webkit-backdrop-filter: blur(60px);
+  backdrop-filter: blur(60px);
 }
 
 .mode-dropdown-header {

@@ -155,6 +155,18 @@
     top: 0;
 }
 
+.top-toolbar-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: var(--canvas-float-block-default);
+    backdrop-filter: blur(var(--canvas-float-backdrop-blur));
+    border: 0.5px solid var(--stroke-tertiary);
+    border-radius: 10px;
+    box-shadow: var(--shadow-generator-float-block);
+}
+
 .bottom-toolbar-PE8gbm {
     bottom: 0;
     left: 0;
@@ -316,6 +328,41 @@
 .reference-upload-h7tmnr .icon-TrJRuq {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
+}
+
+
+.top-tool-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.top-tool-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.top-tool-btn.has-dropdown {
+    gap: 4px;
+}
+
+.top-tool-btn .dropdown-icon {
+    margin-left: 2px;
+}
+
+.bottom-toolbar {
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 /* 动画 */

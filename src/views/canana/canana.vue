@@ -287,5 +287,6 @@ const handlePromptSend = (message) => {
 /* 导入提取的样式 */
 @import './styles/index.css';
 @import './styles/empty-state.css';
+@import './styles/canvas.css';
 
 </style>

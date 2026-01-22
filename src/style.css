@@ -1,5 +1,8 @@
-@import './styles/variables.css';
+/* 导入样式系统 */
 @import './styles/reset.css';
+@import './styles/variables.css';
+@import './styles/dreamina-variables.css';
+@import './styles/dreamina-utilities.css';
 
 /* 全局主题变量 - 深色模式（默认） */
 :root {

@@ -1,0 +1,263 @@
+/**
+ * 完整样式变量系统
+ * 提供完整的设计系统变量，支持深色/浅色主题
+ */
+
+:root {
+  /* ==================== 字体系统 ==================== */
+  --font-family: CapCut Sans, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif;
+  --alphanumeric-font-family: Montserrat, var(--font-family);
+
+  /* ==================== 画布系统 ==================== */
+  --canvas-float-backdrop-blur: 80px;
+  --canvas-sidebar-bg-rgb: 15, 15, 18;
+
+  /* ==================== 背景色系统 ==================== */
+  /* 基础背景 */
+  --bg-black: #000;
+  --bg-body: #0f0f12;
+  --bg-commerce-popup: #09080b;
+  --bg-dropdown-menu: #1c1e22;
+  --bg-float: #22252a;
+  --bg-surface: #15161a;
+
+  /* 遮罩背景 */
+  --bg-mask-30: rgba(0, 0, 0, 0.3);
+  --bg-mask-60: rgba(0, 0, 0, 0.6);
+  --bg-mask-80: rgba(0, 0, 0, 0.8);
+
+  /* 媒体上的按钮背景 */
+  --onmask-button-bg-default: rgba(32, 33, 39, 0.718);
+  --onmask-button-bg-hover: rgba(38, 39, 45, 0.718);
+  --onmask-button-bg-pressed: rgba(28, 29, 35, 0.718);
+
+  /* 块级元素背景 - 主要 */
+  --bg-block-primary-default: rgba(204, 221, 255, 0.08);
+  --bg-block-primary-hover: rgba(204, 221, 255, 0.12);
+  --bg-block-primary-pressed: rgba(204, 221, 255, 0.16);
+
+  /* 块级元素背景 - 次要 */
+  --bg-block-secondary-default: rgba(204, 221, 255, 0.04);
+  --bg-block-secondary-hover: rgba(204, 221, 255, 0.08);
+  --bg-block-secondary-pressed: rgba(204, 221, 255, 0.12);
+
+  /* 品牌色块级背景 */
+  --brand-main-block-default: rgba(0, 202, 224, 0.12);
+  --brand-main-block-hover: rgba(0, 202, 224, 0.16);
+  --brand-main-block-pressed: rgba(0, 202, 224, 0.24);
+
+  /* 画布浮动块背景（毛玻璃效果） */
+  --canvas-float-block-default: rgba(32, 33, 39, 0.72);
+
+  /* ==================== 文本颜色系统 ==================== */
+  /* 普通文本 */
+  --text-primary: rgba(235, 248, 255, 0.92);
+  --text-secondary: rgba(235, 248, 255, 0.6);
+  --text-tertiary: rgba(235, 248, 255, 0.36);
+  --text-quaternary: rgba(235, 248, 255, 0.24);
+  --text-disabled: rgba(235, 248, 255, 0.2);
+  --text-placeholder: rgba(235, 248, 255, 0.36);
+
+  /* 媒体上的文本（图片/视频上） */
+  --onmedia-text-primary: #f5fbff;
+  --onmedia-text-secondary: rgba(245, 251, 255, 0.6);
+
+  /* 反色文本 */
+  --inverse-text-primary: rgba(0, 0, 0, 0.88);
+  --inverse-text-secondary: rgba(0, 0, 0, 0.6);
+  --inverse-text-tertiary: rgba(0, 0, 0, 0.2);
+
+  /* ==================== 品牌色系统 ==================== */
+  --brand-main-default: #00cae0;
+  --brand-main-hover: #33d9ea;
+  --brand-main-pressed: #00b8cc;
+  --brand-main-disabled: rgba(0, 202, 224, 0.4);
+
+  /* 品牌色渐变 */
+  --brand-main-006: rgba(38, 248, 248, 0.06);
+  --brand-main-02: rgba(38, 248, 248, 0.2);
+
+  /* ==================== 边框/描边系统 ==================== */
+  --stroke-primary: rgba(235, 248, 255, 0.16);
+  --stroke-secondary: rgba(235, 248, 255, 0.12);
+  --stroke-tertiary: rgba(235, 248, 255, 0.08);
+  --stroke-focus: #00cae0;
+  --stroke-error: #ff6b6b;
+
+  /* ==================== 组件专用色 ==================== */
+  /* 主按钮 */
+  --component-primary-button-bg-default: var(--brand-main-default);
+  --component-primary-button-bg-hover: var(--brand-main-hover);
+  --component-primary-button-bg-pressed: var(--brand-main-pressed);
+  --component-primary-button-bg-disabled: var(--brand-main-disabled);
+  --component-primary-button-text-default: #000;
+  --component-primary-button-text-disabled: rgba(0, 0, 0, 0.4);
+
+  /* 次要按钮 */
+  --component-secondary-button-bg-default: transparent;
+  --component-secondary-button-bg-hover: var(--bg-block-secondary-hover);
+  --component-secondary-button-bg-pressed: var(--bg-block-secondary-pressed);
+  --component-secondary-button-text-default: var(--text-primary);
+
+  /* 文本按钮 */
+  --component-secondary-text-button-default: var(--text-secondary);
+  --component-secondary-text-button-hover: rgba(224, 245, 255, 0.8);
+  --component-secondary-text-button-pressed: var(--text-primary);
+
+  /* Tooltip */
+  --component-tooltips-bg: rgba(32, 33, 39, 0.95);
+  --component-tooltips-text: var(--text-primary);
+
+  /* ==================== 阴影系统 ==================== */
+  --shadow-dropdown-menu: 0 8px 56px 0 rgba(0, 0, 0, 0.24);
+  --shadow-generator-float-block:
+    0 4px 8px 0 rgba(0, 0, 0, 0.03),
+    0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  --shadow-popup: 0 16px 48px 0 rgba(0, 0, 0, 0.32);
+  --shadow-card: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+
+  /* ==================== 布局系统 ==================== */
+  --content-generator-min-width: 300px;
+  --content-generator-max-width: 800px;
+
+  /* ==================== 状态色 ==================== */
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-error: #ff6b6b;
+  --color-info: #00cae0;
+
+  /* ==================== 功能色 ==================== */
+  --color-link: var(--brand-main-default);
+  --color-link-hover: var(--brand-main-hover);
+  --color-link-active: var(--brand-main-pressed);
+
+  /* ==================== 动画缓动 ==================== */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ==================== 动画时长 ==================== */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  /* ==================== Z-index 层级 ==================== */
+  --z-index-dropdown: 1000;
+  --z-index-modal: 2000;
+  --z-index-notification: 3000;
+  --z-index-tooltip: 4000;
+}
+
+/* ==================== 浅色主题 ==================== */
+:root[data-theme="light"] {
+  /* 画布系统 */
+  --canvas-sidebar-bg-rgb: 255, 255, 255;
+
+  /* 背景色系统 */
+  --bg-black: #fff;
+  --bg-body: #f5f5f7;
+  --bg-commerce-popup: #ffffff;
+  --bg-dropdown-menu: #ffffff;
+  --bg-float: #ffffff;
+  --bg-surface: #ffffff;
+
+  /* 遮罩背景 */
+  --bg-mask-30: rgba(0, 0, 0, 0.2);
+  --bg-mask-60: rgba(0, 0, 0, 0.4);
+  --bg-mask-80: rgba(0, 0, 0, 0.6);
+
+  /* 媒体上的按钮背景 */
+  --onmask-button-bg-default: rgba(255, 255, 255, 0.8);
+  --onmask-button-bg-hover: rgba(255, 255, 255, 0.9);
+  --onmask-button-bg-pressed: rgba(255, 255, 255, 0.7);
+
+  /* 块级元素背景 - 主要 */
+  --bg-block-primary-default: rgba(0, 0, 0, 0.04);
+  --bg-block-primary-hover: rgba(0, 0, 0, 0.08);
+  --bg-block-primary-pressed: rgba(0, 0, 0, 0.12);
+
+  /* 块级元素背景 - 次要 */
+  --bg-block-secondary-default: rgba(0, 0, 0, 0.02);
+  --bg-block-secondary-hover: rgba(0, 0, 0, 0.04);
+  --bg-block-secondary-pressed: rgba(0, 0, 0, 0.08);
+
+  /* 品牌色块级背景 */
+  --brand-main-block-default: rgba(0, 165, 184, 0.1);
+  --brand-main-block-hover: rgba(0, 165, 184, 0.15);
+  --brand-main-block-pressed: rgba(0, 165, 184, 0.2);
+
+  /* 画布浮动块背景 */
+  --canvas-float-block-default: rgba(255, 255, 255, 0.9);
+
+  /* 文本颜色系统 */
+  --text-primary: rgba(0, 0, 0, 0.88);
+  --text-secondary: rgba(0, 0, 0, 0.65);
+  --text-tertiary: rgba(0, 0, 0, 0.45);
+  --text-quaternary: rgba(0, 0, 0, 0.25);
+  --text-disabled: rgba(0, 0, 0, 0.15);
+  --text-placeholder: rgba(0, 0, 0, 0.25);
+
+  /* 媒体上的文本 */
+  --onmedia-text-primary: #1a1a1a;
+  --onmedia-text-secondary: rgba(26, 26, 26, 0.6);
+
+  /* 反色文本 */
+  --inverse-text-primary: rgba(255, 255, 255, 0.92);
+  --inverse-text-secondary: rgba(255, 255, 255, 0.6);
+  --inverse-text-tertiary: rgba(255, 255, 255, 0.2);
+
+  /* 品牌色系统 */
+  --brand-main-default: #00a5b8;
+  --brand-main-hover: #33bac9;
+  --brand-main-pressed: #0095a5;
+  --brand-main-disabled: rgba(0, 165, 184, 0.4);
+
+  /* 边框/描边系统 */
+  --stroke-primary: rgba(0, 0, 0, 0.12);
+  --stroke-secondary: rgba(0, 0, 0, 0.08);
+  --stroke-tertiary: rgba(0, 0, 0, 0.06);
+  --stroke-focus: #00a5b8;
+
+  /* 组件专用色 */
+  --component-primary-button-text-default: #fff;
+  --component-primary-button-text-disabled: rgba(255, 255, 255, 0.6);
+
+  --component-secondary-text-button-default: var(--text-secondary);
+  --component-secondary-text-button-hover: var(--text-primary);
+
+  --component-tooltips-bg: rgba(255, 255, 255, 0.98);
+
+  /* 阴影系统 */
+  --shadow-dropdown-menu: 0 8px 56px 0 rgba(0, 0, 0, 0.12);
+  --shadow-generator-float-block:
+    0 4px 16px 0 rgba(0, 0, 0, 0.1),
+    0 2px 6px 0 rgba(0, 0, 0, 0.06);
+  --shadow-popup: 0 16px 48px 0 rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* ==================== 滚动条样式 ==================== */
+.dreamina-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--inverse-text-tertiary, rgba(255, 255, 255, 0.2)) transparent;
+}
+
+.dreamina-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dreamina-scrollbar::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.dreamina-scrollbar::-webkit-scrollbar-thumb {
+  background-clip: content-box;
+  background-color: var(--inverse-text-tertiary, rgba(255, 255, 255, 0.2));
+  border-radius: 4px;
+  transition: background-color 0.3s var(--ease-standard);
+}
+
+.dreamina-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--inverse-text-secondary, rgba(255, 255, 255, 0.6));
+}

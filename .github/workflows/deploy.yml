@@ -24,7 +24,7 @@ jobs:
           cache: 'npm'
 
       - name: 安装依赖
-        run: npm ci
+        run: npm install
 
       - name: 构建项目
         run: npm run build

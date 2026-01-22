@@ -1,0 +1,185 @@
+/* 提示词编辑器样式 */
+
+/* 主容器 */
+.prompt-editor-container-A68zI7 {
+    overflow: hidden;
+    position: relative;
+}
+
+.prompt-editor-2haS5B .tiptap p[data-placeholder]:after {
+    color: var(--text-placeholder);
+    content: attr(data-placeholder);
+    pointer-events: none;
+}
+
+/* 编辑器和尺寸计算器 */
+.prompt-editor-E3Iuyy .tiptap,
+.prompt-editor-sizer-HGYBfr .tiptap {
+    background-color: transparent;
+    box-sizing: border-box;
+    caret-color: var(--brand-main-default);
+    color: var(--text-primary);
+    line-height: var(--content-generator-prompt-control-line-height);
+    overflow-wrap: break-word;
+    overflow-y: scroll;
+    padding-right: 4px;
+    scrollbar-width: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.prompt-editor-E3Iuyy .tiptap:hover,
+.prompt-editor-sizer-HGYBfr .tiptap:hover {
+    --scrollbar-background-color: var(--bg-block-primary-pressed);
+}
+
+.prompt-editor-E3Iuyy .tiptap:hover::-webkit-scrollbar-thumb,
+.prompt-editor-sizer-HGYBfr .tiptap:hover::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-background-color);
+}
+
+.prompt-editor-E3Iuyy .tiptap::-webkit-scrollbar,
+.prompt-editor-sizer-HGYBfr .tiptap::-webkit-scrollbar {
+    width: 4px;
+}
+
+.prompt-editor-E3Iuyy .tiptap::-webkit-scrollbar-thumb,
+.prompt-editor-E3Iuyy .tiptap::-webkit-scrollbar-track,
+.prompt-editor-sizer-HGYBfr .tiptap::-webkit-scrollbar-thumb,
+.prompt-editor-sizer-HGYBfr .tiptap::-webkit-scrollbar-track {
+    cursor: default;
+}
+
+.prompt-editor-E3Iuyy .tiptap::-webkit-input-placeholder,
+.prompt-editor-sizer-HGYBfr .tiptap::-webkit-input-placeholder {
+    color: var(--text-placeholder);
+    -webkit-text-fill-color: var(--text-placeholder);
+}
+
+.prompt-editor-E3Iuyy .tiptap::-ms-input-placeholder,
+.prompt-editor-sizer-HGYBfr .tiptap::-ms-input-placeholder {
+    color: var(--text-placeholder);
+    -webkit-text-fill-color: var(--text-placeholder);
+}
+
+.prompt-editor-E3Iuyy .tiptap::placeholder,
+.prompt-editor-sizer-HGYBfr .tiptap::placeholder {
+    color: var(--text-placeholder);
+    -webkit-text-fill-color: var(--text-placeholder);
+}
+
+/* Firefox 滚动条 */
+@-moz-document url-prefix() {
+    .prompt-editor-E3Iuyy .tiptap,
+    .prompt-editor-sizer-HGYBfr .tiptap {
+        scrollbar-color: var(--scrollbar-background-color) transparent;
+        scrollbar-width: thin;
+    }
+}
+
+.prompt-editor-E3Iuyy .tiptap p,
+.prompt-editor-sizer-HGYBfr .tiptap p {
+    margin: 0;
+}
+
+/* 尺寸计算器 */
+.prompt-editor-sizer-HGYBfr {
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility: hidden;
+    width: 100%;
+}
+
+/* 编辑器高度动画 */
+.prompt-editor-E3Iuyy .tiptap {
+    height: var(--content-generator-prompt-control-height);
+    transition: height var(--content-generator-collapse-transition-duration) var(--content-generator-collapse-transition-timing-function),
+                padding-top var(--content-generator-collapse-transition-duration) var(--content-generator-collapse-transition-timing-function);
+    will-change: height, padding-top;
+}
+
+/* 工具栏按钮 */
+.toolbar-button-FhFnQ_.lv-btn.lv-btn-secondary {
+    font-weight: 450;
+}
+
+.toolbar-button-FhFnQ_.lv-btn.lv-btn-secondary:not(.lv-btn-disabled) {
+    background: transparent;
+}
+
+.toolbar-button-FhFnQ_.lv-btn.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading-wsVy2o) {
+    border: 1px solid var(--stroke-secondary);
+}
+
+.toolbar-button-FhFnQ_.lv-btn.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading-wsVy2o):focus-visible,
+.toolbar-button-FhFnQ_.lv-btn.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading-wsVy2o):hover {
+    background: var(--bg-block-secondary-hover);
+}
+
+.toolbar-button-FhFnQ_.lv-btn.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading-wsVy2o):active {
+    background: var(--bg-block-secondary-pressed);
+}
+
+/* 主内容区 */
+.main-content-MTw5sD {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 动画 */
+@keyframes enable-display-none-lZ3iQV {
+    0% {
+        display: block;
+    }
+    to {
+        display: none;
+    }
+}
+
+@keyframes card-enter-k9xbOQ {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-30deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(-8deg);
+    }
+}
+
+@keyframes card-exit-B0iiwK {
+    0% {
+        opacity: 1;
+        top: -164px;
+        transform: scale(1) rotate(-8deg);
+    }
+    to {
+        opacity: 0;
+        top: -20px;
+        transform: scale(0.3) rotate(22deg);
+    }
+}
+
+@keyframes scale-pulse-A_l_66 {
+    0%, to {
+        transform: rotate(-8deg) scale(1);
+    }
+    50% {
+        transform: rotate(-8deg) scale(1.1);
+    }
+}
+
+/* Tooltip 滚动条 */
+@-moz-document url-prefix() {
+    .tooltip-esIQzT .lv-tooltip-content-inner {
+        scrollbar-color: var(--bg-block-primary-pressed) transparent;
+        scrollbar-width: thin;
+    }
+}
+
+/* 类型选择器 */
+.type-select-BRd1AA.lv-select .lv-select-view {
+    color: var(--brand-main-default) !important;
+}

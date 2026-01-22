@@ -1,0 +1,36 @@
+/* 画布页面样式总入口 */
+
+/* 导入画布核心样式 */
+@import './canvas.css';
+
+/* 导入提示词编辑器样式 */
+@import './prompt-editor.css';
+
+/* 通用样式 */
+.image-editor-container-QrfPhz {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 隐藏类 */
+.sf-hidden {
+    display: none !important;
+}
+
+.hidden-FI_sis {
+    display: none;
+}
+
+/* 通用动画 */
+@keyframes lv-form-blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.2;
+    }
+    to {
+        opacity: 1;
+    }
+}

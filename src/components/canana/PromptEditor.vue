@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ImageModelSelector, RatioSelector, ModeSelector } from './prompt-editor'
+import { ImageModelSelector, RatioSelector, ModeSelector } from '../prompt-editor/index.js'
 
 const emit = defineEmits(['send'])
 

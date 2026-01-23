@@ -105,24 +105,19 @@
 } 
 
 .image-s9z .row-zep .image-qvw  { 
-    display: flex; 
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
     height: 100%; 
     margin: 0 auto; 
-    width: min(2028px,100%);
+    width: 100%;
 } 
 
 .image-bqm { 
     box-sizing: border-box; 
-    flex: 0 0 auto;
-    margin-bottom: 2px; 
-    margin-right: 2px; 
     position: relative;
-    width: 163px;
-    height: 163px;
-} 
-
-.image-bqm:last-child { 
-    margin-right: 0;
+    width: 100%;
+    aspect-ratio: 1 / 1;
 } 
 
 .container-pm3 { 

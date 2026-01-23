@@ -55,7 +55,7 @@
       </div>
 
       <!-- 资产 -->
-      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="Asset">
+      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="Asset" @click="navigateTo('/asset')">
         <div class="icon-container-XAovJs" style="--menu-icon-size:48px">
           <div class="content-XAjJup">
             <div class="icon-menu-m2Y0RB">
@@ -100,6 +100,56 @@
               </div>
             </div>
             <div class="lv-typography text-HLQFZY">画布</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 账号管理 -->
+      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="AccountManagement" @click="navigateTo('/account')">
+        <div class="icon-container-XAovJs" style="--menu-icon-size:48px">
+          <div class="content-XAjJup">
+            <div class="icon-menu-m2Y0RB">
+              <div class="icon-wrap-tBuhBU hide-itzP3D sf-hidden">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10ZM4 18a8 8 0 1 1 16 0 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" fill="currentColor"></path>
+                  </g>
+                </svg>
+              </div>
+              <div class="icon-wrap-tBuhBU">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" d="M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM7 7a5 5 0 1 1 10 0A5 5 0 0 1 7 7Zm-1 11a6 6 0 0 1 12 0v.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 18.5V18Zm6-8a8 8 0 0 0-8 8v.5A3.5 3.5 0 0 0 7.5 22h9a3.5 3.5 0 0 0 3.5-3.5V18a8 8 0 0 0-8-8Z" clip-rule="evenodd" fill-rule="evenodd" fill="currentColor"></path>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="lv-typography text-HLQFZY">账号</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 发布中心 -->
+      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="PublishCenter" @click="navigateTo('/publish')">
+        <div class="icon-container-XAovJs" style="--menu-icon-size:48px">
+          <div class="content-XAjJup">
+            <div class="icon-menu-m2Y0RB">
+              <div class="icon-wrap-tBuhBU hide-itzP3D sf-hidden">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" d="M12 2a1 1 0 0 1 1 1v10.586l3.293-3.293a1 1 0 0 1 1.414 1.414l-5 5a1 1 0 0 1-1.414 0l-5-5a1 1 0 1 1 1.414-1.414L11 13.586V3a1 1 0 0 1 1-1ZM4 14a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 1 1 2 0v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-4a1 1 0 0 1 1-1Z" fill="currentColor"></path>
+                  </g>
+                </svg>
+              </div>
+              <div class="icon-wrap-tBuhBU">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" d="M12 2a1 1 0 0 1 1 1v10.586l3.293-3.293a1 1 0 0 1 1.414 1.414l-5 5a1 1 0 0 1-1.414 0l-5-5a1 1 0 1 1 1.414-1.414L11 13.586V3a1 1 0 0 1 1-1ZM4 14a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4a1 1 0 1 1 2 0v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-4a1 1 0 0 1 1-1Z" clip-rule="evenodd" fill-rule="evenodd" fill="currentColor"></path>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="lv-typography text-HLQFZY">发布</div>
           </div>
         </div>
       </div>

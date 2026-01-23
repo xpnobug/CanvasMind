@@ -6,20 +6,28 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
   },
   "engines": {
     "node": ">=20.19.0",
     "npm": ">=9.0.0"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "element-plus": "^2.13.1",
     "vue": "^3.5.24",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^25.0.10",
     "@vitejs/plugin-vue": "^6.0.1",
+    "tailwindcss": "^4.1.18",
     "terser": "^5.44.1",
-    "vite": "^7.2.4"
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4",
+    "vue-tsc": "^3.2.2"
   }
 }

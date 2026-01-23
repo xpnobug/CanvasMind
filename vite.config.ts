@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    tailwindcss(),
+  ],
 
   // 开发服务器配置
   server: {
@@ -51,6 +55,7 @@ export default defineConfig({
       '@styles': path.resolve(__dirname, 'src/styles'),
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@api': path.resolve(__dirname, 'src/api'),
+      '@types': path.resolve(__dirname, 'src/types'),
     },
   },
 

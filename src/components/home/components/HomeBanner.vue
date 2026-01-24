@@ -63,7 +63,7 @@
                 <g clip-path="url(#__lottie_element_4)" transform="matrix(1,0,0,1,0,0)" opacity="1"
                    style="display: block;">
                   <g clip-path="url(#__lottie_element_5)">
-                    <g class="png"
+                    <g class="png third-image"
                        transform="matrix(0.910000205039978,0,0,0.910000205039978,1.5799713134765625,11.179969787597656)"
                        opacity="1" style="display: block;">
                       <image width="324px" height="204px" preserveAspectRatio="xMidYMid slice"
@@ -226,3 +226,14 @@
 <script setup>
 // 首页横幅组件
 </script>
+<style>
+.button-aJFqb0 .third-image {
+  transition: transform 0.3s ease;
+  transform-origin: top left;
+}
+
+.button-aJFqb0:hover .third-image {
+  /* 在原有 scale 0.91 基础上放大到约 0.95 */
+  transform: matrix(0.99,0,0,0.95,1.5799713134765625,11.179969787597656);
+}
+</style>

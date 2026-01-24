@@ -27,7 +27,7 @@
       </div>
 
       <!-- 生成 -->
-      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="AIGeneratedRecord">
+      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="AIGeneratedRecord" @click="navigateTo('/generate')">
         <div class="icon-container-XAovJs" style="--menu-icon-size:48px">
           <div class="container-juKD6_">
             <div class="content-XAjJup">

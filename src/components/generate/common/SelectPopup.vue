@@ -81,7 +81,8 @@ onUnmounted(() => {
            position: 'fixed',
            top: popupPosition.top + 'px',
            left: popupPosition.left + 'px',
-           transform: 'translateX(-50%) translateY(-100%)'
+           transform: 'translateX(-50%) translateY(-100%)',
+           zIndex: 10001
          }">
       <!-- 标题 -->
       <div v-if="title" class="title-RK9CLE dropdown-title-V9bKQe secondary-IGs0cX">{{ title }}</div>

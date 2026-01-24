@@ -4167,3 +4167,302 @@ div.normal-button-mS74ha {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ==================== 生成偏好面板样式 ==================== */
+
+/* 弹窗容器 */
+.popover-hjZ_EM {
+    width: 484px
+}
+
+/* 面板字段容器 */
+.fields-Ohpia1 {
+    display: flex;
+    flex-direction: column;
+    gap: 24px
+}
+
+/* 面板变量 */
+.agentic-settings-panel-PW6SXt {
+    --agentic-generator-settings-opacity: 0.5
+}
+
+/* 字段样式 */
+.field-lS55rI {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+}
+
+/* 标题样式 */
+.title-RK9CLE {
+    display: flex;
+    font-family: var(--alphanumeric-font-family)
+}
+
+.title-RK9CLE.primary-qeUHsW {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    height: 22px;
+    line-height: 22px
+}
+
+.title-RK9CLE.secondary-IGs0cX {
+    color: var(--text-placeholder);
+    font-size: 12px;
+    font-weight: 400;
+    height: 12px;
+    line-height: 12px
+}
+
+/* 额外内容区域（自动开关） */
+.extra-XsPrhm {
+    flex: 1 1
+}
+
+.container-acAd2k {
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
+    align-items: center;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end
+}
+
+.switch-xgMSH6 {
+    margin-left: 8px
+}
+
+/* 单选组样式 */
+.radio-group-nSistg {
+    align-items: center;
+    background: var(--bg-block-secondary-default);
+    border-radius: var(--radio-group-border-radius);
+    display: flex;
+    gap: 2px;
+    justify-content: space-around;
+    padding: 2px
+}
+
+.radio-group-nSistg.lv-radio-group {
+    font-family: var(--alphanumeric-font-family)
+}
+
+.radio-group-nSistg.lv-radio-group .lv-radio {
+    border-radius: calc(var(--radio-group-border-radius) - 2px);
+    height: 100%;
+    margin-right: 0;
+    overflow: hidden;
+    padding-left: 0;
+    width: 100%
+}
+
+/* 图片/视频单选组 */
+.radio-group-A7r8m8 {
+    height: 36px;
+    --radio-group-border-radius: 10px
+}
+
+/* 比例选择单选组 */
+.radio-group-csT79P {
+    height: 60px;
+    --radio-group-border-radius: 12px
+}
+
+/* 单选按钮样式 */
+.radio-yGzTi5 {
+    align-items: center;
+    background-color: transparent;
+    color: var(--text-secondary);
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    transition: color .1s linear, background-color .1s linear;
+    width: 100%
+}
+
+.radio-yGzTi5:active, .radio-yGzTi5:hover {
+    background-color: var(--component-segmented-control-hover)
+}
+
+.radio-yGzTi5.checked-KVSAoI {
+    background-color: var(--component-segmented-control-selected);
+    color: var(--radio-checked-text-color, var(--text-primary))
+}
+
+/* 比例选项内容 */
+.radio-content-qJGArn {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    justify-content: center;
+    width: 48px
+}
+
+.label-l6Zq3t {
+    height: 12px;
+    line-height: 12px
+}
+
+/* 禁用状态 */
+.radio-group-disabled-azzH2v {
+    opacity: var(--agentic-generator-settings-opacity)
+}
+
+.aspect-ratio-radio-group-disabled-d5D3ro {
+    opacity: var(--agentic-generator-settings-opacity)
+}
+
+/* 其他设置区域 */
+.other-settings-k8Nb2R {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between
+}
+
+.other-settings-k8Nb2R .lv-select-view {
+    display: flex;
+    justify-content: center
+}
+
+.other-settings-k8Nb2R .lv-select-view .lv-select-view-selector {
+    width: unset !important
+}
+
+/* 触发按钮样式 */
+.trigger-button-HdTM8H {
+    flex: 1 1
+}
+
+.trigger-button-HdTM8H.lv-btn.lv-btn-size-default:not(.lv-btn-size-default.lv-btn-icon-only):not(.lv-btn-shape-circle) {
+    padding: 0
+}
+
+.trigger-button-HdTM8H.lv-btn-secondary:not(.lv-btn-disabled) {
+    background: var(--bg-block-primary-default);
+    color: var(--text-primary)
+}
+
+.trigger-button-HdTM8H.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading):focus-visible,
+.trigger-button-HdTM8H.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading):hover {
+    background: var(--bg-block-primary-hover);
+    box-shadow: none;
+    color: var(--text-primary)
+}
+
+.trigger-button-HdTM8H.lv-btn-secondary:not(.lv-btn-disabled):not(.lv-btn-loading):active {
+    background: var(--bg-block-primary-pressed);
+    color: var(--text-primary)
+}
+
+.trigger-button-disabled-cJzDE3 {
+    opacity: var(--agentic-generator-settings-opacity)
+}
+
+/* 分辨率选择 */
+.resolution-select-BKucmm {
+    flex: 1 1
+}
+
+.resolution-select-disabled-EoEwFj {
+    opacity: var(--agentic-generator-settings-opacity)
+}
+
+.commercial-content-vye33D {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    justify-content: center
+}
+
+/* 隐藏元素 */
+.sf-hidden {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none
+}
+
+/* lv-switch 开关样式 */
+.lv-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    background: var(--bg-block-secondary-default);
+    border-radius: 100px;
+    transition: background-color 0.2s ease;
+}
+
+.lv-switch-small {
+    width: 28px;
+    height: 16px;
+}
+
+.lv-switch-dot {
+    position: absolute;
+    background: var(--text-primary);
+    border-radius: 50%;
+    transition: transform 0.2s ease, left 0.2s ease;
+}
+
+.lv-switch-small .lv-switch-dot {
+    width: 12px;
+    height: 12px;
+    left: 2px;
+    top: 2px;
+}
+
+.lv-switch-checked {
+    background: var(--brand-main-default);
+}
+
+.lv-switch-checked .lv-switch-dot {
+    transform: translateX(12px);
+}
+
+/* lv-radio 单选样式 */
+.lv-radio {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.lv-radio-group {
+    display: flex;
+}
+
+/* lv-popover 弹窗样式 */
+.lv-popover-content {
+    background-color: var(--bg-dropdown-menu);
+    border: .5px solid var(--stroke-tertiary);
+    border-radius: 16px;
+    box-shadow: var(--shadow-dropdown-menu);
+    padding: 16px;
+}
+
+.lv-popover-content-top {
+    transform: translateY(-100%);
+}
+
+.preference-panel-popover {
+    animation: preference-panel-fadein 0.15s ease-out;
+}
+
+@keyframes preference-panel-fadein {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

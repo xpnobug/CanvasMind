@@ -24,10 +24,26 @@ const props = defineProps<Props>()
 // Emits 定义
 const emit = defineEmits<{
   'update:modelValue': [value: CreationType]
+  'open': []
+  'close': []
 }>()
 
 // 下拉框是否展开
 const isOpen = ref(false)
+
+// 关闭下拉框方法（供外部调用）
+const close = () => {
+  if (isOpen.value) {
+    isOpen.value = false
+    emit('close')
+  }
+}
+
+// 暴露方法和状态
+defineExpose({
+  isOpen,
+  close
+})
 
 // 触发器元素引用
 const triggerRef = ref<HTMLElement | null>(null)
@@ -40,7 +56,14 @@ const currentTypeConfig = computed(() =>
 // 切换下拉框
 const toggleDropdown = (e: Event) => {
   e.stopPropagation()
+  const wasOpen = isOpen.value
   isOpen.value = !isOpen.value
+  // 打开时通知父组件
+  if (!wasOpen && isOpen.value) {
+    emit('open')
+  } else if (wasOpen && !isOpen.value) {
+    emit('close')
+  }
 }
 
 // 选择类型

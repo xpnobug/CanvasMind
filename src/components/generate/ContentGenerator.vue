@@ -8,6 +8,24 @@ import { AgentToolbar, ImageToolbar, VideoToolbar, DigitalHumanToolbar } from '.
 // 当前创作类型
 const currentType = ref<CreationType>('agent')
 
+// 组件引用（用于弹窗互斥）
+const typeSelectorRef = ref<InstanceType<typeof TypeSelector> | null>(null)
+const typeSelectorExpandRef = ref<InstanceType<typeof TypeSelector> | null>(null)
+const agentToolbarRef = ref<InstanceType<typeof AgentToolbar> | null>(null)
+const agentToolbarExpandRef = ref<InstanceType<typeof AgentToolbar> | null>(null)
+
+// 当 TypeSelector 弹窗打开时，关闭 AgentToolbar 的面板
+const handleTypeSelectorOpen = () => {
+  agentToolbarRef.value?.closePanel()
+  agentToolbarExpandRef.value?.closePanel()
+}
+
+// 当 AgentToolbar 面板打开时，关闭 TypeSelector 的下拉框
+const handleAgentToolbarPanelOpen = () => {
+  typeSelectorRef.value?.close()
+  typeSelectorExpandRef.value?.close()
+}
+
 // 内部折叠状态
 const isCollapsed = ref(true)
 
@@ -218,19 +236,19 @@ const priceText = computed(() => {
             <!-- 折叠状态：创作类型选择 + Agent 工具栏 -->
             <template v-if="isCollapsed">
               <!-- 类型选择器 -->
-              <TypeSelector v-model="currentType" />
+              <TypeSelector ref="typeSelectorRef" v-model="currentType" @open="handleTypeSelectorOpen" />
 
               <!-- Agent 工具栏（折叠状态下显示） -->
-              <AgentToolbar />
+              <AgentToolbar ref="agentToolbarRef" @panelOpen="handleAgentToolbarPanelOpen" />
             </template>
 
             <!-- 展开状态：根据创作类型显示不同工具栏 -->
             <template v-else>
               <!-- 类型选择器 -->
-              <TypeSelector v-model="currentType" />
+              <TypeSelector ref="typeSelectorExpandRef" v-model="currentType" @open="handleTypeSelectorOpen" />
 
               <!-- Agent 模式工具栏 -->
-              <AgentToolbar v-if="currentType === 'agent'" />
+              <AgentToolbar v-if="currentType === 'agent'" ref="agentToolbarExpandRef" @panelOpen="handleAgentToolbarPanelOpen" />
 
               <!-- 图片生成工具栏 -->
               <ImageToolbar v-else-if="currentType === 'image'" />

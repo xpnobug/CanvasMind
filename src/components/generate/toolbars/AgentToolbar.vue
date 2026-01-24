@@ -1,12 +1,56 @@
 <script setup lang="ts">
 // Agent 模式工具栏组件
-// 包含自动、灵感搜索、创意设计三个功能按钮
+// 包含自动（生成偏好）、灵感搜索、创意设计三个功能按钮
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import PreferencePanel from '../common/PreferencePanel.vue'
+
+// 定义事件
+const emit = defineEmits<{
+  'panelOpen': []
+  'panelClose': []
+}>()
 
 // 功能开关状态
 const inspirationSearchEnabled = ref(true)
 const creativeDesignEnabled = ref(true)
+
+// 生成偏好面板状态
+const isPreferencePanelOpen = ref(false)
+const preferenceTriggerRef = ref<HTMLElement | null>(null)
+
+// 自动模式状态
+const autoMode = ref(true)
+
+// 按钮文字（根据 autoMode 显示不同文字）
+const preferenceButtonText = computed(() => autoMode.value ? '自动' : '自定义')
+
+// 关闭面板方法（供外部调用）
+const closePanel = () => {
+  if (isPreferencePanelOpen.value) {
+    isPreferencePanelOpen.value = false
+    emit('panelClose')
+  }
+}
+
+// 暴露方法和状态
+defineExpose({
+  isPreferencePanelOpen,
+  closePanel
+})
+
+// 切换生成偏好面板
+const togglePreferencePanel = (e: Event) => {
+  e.stopPropagation()
+  const wasOpen = isPreferencePanelOpen.value
+  isPreferencePanelOpen.value = !isPreferencePanelOpen.value
+  // 打开时通知父组件
+  if (!wasOpen && isPreferencePanelOpen.value) {
+    emit('panelOpen')
+  } else if (wasOpen && !isPreferencePanelOpen.value) {
+    emit('panelClose')
+  }
+}
 
 // 切换灵感搜索
 const toggleInspirationSearch = () => {
@@ -21,9 +65,11 @@ const toggleCreativeDesign = () => {
 
 <template>
   <div class="agent-toolbar">
-    <!-- 自动按钮 -->
-    <button class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square button-lc3WzE toolbar-button-FhFnQ_"
-            type="button">
+    <!-- 自动按钮（打开生成偏好面板） -->
+    <button ref="preferenceTriggerRef"
+            :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'active-Rs99sz active-mrQmUS': isPreferencePanelOpen }]"
+            type="button"
+            @click="togglePreferencePanel">
       <svg width="1em" height="1em" viewBox="0 0 24 24"
            preserveAspectRatio="xMidYMid meet" fill="none"
            role="presentation" xmlns="http://www.w3.org/2000/svg">
@@ -34,8 +80,11 @@ const toggleCreativeDesign = () => {
                 fill="currentColor"></path>
         </g>
       </svg>
-      <span>自动</span>
+      <span>{{ preferenceButtonText }}</span>
     </button>
+
+    <!-- 生成偏好面板 -->
+    <PreferencePanel v-model:visible="isPreferencePanelOpen" v-model:autoMode="autoMode" :trigger-ref="preferenceTriggerRef" />
 
     <!-- 灵感搜索按钮 -->
     <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', 'switch-button-GPRaGT', { 'checked-SqLqYu': inspirationSearchEnabled }]"
@@ -82,5 +131,11 @@ const toggleCreativeDesign = () => {
 /* 样式已在 generate.css 中定义 */
 .agent-toolbar {
   display: contents;
+}
+
+/* 自动按钮选中状态 */
+.toolbar-button-FhFnQ_.active-Rs99sz.lv-btn.lv-btn-secondary.lv-btn-size-default:not(.lv-btn-disabled):not(.lv-btn-loading) {
+  background: var(--bg-block-secondary-hover);
+  border-color: var(--brand-main-default);
 }
 </style>

@@ -2,7 +2,7 @@
 // 选择弹窗组件
 // 支持上下弹出方向设置，可自动根据页面空间计算最佳弹出方向
 
-import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 
 // 弹出方向类型
 type Placement = 'top' | 'bottom' | 'auto'

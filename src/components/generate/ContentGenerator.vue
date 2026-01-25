@@ -5,6 +5,19 @@ import { ref, computed } from 'vue'
 import { TypeSelector, type CreationType } from './selectors'
 import { AgentToolbar, ImageToolbar, VideoToolbar, DigitalHumanToolbar } from './toolbars'
 
+// Props 定义
+interface Props {
+  // 是否可折叠（默认 true）
+  collapsible?: boolean
+  // 默认是否展开（默认 false，即折叠状态）
+  defaultExpanded?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  collapsible: true,
+  defaultExpanded: false
+})
+
 // 当前创作类型
 const currentType = ref<CreationType>('agent')
 
@@ -26,27 +39,31 @@ const handleAgentToolbarPanelOpen = () => {
   typeSelectorExpandRef.value?.close()
 }
 
-// 内部折叠状态
-const isCollapsed = ref(true)
+// 内部折叠状态（根据 defaultExpanded 初始化）
+const isCollapsed = ref(!props.defaultExpanded)
 
 // 展开输入框
 const expand = () => {
   isCollapsed.value = false
 }
 
-// 折叠输入框
+// 折叠输入框（仅当 collapsible 为 true 时生效）
 const collapse = () => {
-  isCollapsed.value = true
+  if (props.collapsible) {
+    isCollapsed.value = true
+  }
 }
 
-// 切换折叠状态
+// 切换折叠状态（仅当 collapsible 为 true 时生效）
 const toggle = () => {
-  isCollapsed.value = !isCollapsed.value
+  if (props.collapsible) {
+    isCollapsed.value = !isCollapsed.value
+  }
 }
 
-// 点击输入框区域时展开
+// 点击输入框区域时展开（仅当 collapsible 为 true 时响应）
 const handleClick = () => {
-  if (isCollapsed.value) {
+  if (props.collapsible && isCollapsed.value) {
     expand()
   }
 }

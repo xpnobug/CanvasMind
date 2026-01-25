@@ -13,12 +13,4 @@ export { default as MenuIconButton } from './MenuIconButton.vue'
 export { default as HomeHeader } from './HomeHeader.vue'
 export { default as TypeSelector } from './TypeSelector.vue'
 export { default as HomeBanner } from './HomeBanner.vue'
-
-// 内容生成器组件
-export { default as ContentGenerator } from './ContentGenerator.vue'
-export { default as ReferenceUpload } from './ReferenceUpload.vue'
-export { default as PromptInput } from './PromptInput.vue'
-export { default as SubmitButton } from './SubmitButton.vue'
-export { default as Toolbar } from './Toolbar.vue'
-export { default as ToolbarButton } from './ToolbarButton.vue'
 export { default as TaskIndicator } from './TaskIndicator.vue'

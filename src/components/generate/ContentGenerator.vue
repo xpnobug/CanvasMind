@@ -5,17 +5,23 @@ import { ref, computed } from 'vue'
 import { TypeSelector, type CreationType } from './selectors'
 import { AgentToolbar, ImageToolbar, VideoToolbar, DigitalHumanToolbar } from './toolbars'
 
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
+
 // Props 定义
 interface Props {
   // 是否可折叠（默认 true）
   collapsible?: boolean
   // 默认是否展开（默认 false，即折叠状态）
   defaultExpanded?: boolean
+  // 弹窗弹出方向：top-向上, bottom-向下, auto-自动计算
+  popupPlacement?: Placement
 }
 
 const props = withDefaults(defineProps<Props>(), {
   collapsible: true,
-  defaultExpanded: false
+  defaultExpanded: false,
+  popupPlacement: 'auto'
 })
 
 // 当前创作类型
@@ -253,28 +259,28 @@ const priceText = computed(() => {
             <!-- 折叠状态：创作类型选择 + Agent 工具栏 -->
             <template v-if="isCollapsed">
               <!-- 类型选择器 -->
-              <TypeSelector ref="typeSelectorRef" v-model="currentType" @open="handleTypeSelectorOpen" />
+              <TypeSelector ref="typeSelectorRef" v-model="currentType" :placement="popupPlacement" @open="handleTypeSelectorOpen" />
 
               <!-- Agent 工具栏（折叠状态下显示） -->
-              <AgentToolbar ref="agentToolbarRef" @panelOpen="handleAgentToolbarPanelOpen" />
+              <AgentToolbar ref="agentToolbarRef" :placement="popupPlacement" @panelOpen="handleAgentToolbarPanelOpen" />
             </template>
 
             <!-- 展开状态：根据创作类型显示不同工具栏 -->
             <template v-else>
               <!-- 类型选择器 -->
-              <TypeSelector ref="typeSelectorExpandRef" v-model="currentType" @open="handleTypeSelectorOpen" />
+              <TypeSelector ref="typeSelectorExpandRef" v-model="currentType" :placement="popupPlacement" @open="handleTypeSelectorOpen" />
 
               <!-- Agent 模式工具栏 -->
-              <AgentToolbar v-if="currentType === 'agent'" ref="agentToolbarExpandRef" @panelOpen="handleAgentToolbarPanelOpen" />
+              <AgentToolbar v-if="currentType === 'agent'" ref="agentToolbarExpandRef" :placement="popupPlacement" @panelOpen="handleAgentToolbarPanelOpen" />
 
               <!-- 图片生成工具栏 -->
-              <ImageToolbar v-else-if="currentType === 'image'" />
+              <ImageToolbar v-else-if="currentType === 'image'" :placement="popupPlacement" />
 
               <!-- 视频生成工具栏 -->
-              <VideoToolbar v-else-if="currentType === 'video'" />
+              <VideoToolbar v-else-if="currentType === 'video'" :placement="popupPlacement" />
 
               <!-- 数字人/动作模仿工具栏 -->
-              <DigitalHumanToolbar v-else />
+              <DigitalHumanToolbar v-else :placement="popupPlacement" />
             </template>
           </div>
         </div>

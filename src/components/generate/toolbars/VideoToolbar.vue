@@ -1,9 +1,23 @@
 <script setup lang="ts">
 // 视频生成工具栏组件
 // 包含模型版本选择、功能选择、尺寸选择、时长选择
+// 支持弹出方向设置
 
 import { ref } from 'vue'
 import SelectPopup from '../common/SelectPopup.vue'
+
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
+
+// Props 定义
+interface Props {
+  // 弹出方向：top-向上, bottom-向下, auto-自动计算
+  placement?: Placement
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placement: 'auto'
+})
 
 // 模型版本配置
 const modelVersions = [
@@ -157,7 +171,7 @@ const getCurrentSizeConfig = () => {
     </div>
 
     <!-- 模型版本选择弹窗 -->
-    <SelectPopup v-model:visible="isModelSelectOpen" :trigger-ref="modelTriggerRef" title="模型版本">
+    <SelectPopup v-model:visible="isModelSelectOpen" :trigger-ref="modelTriggerRef" :placement="placement" title="模型版本">
       <ul class="lv-select-popup-inner">
         <li v-for="version in modelVersions"
             :key="version.value"
@@ -223,7 +237,7 @@ const getCurrentSizeConfig = () => {
     </div>
 
     <!-- 功能选择弹窗 -->
-    <SelectPopup v-model:visible="isFeatureSelectOpen" :trigger-ref="featureTriggerRef" title="功能">
+    <SelectPopup v-model:visible="isFeatureSelectOpen" :trigger-ref="featureTriggerRef" :placement="placement" title="功能">
       <ul class="lv-select-popup-inner">
         <li v-for="feature in featureOptions"
             :key="feature.value"
@@ -267,7 +281,7 @@ const getCurrentSizeConfig = () => {
     </button>
 
     <!-- 尺寸选择弹窗 -->
-    <SelectPopup v-model:visible="isSizeSelectOpen" :trigger-ref="sizeTriggerRef" title="视频尺寸">
+    <SelectPopup v-model:visible="isSizeSelectOpen" :trigger-ref="sizeTriggerRef" :placement="placement" title="视频尺寸">
       <ul class="lv-select-popup-inner">
         <li v-for="size in sizeOptions"
             :key="size.value"
@@ -322,7 +336,7 @@ const getCurrentSizeConfig = () => {
     </div>
 
     <!-- 时长选择弹窗 -->
-    <SelectPopup v-model:visible="isDurationSelectOpen" :trigger-ref="durationTriggerRef" title="视频时长">
+    <SelectPopup v-model:visible="isDurationSelectOpen" :trigger-ref="durationTriggerRef" :placement="placement" title="视频时长">
       <ul class="lv-select-popup-inner">
         <li v-for="duration in durationOptions"
             :key="duration.value"

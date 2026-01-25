@@ -1,9 +1,23 @@
 <script setup lang="ts">
 // 图片生成工具栏组件
 // 包含模型版本选择、尺寸选择、文字工具按钮
+// 支持弹出方向设置
 
 import { ref } from 'vue'
 import SelectPopup from '../common/SelectPopup.vue'
+
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
+
+// Props 定义
+interface Props {
+  // 弹出方向：top-向上, bottom-向下, auto-自动计算
+  placement?: Placement
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placement: 'auto'
+})
 
 // 模型版本配置
 const modelVersions = [
@@ -109,7 +123,7 @@ const currentSizeConfig = () => {
     </div>
 
     <!-- 模型版本选择弹窗 -->
-    <SelectPopup v-model:visible="isModelSelectOpen" :trigger-ref="modelTriggerRef" title="模型版本">
+    <SelectPopup v-model:visible="isModelSelectOpen" :trigger-ref="modelTriggerRef" :placement="placement" title="模型版本">
       <ul class="lv-select-popup-inner">
         <li v-for="version in modelVersions"
             :key="version.value"
@@ -154,7 +168,7 @@ const currentSizeConfig = () => {
     </button>
 
     <!-- 尺寸选择弹窗 -->
-    <SelectPopup v-model:visible="isSizeSelectOpen" :trigger-ref="sizeTriggerRef" title="图片尺寸">
+    <SelectPopup v-model:visible="isSizeSelectOpen" :trigger-ref="sizeTriggerRef" :placement="placement" title="图片尺寸">
       <ul class="lv-select-popup-inner">
         <li v-for="size in sizeOptions"
             :key="size.value"

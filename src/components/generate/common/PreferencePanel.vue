@@ -1,19 +1,26 @@
 <script setup lang="ts">
 // 生成偏好面板组件
 // 包含生成偏好、选择比例、其他设置三个部分
+// 支持上下弹出方向设置，可自动根据页面空间计算最佳弹出方向
 
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import SelectPopup from './SelectPopup.vue'
+
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
 
 // 组件属性
 interface Props {
   visible: boolean
   triggerRef: HTMLElement | null
   autoMode?: boolean
+  // 弹出方向：top-向上, bottom-向下, auto-自动计算
+  placement?: Placement
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  autoMode: true
+  autoMode: true,
+  placement: 'auto'
 })
 
 const emit = defineEmits<{
@@ -145,8 +152,62 @@ const resolutionTriggerRef = ref<HTMLElement | null>(null)
 const panelStyle = ref<{
   top?: string
   left?: string
+  transform?: string
   transformOrigin?: string
 }>({})
+
+// 实际弹出方向（用于样式控制）
+const actualPlacement = ref<'top' | 'bottom'>('top')
+
+// 预估面板高度（用于自动计算方向）
+const ESTIMATED_PANEL_HEIGHT = 400
+
+// 计算最佳弹出方向
+const calculateBestPlacement = (): 'top' | 'bottom' => {
+  if (!props.triggerRef) return 'top'
+
+  const rect = props.triggerRef.getBoundingClientRect()
+
+  // 计算上下可用空间
+  const spaceAbove = rect.top
+  const spaceBelow = window.innerHeight - rect.bottom
+
+  // 如果指定了方向（非 auto），检查是否有足够空间
+  if (props.placement !== 'auto') {
+    const preferredPlacement = props.placement
+
+    // 检查指定方向是否有足够空间
+    if (preferredPlacement === 'bottom' && spaceBelow >= ESTIMATED_PANEL_HEIGHT) {
+      return 'bottom'
+    }
+    if (preferredPlacement === 'top' && spaceAbove >= ESTIMATED_PANEL_HEIGHT) {
+      return 'top'
+    }
+
+    // 指定方向空间不足，自动切换到有空间的方向
+    if (spaceBelow >= ESTIMATED_PANEL_HEIGHT) {
+      return 'bottom'
+    }
+    if (spaceAbove >= ESTIMATED_PANEL_HEIGHT) {
+      return 'top'
+    }
+
+    // 两边都不够，选择空间更大的方向
+    return spaceBelow > spaceAbove ? 'bottom' : 'top'
+  }
+
+  // auto 模式：优先向上弹出
+  if (spaceAbove < ESTIMATED_PANEL_HEIGHT && spaceBelow >= ESTIMATED_PANEL_HEIGHT) {
+    return 'bottom'
+  }
+
+  // 如果两边空间都不足，选择空间更大的方向
+  if (spaceAbove < ESTIMATED_PANEL_HEIGHT && spaceBelow < ESTIMATED_PANEL_HEIGHT) {
+    return spaceBelow > spaceAbove ? 'bottom' : 'top'
+  }
+
+  return 'top'
+}
 
 // 计算面板位置
 const calculatePosition = () => {
@@ -163,13 +224,30 @@ const calculatePosition = () => {
     left = window.innerWidth - panelWidth - 20
   }
 
-  // 计算顶部位置（在触发器上方）
-  const top = triggerRect.top - 8
+  // 计算最佳弹出方向
+  actualPlacement.value = calculateBestPlacement()
 
-  panelStyle.value = {
-    top: `${top}px`,
-    left: `${left}px`,
-    transformOrigin: '15px 100% 0px'
+  // 根据弹出方向计算位置
+  if (actualPlacement.value === 'bottom') {
+    // 向下弹出：面板显示在触发器下方
+    const top = triggerRect.bottom + 8
+
+    panelStyle.value = {
+      top: `${top}px`,
+      left: `${left}px`,
+      transform: 'none',
+      transformOrigin: '15px 0px 0px'
+    }
+  } else {
+    // 向上弹出：面板显示在触发器上方
+    const top = triggerRect.top - 8
+
+    panelStyle.value = {
+      top: `${top}px`,
+      left: `${left}px`,
+      transform: 'translateY(-100%)',
+      transformOrigin: '15px 100% 0px'
+    }
   }
 }
 
@@ -260,10 +338,10 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <div v-if="visible"
-         class="lv-trigger lv-popover lv-trigger-position-bl popover-hjZ_EM preference-panel-popover"
-         :style="{ ...panelStyle, opacity: 1, position: 'absolute', maxWidth: 'unset', display: 'initial', pointerEvents: 'auto', zIndex: 10000 }"
+         :class="['lv-trigger', 'lv-popover', 'lv-trigger-position-bl', 'popover-hjZ_EM', 'preference-panel-popover', `placement-${actualPlacement}`]"
+         :style="{ ...panelStyle, opacity: 1, position: 'fixed', maxWidth: 'unset', display: 'initial', pointerEvents: 'auto', zIndex: 10000 }"
          @click.stop>
-      <div class="lv-popover-content lv-popover-content-top" role="tooltip">
+      <div class="lv-popover-content" role="tooltip">
         <div class="lv-popover-content-inner">
           <div class="lv-popover-inner">
             <div class="lv-popover-inner-content">

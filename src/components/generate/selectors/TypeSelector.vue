@@ -1,9 +1,15 @@
 <script setup lang="ts">
+// 创作类型选择器组件
+// 支持弹出方向设置
+
 import { ref, computed } from 'vue'
 import SelectPopup from '../common/SelectPopup.vue'
 
 // 创作类型枚举
 export type CreationType = 'agent' | 'image' | 'video' | 'digital-human' | 'motion'
+
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
 
 // 创作类型配置
 const creationTypes = [
@@ -17,9 +23,13 @@ const creationTypes = [
 // Props 定义
 interface Props {
   modelValue: CreationType
+  // 弹出方向：top-向上, bottom-向下, auto-自动计算
+  placement?: Placement
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  placement: 'auto'
+})
 
 // Emits 定义
 const emit = defineEmits<{
@@ -161,7 +171,7 @@ const selectType = (type: CreationType) => {
   </div>
 
   <!-- 下拉弹窗 -->
-  <SelectPopup v-model:visible="isOpen" :trigger-ref="triggerRef" title="创作类型">
+  <SelectPopup v-model:visible="isOpen" :trigger-ref="triggerRef" :placement="placement" title="创作类型">
     <ul class="lv-select-popup-inner">
       <li v-for="type in creationTypes"
           :key="type.value"

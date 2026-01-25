@@ -3893,7 +3893,7 @@ div.normal-button-mS74ha {
     transform-origin: bottom center
 }
 
-/* 弹窗弹出动画 */
+/* 向上弹出动画（默认） */
 @keyframes lv-select-popup-fadein {
     0% {
         opacity: 0;
@@ -3903,6 +3903,30 @@ div.normal-button-mS74ha {
         opacity: 1;
         transform: translateX(-50%) translateY(-100%) scale(1)
     }
+}
+
+/* 向下弹出动画 */
+@keyframes lv-select-popup-fadein-bottom {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.95)
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1)
+    }
+}
+
+/* 向上弹出样式（默认） */
+.lv-select-popup.placement-top {
+    animation: lv-select-popup-fadein 0.15s ease-out;
+    transform-origin: bottom center
+}
+
+/* 向下弹出样式 */
+.lv-select-popup.placement-bottom {
+    animation: lv-select-popup-fadein-bottom 0.15s ease-out;
+    transform-origin: top center
 }
 
 /* 箭头图标旋转 - 展开状态 */
@@ -4452,11 +4476,29 @@ div.normal-button-mS74ha {
     transform: translateY(-100%);
 }
 
+/* 向下弹出时不需要 transform */
+.lv-popover-content-bottom {
+    transform: none;
+}
+
 .preference-panel-popover {
     animation: preference-panel-fadein 0.15s ease-out;
 }
 
+/* 向上弹出动画（默认） */
 @keyframes preference-panel-fadein {
+    0% {
+        opacity: 0;
+        transform: translateY(-100%) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-100%) scale(1);
+    }
+}
+
+/* 向下弹出动画 */
+@keyframes preference-panel-fadein-bottom {
     0% {
         opacity: 0;
         transform: scale(0.95);
@@ -4465,4 +4507,16 @@ div.normal-button-mS74ha {
         opacity: 1;
         transform: scale(1);
     }
+}
+
+/* PreferencePanel 向上弹出样式（默认） */
+.preference-panel-popover.placement-top {
+    animation: preference-panel-fadein 0.15s ease-out;
+    transform-origin: 15px 100% 0px;
+}
+
+/* PreferencePanel 向下弹出样式 */
+.preference-panel-popover.placement-bottom {
+    animation: preference-panel-fadein-bottom 0.15s ease-out;
+    transform-origin: 15px 0px 0px;
 }

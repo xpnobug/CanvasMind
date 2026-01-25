@@ -5,11 +5,12 @@
       <TypeSelector />
       即刻造梦！
     </div>
-    <!-- 首页配置：不可折叠、默认展开、弹窗方向自动判断 -->
+    <!-- 首页配置：不可折叠、默认展开、弹窗强制向下弹出 -->
     <GenerateContentGenerator
       class="home-header-content-generator-RI50Ki"
       :collapsible="false"
       :default-expanded="true"
+      popup-placement="bottom"
     />
     <TaskIndicator />
     <HomeBanner />

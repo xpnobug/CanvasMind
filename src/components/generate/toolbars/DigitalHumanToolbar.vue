@@ -1,6 +1,20 @@
 <script setup lang="ts">
 // 数字人/动作模仿工具栏组件
 // 基础配置工具栏，包含设置按钮
+// 支持弹出方向设置
+
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
+
+// Props 定义（保持接口一致性，未来可能使用）
+interface Props {
+  // 弹出方向：top-向上, bottom-向下, auto-自动计算
+  placement?: Placement
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placement: 'auto'
+})
 </script>
 
 <template>

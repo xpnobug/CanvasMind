@@ -1,9 +1,23 @@
 <script setup lang="ts">
 // Agent 模式工具栏组件
 // 包含自动（生成偏好）、灵感搜索、创意设计三个功能按钮
+// 支持弹出方向设置
 
 import { ref, computed } from 'vue'
 import PreferencePanel from '../common/PreferencePanel.vue'
+
+// 弹出方向类型
+type Placement = 'top' | 'bottom' | 'auto'
+
+// Props 定义
+interface Props {
+  // 弹出方向：top-向上, bottom-向下, auto-自动计算
+  placement?: Placement
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placement: 'auto'
+})
 
 // 定义事件
 const emit = defineEmits<{
@@ -84,7 +98,7 @@ const toggleCreativeDesign = () => {
     </button>
 
     <!-- 生成偏好面板 -->
-    <PreferencePanel v-model:visible="isPreferencePanelOpen" v-model:autoMode="autoMode" :trigger-ref="preferenceTriggerRef" />
+    <PreferencePanel v-model:visible="isPreferencePanelOpen" v-model:autoMode="autoMode" :trigger-ref="preferenceTriggerRef" :placement="placement" />
 
     <!-- 灵感搜索按钮 -->
     <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', 'switch-button-GPRaGT', { 'checked-SqLqYu': inspirationSearchEnabled }]"

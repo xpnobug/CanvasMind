@@ -226,17 +226,6 @@ const isResizing = ref(false)
 const MIN_PANEL_WIDTH = 320
 const MAX_PANEL_WIDTH = 800
 
-// 开始调整大小
-const handleResizeStart = (e: MouseEvent) => {
-  e.preventDefault()
-  isResizing.value = true
-  document.addEventListener('mousemove', handleResizeMove)
-  document.addEventListener('mouseup', handleResizeEnd)
-  // 添加拖拽时的样式
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-}
-
 // 调整大小中
 const handleResizeMove = (e: MouseEvent) => {
   if (!isResizing.value) return
@@ -268,10 +257,6 @@ onUnmounted(() => {
   }
 })
 
-// 面板宽度样式（用于设置 CSS 变量）
-const panelWidthStyle = computed(() => ({
-  '--right-panel-width': `${props.panelWidth}px`
-}))
 </script>
 
 <template>

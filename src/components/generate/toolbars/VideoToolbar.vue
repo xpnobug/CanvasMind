@@ -13,10 +13,13 @@ type Placement = 'top' | 'bottom' | 'auto'
 interface Props {
   // 弹出方向：top-向上, bottom-向下, auto-自动计算
   placement?: Placement
+  // 是否只显示图标（侧边栏模式）
+  iconOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placement: 'auto'
+  placement: 'auto',
+  iconOnly: false
 })
 
 // 模型版本配置
@@ -146,10 +149,11 @@ const getCurrentSizeConfig = () => {
   <div class="video-toolbar">
     <!-- 模型版本选择 -->
     <div ref="modelTriggerRef"
-         class="lv-select lv-select-single lv-select-size-default toolbar-select-h345g7 select-joF5y7"
+         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
          role="combobox"
          tabindex="0"
          :aria-expanded="isModelSelectOpen"
+         :title="iconOnly ? getCurrentModelLabel() : undefined"
          @click.stop="toggleModelSelect">
       <div class="lv-select-view">
         <span class="lv-select-view-selector">
@@ -164,9 +168,23 @@ const getCurrentSizeConfig = () => {
                       fill-rule="evenodd"></path>
               </g>
             </svg>
-            {{ getCurrentModelLabel() }}
+            <span v-if="!iconOnly">{{ getCurrentModelLabel() }}</span>
           </span>
         </span>
+        <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
+          <div class="lv-select-arrow-icon">
+            <svg width="1em" height="1em" viewBox="0 0 24 24"
+                 preserveAspectRatio="xMidYMid meet" fill="none"
+                 role="presentation" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                      d="M21.01 7.982A1.2 1.2 0 0 1 21 9.679l-8.156 8.06a1.2 1.2 0 0 1-1.688 0L3 9.68a1.2 1.2 0 0 1 1.687-1.707L12 15.199l7.313-7.227a1.2 1.2 0 0 1 1.697.01Z"
+                      fill="currentColor"></path>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
       </div>
     </div>
 
@@ -199,10 +217,11 @@ const getCurrentSizeConfig = () => {
 
     <!-- 功能选择 -->
     <div ref="featureTriggerRef"
-         class="lv-select lv-select-single lv-select-size-default toolbar-select-h345g7 select-joF5y7"
+         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
          role="combobox"
          tabindex="0"
          :aria-expanded="isFeatureSelectOpen"
+         :title="iconOnly ? getCurrentFeatureLabel() : undefined"
          @click.stop="toggleFeatureSelect">
       <div class="lv-select-view">
         <span class="lv-select-view-selector">
@@ -217,10 +236,10 @@ const getCurrentSizeConfig = () => {
                 </g>
               </svg>
             </span>
-            {{ getCurrentFeatureLabel() }}
+            <span v-if="!iconOnly">{{ getCurrentFeatureLabel() }}</span>
           </span>
         </span>
-        <div aria-hidden="true" class="lv-select-suffix">
+        <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
           <div class="lv-select-arrow-icon">
             <svg width="1em" height="1em" viewBox="0 0 24 24"
                  preserveAspectRatio="xMidYMid meet" fill="none"
@@ -233,6 +252,7 @@ const getCurrentSizeConfig = () => {
             </svg>
           </div>
         </div>
+        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
       </div>
     </div>
 
@@ -265,8 +285,9 @@ const getCurrentSizeConfig = () => {
 
     <!-- 尺寸选择 -->
     <button ref="sizeTriggerRef"
-            class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square button-lc3WzE toolbar-button-FhFnQ_"
+            :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'lv-btn-icon-only': iconOnly }]"
             type="button"
+            :title="iconOnly ? getCurrentSizeConfig().value + ' ' + getCurrentSizeConfig().quality : undefined"
             @click.stop="toggleSizeSelect">
       <svg fill="none" height="1em" preserveAspectRatio="xMidYMid meet"
            role="presentation" viewBox="0 0 24 24"
@@ -277,7 +298,7 @@ const getCurrentSizeConfig = () => {
                 clip-rule="evenodd" fill-rule="evenodd" fill="currentColor"></path>
         </g>
       </svg>
-      <span class="button-text-gwJnq9">{{ getCurrentSizeConfig().value }}<span class="divider-ObM8Ek"></span><span class="commercial-content-QAReHq">{{ getCurrentSizeConfig().quality }}</span></span>
+      <span v-if="!iconOnly" class="button-text-gwJnq9">{{ getCurrentSizeConfig().value }}<span class="divider-ObM8Ek"></span><span class="commercial-content-QAReHq">{{ getCurrentSizeConfig().quality }}</span></span>
     </button>
 
     <!-- 尺寸选择弹窗 -->
@@ -310,10 +331,11 @@ const getCurrentSizeConfig = () => {
 
     <!-- 时长选择 -->
     <div ref="durationTriggerRef"
-         class="lv-select lv-select-single lv-select-size-default toolbar-select-h345g7 select-joF5y7"
+         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
          role="combobox"
          tabindex="0"
          :aria-expanded="isDurationSelectOpen"
+         :title="iconOnly ? currentDuration : undefined"
          @click.stop="toggleDurationSelect">
       <div class="lv-select-view">
         <span class="lv-select-view-selector">
@@ -329,9 +351,23 @@ const getCurrentSizeConfig = () => {
                 </g>
               </svg>
             </span>
-            {{ currentDuration }}
+            <span v-if="!iconOnly">{{ currentDuration }}</span>
           </span>
         </span>
+        <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
+          <div class="lv-select-arrow-icon">
+            <svg width="1em" height="1em" viewBox="0 0 24 24"
+                 preserveAspectRatio="xMidYMid meet" fill="none"
+                 role="presentation" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                      d="M21.01 7.982A1.2 1.2 0 0 1 21 9.679l-8.156 8.06a1.2 1.2 0 0 1-1.688 0L3 9.68a1.2 1.2 0 0 1 1.687-1.707L12 15.199l7.313-7.227a1.2 1.2 0 0 1 1.697.01Z"
+                      fill="currentColor"></path>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
       </div>
     </div>
 

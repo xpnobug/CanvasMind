@@ -10,18 +10,22 @@ type Placement = 'top' | 'bottom' | 'auto'
 interface Props {
   // 弹出方向：top-向上, bottom-向下, auto-自动计算
   placement?: Placement
+  // 是否只显示图标（侧边栏模式）
+  iconOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placement: 'auto'
+  placement: 'auto',
+  iconOnly: false
 })
 </script>
 
 <template>
   <div class="digital-human-toolbar">
     <!-- 设置按钮 -->
-    <button class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square button-lc3WzE toolbar-button-FhFnQ_"
-            type="button">
+    <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'lv-btn-icon-only': iconOnly }]"
+            type="button"
+            :title="iconOnly ? '设置' : undefined">
       <svg width="1em" height="1em" viewBox="0 0 24 24"
            preserveAspectRatio="xMidYMid meet" fill="none"
            role="presentation" xmlns="http://www.w3.org/2000/svg">
@@ -32,7 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
                 fill="currentColor"></path>
         </g>
       </svg>
-      <span>设置</span>
+      <span v-if="!iconOnly">设置</span>
     </button>
   </div>
 </template>

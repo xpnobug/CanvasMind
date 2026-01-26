@@ -25,10 +25,13 @@ interface Props {
   modelValue: CreationType
   // 弹出方向：top-向上, bottom-向下, auto-自动计算
   placement?: Placement
+  // 是否紧凑模式（只显示图标，用于侧边栏）
+  compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placement: 'auto'
+  placement: 'auto',
+  compact: false
 })
 
 // Emits 定义
@@ -87,7 +90,7 @@ const selectType = (type: CreationType) => {
   <div ref="triggerRef" class="type-select-wrapper" @click.stop="toggleDropdown">
     <div :aria-expanded="isOpen"
          aria-haspopup="listbox"
-         class="lv-select lv-select-single lv-select-size-default toolbar-select-h345g7 type-select-BRd1AA select-joF5y7"
+         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'type-select-BRd1AA', 'select-joF5y7', { 'compact-OC0Z0c': compact }]"
          role="combobox"
          tabindex="0">
       <div class="lv-select-view">
@@ -150,10 +153,10 @@ const selectType = (type: CreationType) => {
                 </g>
               </svg>
             </span>
-            {{ currentTypeConfig.label }}
+            <span v-if="!compact">{{ currentTypeConfig.label }}</span>
           </span>
         </span>
-        <div aria-hidden="true" class="lv-select-suffix">
+        <div v-if="!compact" aria-hidden="true" class="lv-select-suffix">
           <div class="lv-select-arrow-icon">
             <svg width="1em" height="1em" viewBox="0 0 24 24"
                  preserveAspectRatio="xMidYMid meet" fill="none"
@@ -166,6 +169,7 @@ const selectType = (type: CreationType) => {
             </svg>
           </div>
         </div>
+        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
       </div>
     </div>
   </div>

@@ -13,10 +13,13 @@ type Placement = 'top' | 'bottom' | 'auto'
 interface Props {
   // 弹出方向：top-向上, bottom-向下, auto-自动计算
   placement?: Placement
+  // 是否只显示图标（侧边栏模式）
+  iconOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placement: 'auto'
+  placement: 'auto',
+  iconOnly: false
 })
 
 // 模型版本配置
@@ -85,10 +88,11 @@ const currentSizeConfig = () => {
   <div class="image-toolbar">
     <!-- 模型版本选择 -->
     <div ref="modelTriggerRef"
-         class="lv-select lv-select-single lv-select-size-default toolbar-select-h345g7 select-joF5y7"
+         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
          role="combobox"
          tabindex="0"
          :aria-expanded="isModelSelectOpen"
+         :title="iconOnly ? '图片 ' + currentModelVersion : undefined"
          @click.stop="toggleModelSelect">
       <div class="lv-select-view">
         <span class="lv-select-view-selector">
@@ -103,10 +107,10 @@ const currentSizeConfig = () => {
                       fill-rule="evenodd"></path>
               </g>
             </svg>
-            图片 {{ currentModelVersion }}
+            <span v-if="!iconOnly">图片 {{ currentModelVersion }}</span>
           </span>
         </span>
-        <div aria-hidden="true" class="lv-select-suffix">
+        <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
           <div class="lv-select-arrow-icon">
             <svg width="1em" height="1em" viewBox="0 0 24 24"
                  preserveAspectRatio="xMidYMid meet" fill="none"
@@ -119,6 +123,7 @@ const currentSizeConfig = () => {
             </svg>
           </div>
         </div>
+        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
       </div>
     </div>
 
@@ -151,8 +156,9 @@ const currentSizeConfig = () => {
 
     <!-- 尺寸选择按钮 -->
     <button ref="sizeTriggerRef"
-            class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square button-lc3WzE toolbar-button-FhFnQ_"
+            :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'lv-btn-icon-only': iconOnly }]"
             type="button"
+            :title="iconOnly ? currentSizeConfig().value + ' ' + currentSizeConfig().quality : undefined"
             @click.stop="toggleSizeSelect">
       <svg fill="none" height="1em" preserveAspectRatio="xMidYMid meet"
            role="presentation" viewBox="0 0 24 24"
@@ -164,7 +170,7 @@ const currentSizeConfig = () => {
                 fill-rule="evenodd"></path>
         </g>
       </svg>
-      <span class="button-text-lDBpQJ">{{ currentSizeConfig().value }}<span class="divider-KQsVxi"></span><span class="commercial-content-PR23Ed">{{ currentSizeConfig().quality }}</span></span>
+      <span v-if="!iconOnly" class="button-text-lDBpQJ">{{ currentSizeConfig().value }}<span class="divider-KQsVxi"></span><span class="commercial-content-PR23Ed">{{ currentSizeConfig().quality }}</span></span>
     </button>
 
     <!-- 尺寸选择弹窗 -->

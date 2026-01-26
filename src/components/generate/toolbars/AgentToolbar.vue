@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Agent 模式工具栏组件
 // 包含自动（生成偏好）、灵感搜索、创意设计三个功能按钮
-// 支持弹出方向设置
+// 支持弹出方向设置和纯图标模式
 
 import { ref, computed } from 'vue'
 import PreferencePanel from '../common/PreferencePanel.vue'
@@ -13,10 +13,13 @@ type Placement = 'top' | 'bottom' | 'auto'
 interface Props {
   // 弹出方向：top-向上, bottom-向下, auto-自动计算
   placement?: Placement
+  // 是否只显示图标（侧边栏模式）
+  iconOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placement: 'auto'
+  placement: 'auto',
+  iconOnly: false
 })
 
 // 定义事件
@@ -81,8 +84,9 @@ const toggleCreativeDesign = () => {
   <div class="agent-toolbar">
     <!-- 自动按钮（打开生成偏好面板） -->
     <button ref="preferenceTriggerRef"
-            :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'active-Rs99sz active-mrQmUS': isPreferencePanelOpen }]"
+            :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'lv-btn-icon-only': iconOnly, 'active-Rs99sz active-mrQmUS': isPreferencePanelOpen }]"
             type="button"
+            :title="iconOnly ? preferenceButtonText : undefined"
             @click="togglePreferencePanel">
       <svg width="1em" height="1em" viewBox="0 0 24 24"
            preserveAspectRatio="xMidYMid meet" fill="none"
@@ -94,15 +98,16 @@ const toggleCreativeDesign = () => {
                 fill="currentColor"></path>
         </g>
       </svg>
-      <span>{{ preferenceButtonText }}</span>
+      <span v-if="!iconOnly">{{ preferenceButtonText }}</span>
     </button>
 
     <!-- 生成偏好面板 -->
     <PreferencePanel v-model:visible="isPreferencePanelOpen" v-model:autoMode="autoMode" :trigger-ref="preferenceTriggerRef" :placement="placement" />
 
     <!-- 灵感搜索按钮 -->
-    <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', 'switch-button-GPRaGT', { 'checked-SqLqYu': inspirationSearchEnabled }]"
+    <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', 'switch-button-GPRaGT', { 'lv-btn-icon-only': iconOnly, 'checked-SqLqYu': inspirationSearchEnabled }]"
             type="button"
+            :title="iconOnly ? '灵感搜索' : undefined"
             @click="toggleInspirationSearch">
       <svg width="1em" height="1em" viewBox="0 0 24 24"
            preserveAspectRatio="xMidYMid meet" fill="none"
@@ -115,12 +120,13 @@ const toggleCreativeDesign = () => {
                 fill="#00CAE0"></path>
         </g>
       </svg>
-      <span>灵感搜索</span>
+      <span v-if="!iconOnly">灵感搜索</span>
     </button>
 
     <!-- 创意设计按钮 -->
-    <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', 'switch-button-GPRaGT', { 'checked-SqLqYu': creativeDesignEnabled }]"
+    <button :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', 'switch-button-GPRaGT', { 'lv-btn-icon-only': iconOnly, 'checked-SqLqYu': creativeDesignEnabled }]"
             type="button"
+            :title="iconOnly ? '创意设计' : undefined"
             @click="toggleCreativeDesign">
       <svg width="1em" height="1em" viewBox="0 0 24 24"
            preserveAspectRatio="xMidYMid meet" fill="none"
@@ -136,7 +142,7 @@ const toggleCreativeDesign = () => {
                 d="M8.078 12.57a.944.944 0 0 1 1.347-.002.98.98 0 0 1 .002 1.37L5.43 18.001a.947.947 0 0 1-1.35 0l-2.296-2.339a.978.978 0 0 1 .003-1.369.944.944 0 0 1 1.347.003l1.621 1.65 3.324-3.378Z"></path>
         </g>
       </svg>
-      <span>创意设计</span>
+      <span v-if="!iconOnly">创意设计</span>
     </button>
   </div>
 </template>

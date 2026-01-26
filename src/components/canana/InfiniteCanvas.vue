@@ -53,17 +53,17 @@ let generating = false
 async function generateImages() {
   if (generating || mockIndex >= mockImages.length) return
   generating = true
-  
+
   // 每次生成 4 张
   const count = Math.min(4, mockImages.length - mockIndex)
-  
+
   for (let i = 0; i < count; i++) {
     await new Promise(r => setTimeout(r, 300 + Math.random() * 200))
     const img = mockImages[mockIndex]
     images.value.push({ ...img, index: mockIndex })
     mockIndex++
   }
-  
+
   // 生成后居中显示
   setTimeout(() => {
     if (containerRef.value) {
@@ -71,12 +71,71 @@ async function generateImages() {
       viewport.centerContent(gridLayout.frameWidth.value, gridLayout.frameHeight.value, rect)
     }
   }, 100)
-  
+
   generating = false
 }
 
+// 添加外部图片（从资产选择器选择的图片）
+async function addImages(assetItems) {
+  if (!assetItems || assetItems.length === 0) return
+
+  const startIndex = images.value.length
+
+  for (let i = 0; i < assetItems.length; i++) {
+    const asset = assetItems[i]
+    // 加载图片获取实际尺寸
+    const imgSize = await getImageSize(asset.url)
+
+    images.value.push({
+      id: `asset-${Date.now()}-${i}`,
+      src: asset.url,
+      w: imgSize.width || props.cellWidth,
+      h: imgSize.height || props.cellHeight,
+      index: startIndex + i
+    })
+  }
+
+  // 添加后居中显示
+  setTimeout(() => {
+    if (containerRef.value) {
+      const rect = containerRef.value.getBoundingClientRect()
+      viewport.centerContent(gridLayout.frameWidth.value, gridLayout.frameHeight.value, rect)
+    }
+  }, 100)
+}
+
+// 获取图片尺寸
+function getImageSize(url) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      // 按比例缩放到网格尺寸
+      const aspectRatio = img.width / img.height
+      let width, height
+
+      if (aspectRatio > props.cellWidth / props.cellHeight) {
+        // 图片更宽，以宽度为准
+        width = props.cellWidth
+        height = Math.round(props.cellWidth / aspectRatio)
+      } else {
+        // 图片更高，以高度为准
+        height = props.cellHeight
+        width = Math.round(props.cellHeight * aspectRatio)
+      }
+
+      resolve({ width, height })
+    }
+    img.onerror = () => {
+      // 加载失败使用默认尺寸
+      resolve({ width: props.cellWidth, height: props.cellHeight })
+    }
+    img.src = url
+  })
+}
+
 // 暴露给父组件
-defineExpose({ generateImages })
+defineExpose({ generateImages, addImages })
 
 // ============ Composables ============
 const viewport = useViewport({

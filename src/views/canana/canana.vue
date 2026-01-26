@@ -35,8 +35,25 @@ const handleUpload = () => {
 
 // 处理选择资产
 const handleSelectAsset = () => {
-  // TODO: 实现选择资产逻辑
   console.log('选择资产')
+}
+
+// 处理资产选择完成 - 渲染到画布
+const handleAssetSelected = (assets) => {
+  if (!assets || assets.length === 0) return
+
+  console.log('选中的资产:', assets)
+
+  // 创建画布并添加图片
+  if (!canvasCreated.value) {
+    canvasCreated.value = true
+    // 等待画布渲染后再添加图片
+    setTimeout(() => {
+      canvasRef.value?.addImages(assets)
+    }, 100)
+  } else {
+    canvasRef.value?.addImages(assets)
+  }
 }
 
 // 处理中间底部发送的消息
@@ -117,6 +134,7 @@ const handlePromptSend = (message, type) => {
                 v-if="!canvasCreated"
                 @upload="handleUpload"
                 @select-asset="handleSelectAsset"
+                @asset-selected="handleAssetSelected"
               />
               <!-- 画布 -->
               <InfiniteCanvas v-else ref="canvasRef" :zoom="zoom" @zoom-change="handleZoomChange" @selection-change="handleSelectionChange" />

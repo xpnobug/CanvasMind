@@ -275,13 +275,6 @@ const panelWidthStyle = computed(() => ({
 </script>
 
 <template>
-  <!-- 调整大小手柄 - 仅在侧边栏模式且 showResizeHandle 为 true 时可见 -->
-  <div v-if="isSidebar && showResizeHandle"
-       class="resize-handle-AIPywp"
-       :class="{ 'resizing-active': isResizing }"
-       :style="panelWidthStyle"
-       @mousedown="handleResizeStart"></div>
-
   <div :class="['dimension-layout-FUl4Nj', layoutClass, { 'collapsed-WjKggt': isCollapsed }]"
        style="--content-generator-collapse-transition-duration:350ms;--content-generator-collapse-transition-timing-function:cubic-bezier(0.15,0.75,0.3,1)"
        @click="handleClick">

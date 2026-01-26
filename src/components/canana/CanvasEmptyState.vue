@@ -1,15 +1,76 @@
-<script setup>
+<script setup lang="ts">
+import { ref } from 'vue'
+import { AssetSelector, type AssetItem } from '@/components/generate/common'
+
 // 定义事件
-const emit = defineEmits(['upload', 'select-asset'])
+const emit = defineEmits(['upload', 'select-asset', 'asset-selected'])
+
+// 资产选择器弹窗状态
+const showAssetSelector = ref(false)
+
+// 模拟资产数据（实际使用时从 API 获取）
+const mockAssets = ref<AssetItem[]>([])
+const assetsLoading = ref(false)
 
 // 本地上传
 const handleUpload = () => {
   emit('upload')
 }
 
-// 选择资产
+// 选择资产 - 打开弹窗
 const handleSelectAsset = () => {
+  showAssetSelector.value = true
   emit('select-asset')
+  // 模拟加载资产数据
+  loadAssets()
+}
+
+// 加载资产数据
+const loadAssets = async () => {
+  assetsLoading.value = true
+  // 模拟 API 请求
+  setTimeout(() => {
+    // 示例数据，实际使用时替换为 API 调用
+    mockAssets.value = [
+      {
+        id: '1',
+        url: 'https://p26-dreamina-sign.byteimg.com/tos-cn-i-tb4s082cfz/003c91f7f32947c6874aaab9d79778cb~tplv-tb4s082cfz-aigc_resize_mark:640:640.jpeg?lk3s=43402efa&x-expires=1769425200&x-signature=zaZPRco%2BPmSEZK3jJDy6tg9rM%2BA%3D&format=.jpeg',
+        type: 'image',
+        name: '示例图片1'
+      },
+      {
+        id: '2',
+        url: 'https://p26-dreamina-sign.byteimg.com/tos-cn-i-tb4s082cfz/003c91f7f32947c6874aaab9d79778cb~tplv-tb4s082cfz-aigc_resize_mark:640:640.jpeg?lk3s=43402efa&x-expires=1769425200&x-signature=zaZPRco%2BPmSEZK3jJDy6tg9rM%2BA%3D&format=.jpeg',
+        type: 'image',
+        name: '示例图片2'
+      },
+      {
+        id: '3',
+        url: 'https://p26-dreamina-sign.byteimg.com/tos-cn-i-tb4s082cfz/003c91f7f32947c6874aaab9d79778cb~tplv-tb4s082cfz-aigc_resize_mark:640:640.jpeg?lk3s=43402efa&x-expires=1769425200&x-signature=zaZPRco%2BPmSEZK3jJDy6tg9rM%2BA%3D&format=.jpeg',
+        type: 'image',
+        name: '示例图片3'
+      },
+      {
+        id: '4',
+        url: 'https://p26-dreamina-sign.byteimg.com/tos-cn-i-tb4s082cfz/003c91f7f32947c6874aaab9d79778cb~tplv-tb4s082cfz-aigc_resize_mark:640:640.jpeg?lk3s=43402efa&x-expires=1769425200&x-signature=zaZPRco%2BPmSEZK3jJDy6tg9rM%2BA%3D&format=.jpeg',
+        type: 'image',
+        name: '示例图片4'
+      }
+    ]
+    assetsLoading.value = false
+  }, 500)
+}
+
+// 确认选择资产
+const handleAssetConfirm = (assets: AssetItem[]) => {
+  emit('asset-selected', assets)
+}
+
+// Tab 切换
+const handleTabChange = (tabKey: string) => {
+  // 根据 tab 重新加载数据
+  console.log('切换到 Tab:', tabKey)
+  loadAssets()
 }
 </script>
 
@@ -134,5 +195,16 @@ const handleSelectAsset = () => {
       </div>
       <div class="toolbar-zDoGgL bottom-toolbar-PE8gbm"></div>
     </main>
+
+    <!-- 资产选择器弹窗 -->
+    <AssetSelector
+      v-model:visible="showAssetSelector"
+      asset-type="image"
+      :assets="mockAssets"
+      :loading="assetsLoading"
+      title="选择资产"
+      @confirm="handleAssetConfirm"
+      @tab-change="handleTabChange"
+    />
   </div>
 </template>

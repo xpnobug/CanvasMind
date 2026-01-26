@@ -4,7 +4,7 @@ import Header from '@components/canana/Header.vue'
 import LeftToolbar from '@components/canana/LeftToolbar.vue'
 import InfiniteCanvas from '@components/canana/InfiniteCanvas.vue'
 import BottomToolbar from '@components/canana/BottomToolbar.vue'
-import PromptEditor from '@components/canana/PromptEditor.vue'
+import ContentGenerator from '@/components/generate/ContentGenerator.vue'
 import RightPanel from '@components/canana/RightPanel.vue'
 
 const zoom = ref(10)
@@ -28,7 +28,7 @@ const handleSelectionChange = (image) => {
 
 // 处理中间底部发送的消息
 const pendingMessage = ref('')
-const handlePromptSend = (message) => {
+const handlePromptSend = (message, type) => {
   pendingMessage.value = message
   rightPanelOpen.value = true
   // 创建画布并生成图片
@@ -265,8 +265,15 @@ const handlePromptSend = (message) => {
           />
         </div>
 
-        <!-- 提示词编辑器 - 右侧面板关闭时显示 -->
-        <PromptEditor v-show="!rightPanelOpen" @send="handlePromptSend" />
+        <!-- 内容生成器 - 右侧面板关闭时显示 -->
+        <ContentGenerator
+          v-show="!rightPanelOpen"
+          class="canvas-content-generator"
+          :collapsible="true"
+          :default-expanded="false"
+          popup-placement="top"
+          @send="handlePromptSend"
+        />
       </div>
 
       <!-- 右侧面板 -->

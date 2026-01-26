@@ -24,6 +24,15 @@ const props = withDefaults(defineProps<Props>(), {
   popupPlacement: 'auto'
 })
 
+// 事件定义
+const emit = defineEmits<{
+  // 发送消息事件
+  send: [message: string, type: CreationType]
+}>()
+
+// 输入内容
+const inputValue = ref('')
+
 // 当前创作类型
 const currentType = ref<CreationType>('agent')
 
@@ -74,13 +83,50 @@ const handleClick = () => {
   }
 }
 
+// 处理输入
+const handleInput = (e: Event) => {
+  const target = e.target as HTMLInputElement | HTMLTextAreaElement
+  inputValue.value = target.value
+}
+
+// 处理键盘事件（回车发送）
+const handleKeydown = (e: KeyboardEvent) => {
+  // Enter 发送，Shift+Enter 换行
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    handleSubmit()
+  }
+}
+
+// 提交消息
+const handleSubmit = () => {
+  const message = inputValue.value.trim()
+  if (!message) return
+
+  // 触发发送事件
+  emit('send', message, currentType.value)
+
+  // 清空输入
+  inputValue.value = ''
+
+  // 如果可折叠，提交后折叠
+  if (props.collapsible) {
+    collapse()
+  }
+}
+
+// 是否禁用提交按钮
+const isSubmitDisabled = computed(() => !inputValue.value.trim())
+
 // 暴露方法供父组件调用
 defineExpose({
   expand,
   collapse,
   toggle,
   isCollapsed,
-  currentType
+  currentType,
+  inputValue,
+  handleSubmit
 })
 
 // 根据创作类型返回不同的 placeholder
@@ -208,14 +254,19 @@ const priceText = computed(() => {
                :style="`--content-generator-prompt-control-height:${promptControlHeight};--content-generator-prompt-control-line-height:24px`">
             <div class="prompt-textarea-sizer-KvlV5P"></div>
             <textarea
+                v-model="inputValue"
                 :class="['lv-textarea', 'textarea-rfj34A', 'prompt-textarea-l5tJNE', { 'collapsed-l8bAEB': isCollapsed, 'collapse-transition-start-AXNjML': isCollapsed }]"
                 :placeholder="placeholder"
-                translate="no"></textarea>
+                translate="no"
+                @input="handleInput"
+                @keydown="handleKeydown"></textarea>
             <input
+                v-model="inputValue"
                 :class="['lv-input', 'lv-input-size-default', 'input-JjM14b', 'prompt-input-w0wBdF', { 'collapsed-l8bAEB': isCollapsed, 'collapse-transition-start-AXNjML': isCollapsed }]"
                 :placeholder="placeholder"
                 translate="no"
-                value="">
+                @input="handleInput"
+                @keydown="handleKeydown">
           </div>
         </div>
 
@@ -235,8 +286,10 @@ const priceText = computed(() => {
             {{ priceText }}
           </div>
           <div>
-            <button :class="['lv-btn', 'lv-btn-primary', 'lv-btn-size-default', 'lv-btn-shape-circle', 'lv-btn-icon-only', 'lv-btn-disabled', 'button-lc3WzE', 'submit-button-KJTUYS', 'collapsed-submit-button-o26OIS', { 'collapsed-WjKggt': isCollapsed, 'expand-transition-start-ejnjPm': !isCollapsed }]"
-                    disabled type="button">
+            <button :class="['lv-btn', 'lv-btn-primary', 'lv-btn-size-default', 'lv-btn-shape-circle', 'lv-btn-icon-only', 'button-lc3WzE', 'submit-button-KJTUYS', 'collapsed-submit-button-o26OIS', { 'collapsed-WjKggt': isCollapsed, 'expand-transition-start-ejnjPm': !isCollapsed, 'lv-btn-disabled': isSubmitDisabled }]"
+                    :disabled="isSubmitDisabled"
+                    type="button"
+                    @click.stop="handleSubmit">
               <svg fill="none" height="1em"
                    preserveAspectRatio="xMidYMid meet"
                    role="presentation" viewBox="0 0 24 24"
@@ -300,8 +353,10 @@ const priceText = computed(() => {
             {{ priceText }}
           </div>
           <div>
-            <button :class="['lv-btn', 'lv-btn-primary', 'lv-btn-size-default', 'lv-btn-shape-circle', 'lv-btn-icon-only', 'lv-btn-disabled', 'button-lc3WzE', 'submit-button-KJTUYS', 'submit-button-CpjScj', { 'collapsed-WjKggt': isCollapsed, 'expand-transition-start-ejnjPm': !isCollapsed }]"
-                    disabled type="button">
+            <button :class="['lv-btn', 'lv-btn-primary', 'lv-btn-size-default', 'lv-btn-shape-circle', 'lv-btn-icon-only', 'button-lc3WzE', 'submit-button-KJTUYS', 'submit-button-CpjScj', { 'collapsed-WjKggt': isCollapsed, 'expand-transition-start-ejnjPm': !isCollapsed, 'lv-btn-disabled': isSubmitDisabled }]"
+                    :disabled="isSubmitDisabled"
+                    type="button"
+                    @click.stop="handleSubmit">
               <svg fill="none" height="1em"
                    preserveAspectRatio="xMidYMid meet"
                    role="presentation" viewBox="0 0 24 24"

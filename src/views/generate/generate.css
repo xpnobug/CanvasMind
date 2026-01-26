@@ -3842,6 +3842,41 @@ div.normal-button-mS74ha {
     transform: scale(var(--reference-group-collapsed-scale))
 }
 
+/* 参考图上传区域样式 */
+.reference-upload-h7tmnr .label-O_5YLx {
+    color: var(--text-placeholder);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 14px;
+    margin-top: 4px;
+    max-width: 40px;
+    overflow: hidden;
+    text-align: center;
+    transition: margin .3s cubic-bezier(.4, 0, .2, 1), color .3s cubic-bezier(.4, 0, .2, 1), opacity .3s cubic-bezier(.4, 0, .2, 1), transform .3s cubic-bezier(.4, 0, .2, 1);
+    white-space: nowrap;
+    will-change: width, height, margin, opacity, transform
+}
+
+/* 视频首尾帧交换按钮样式 */
+.swap-button-Sta_GS {
+    flex-shrink: 0;
+    margin: 0 4px
+}
+
+/* 视频尾帧容器样式 */
+.last-frame-JCr045 {
+    margin-left: 0
+}
+
+/* 参考图区域 has-references 类样式 */
+.has-references-LZsWsN {
+    margin-left: 8px
+}
+
+.has-references-rI7rW7 {
+    margin-left: 8px
+}
+
 .prompt-container-SvZ73x .prompt-textarea-l5tJNE.collapsed-l8bAEB {
     --content-generator-prompt-input-vertical-offset: calc((var(--content-generator-prompt-control-height) - var(--content-generator-prompt-control-line-height)) / 2);
     transform: translateY(var(--content-generator-prompt-input-vertical-offset))

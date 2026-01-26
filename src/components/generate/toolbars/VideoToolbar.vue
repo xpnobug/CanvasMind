@@ -216,43 +216,45 @@ const getCurrentSizeConfig = () => {
     </SelectPopup>
 
     <!-- 功能选择 -->
-    <div ref="featureTriggerRef"
-         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
-         role="combobox"
-         tabindex="0"
-         :aria-expanded="isFeatureSelectOpen"
-         :title="iconOnly ? getCurrentFeatureLabel() : undefined"
-         @click.stop="toggleFeatureSelect">
-      <div class="lv-select-view">
-        <span class="lv-select-view-selector">
-          <span class="lv-select-view-value">
-            <span class="select-option-icon-LQHnJG">
-              <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet"
-                   fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+    <div class="feature-select-VcsuXi">
+      <div ref="featureTriggerRef"
+           :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
+           role="combobox"
+           tabindex="0"
+           :aria-expanded="isFeatureSelectOpen"
+           :title="iconOnly ? getCurrentFeatureLabel() : undefined"
+           @click.stop="toggleFeatureSelect">
+        <div class="lv-select-view">
+          <span class="lv-select-view-selector">
+            <span class="lv-select-view-value">
+              <span class="select-option-icon-LQHnJG">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet"
+                     fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                          d="M3 3a1 1 0 1 1 2 0v.01h8.66V3h3.519A3.82 3.82 0 0 1 21 6.821V17.18A3.82 3.82 0 0 1 17.179 21H13.66v-.01H5V21a1 1 0 1 1-2 0V3Zm16 14.22a1.982 1.982 0 0 1-1.972 1.79H15.66v-3.33H19v1.54ZM17.22 5c.941.091 1.69.84 1.78 1.78v1.56h-3.34V5h1.56Zm-3.56-.01v14.02H5V4.99h8.66ZM19 10.34h-3.34v3.34H19v-3.34Z"
+                          fill="currentColor"></path>
+                  </g>
+                </svg>
+              </span>
+              <span v-if="!iconOnly">{{ getCurrentFeatureLabel() }}</span>
+            </span>
+          </span>
+          <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
+            <div class="lv-select-arrow-icon">
+              <svg width="1em" height="1em" viewBox="0 0 24 24"
+                   preserveAspectRatio="xMidYMid meet" fill="none"
+                   role="presentation" xmlns="http://www.w3.org/2000/svg">
                 <g>
                   <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
-                        d="M3 3a1 1 0 1 1 2 0v.01h8.66V3h3.519A3.82 3.82 0 0 1 21 6.821V17.18A3.82 3.82 0 0 1 17.179 21H13.66v-.01H5V21a1 1 0 1 1-2 0V3Zm16 14.22a1.982 1.982 0 0 1-1.972 1.79H15.66v-3.33H19v1.54ZM17.22 5c.941.091 1.69.84 1.78 1.78v1.56h-3.34V5h1.56Zm-3.56-.01v14.02H5V4.99h8.66ZM19 10.34h-3.34v3.34H19v-3.34Z"
+                        d="M21.01 7.982A1.2 1.2 0 0 1 21 9.679l-8.156 8.06a1.2 1.2 0 0 1-1.688 0L3 9.68a1.2 1.2 0 0 1 1.687-1.707L12 15.199l7.313-7.227a1.2 1.2 0 0 1 1.697.01Z"
                         fill="currentColor"></path>
                 </g>
               </svg>
-            </span>
-            <span v-if="!iconOnly">{{ getCurrentFeatureLabel() }}</span>
-          </span>
-        </span>
-        <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
-          <div class="lv-select-arrow-icon">
-            <svg width="1em" height="1em" viewBox="0 0 24 24"
-                 preserveAspectRatio="xMidYMid meet" fill="none"
-                 role="presentation" xmlns="http://www.w3.org/2000/svg">
-              <g>
-                <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
-                      d="M21.01 7.982A1.2 1.2 0 0 1 21 9.679l-8.156 8.06a1.2 1.2 0 0 1-1.688 0L3 9.68a1.2 1.2 0 0 1 1.687-1.707L12 15.199l7.313-7.227a1.2 1.2 0 0 1 1.697.01Z"
-                      fill="currentColor"></path>
-              </g>
-            </svg>
+            </div>
           </div>
+          <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
         </div>
-        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
       </div>
     </div>
 

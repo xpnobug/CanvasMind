@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 
 // 导入子组件
 import { TypeSelector, type CreationType } from './selectors'
@@ -21,19 +21,27 @@ interface Props {
   defaultExpanded?: boolean
   // 弹窗弹出方向：top-向上, bottom-向下, auto-自动计算
   popupPlacement?: Placement
+  // 是否显示调整大小手柄（仅侧边栏模式有效）
+  showResizeHandle?: boolean
+  // 当前面板宽度（用于设置 CSS 变量）
+  panelWidth?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   layout: 'default',
   collapsible: true,
   defaultExpanded: false,
-  popupPlacement: 'auto'
+  popupPlacement: 'auto',
+  showResizeHandle: false,
+  panelWidth: 400
 })
 
 // 事件定义
 const emit = defineEmits<{
   // 发送消息事件
   send: [message: string, type: CreationType]
+  // 面板宽度调整事件
+  resize: [width: number]
 }>()
 
 // 输入内容
@@ -162,7 +170,7 @@ const isSidebar = computed(() => props.layout === 'sidebar')
 // 根据折叠状态和布局模式返回不同的高度
 const promptControlHeight = computed(() => {
   if (isSidebar.value) {
-    return '24px'
+    return '96px'
   }
   return isCollapsed.value ? '42px' : '96px'
 })
@@ -198,17 +206,91 @@ const submitButtonContainerClass = computed(() =>
 const collapsedSubmitButtonClass = computed(() =>
   isSidebar.value ? 'collapsed-submit-button-RE6ufv' : 'collapsed-submit-button-o26OIS'
 )
+
+// 是否有参考图（图片和视频模式有参考图上传）
+const hasReferences = computed(() =>
+  currentType.value === 'image' || currentType.value === 'video'
+)
+
+// 参考图容器类名（侧边栏和默认模式使用不同类名）
+const hasReferencesClass = computed(() =>
+  isSidebar.value ? 'has-references-LZsWsN' : 'has-references-rI7rW7'
+)
+
+// ========== 调整大小手柄逻辑 ==========
+
+// 是否正在拖拽调整大小
+const isResizing = ref(false)
+
+// 最小和最大面板宽度
+const MIN_PANEL_WIDTH = 320
+const MAX_PANEL_WIDTH = 800
+
+// 开始调整大小
+const handleResizeStart = (e: MouseEvent) => {
+  e.preventDefault()
+  isResizing.value = true
+  document.addEventListener('mousemove', handleResizeMove)
+  document.addEventListener('mouseup', handleResizeEnd)
+  // 添加拖拽时的样式
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+}
+
+// 调整大小中
+const handleResizeMove = (e: MouseEvent) => {
+  if (!isResizing.value) return
+
+  // 计算新的宽度（从窗口右边缘到鼠标位置）
+  const newWidth = window.innerWidth - e.clientX
+
+  // 限制在最小和最大宽度之间
+  const clampedWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, newWidth))
+
+  // 触发 resize 事件
+  emit('resize', clampedWidth)
+}
+
+// 结束调整大小
+const handleResizeEnd = () => {
+  isResizing.value = false
+  document.removeEventListener('mousemove', handleResizeMove)
+  document.removeEventListener('mouseup', handleResizeEnd)
+  // 恢复样式
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+  if (isResizing.value) {
+    handleResizeEnd()
+  }
+})
+
+// 面板宽度样式（用于设置 CSS 变量）
+const panelWidthStyle = computed(() => ({
+  '--right-panel-width': `${props.panelWidth}px`
+}))
 </script>
 
 <template>
+  <!-- 调整大小手柄 - 仅在侧边栏模式且 showResizeHandle 为 true 时可见 -->
+  <div v-if="isSidebar && showResizeHandle"
+       class="resize-handle-AIPywp"
+       :class="{ 'resizing-active': isResizing }"
+       :style="panelWidthStyle"
+       @mousedown="handleResizeStart"></div>
+
   <div :class="['dimension-layout-FUl4Nj', layoutClass, { 'collapsed-WjKggt': isCollapsed }]"
        style="--content-generator-collapse-transition-duration:350ms;--content-generator-collapse-transition-timing-function:cubic-bezier(0.15,0.75,0.3,1)"
        @click="handleClick">
     <div class="layout-KSckhZ">
       <div class="content-oZ2zsI">
-        <!-- 参考图上传区域（侧边栏模式下隐藏） -->
-        <div v-if="!isSidebar" :class="['references-vWIzeo', { 'collapsed-_VpN2b': isCollapsed }]">
-          <div :class="['reference-group-_DAGw1', { 'collapsed-J9LsWu': isCollapsed }]"
+        <!-- 参考图上传区域 -->
+        <!-- 图片模式：单个参考图上传 -->
+        <div v-if="currentType === 'image'" :class="['references-vWIzeo', { 'collapsed-_VpN2b': isCollapsed && !isSidebar }]">
+          <div :class="['reference-group-_DAGw1', { 'collapsed-J9LsWu': isCollapsed && !isSidebar }]"
                style="--reference-count:1;--reference-item-width:48px;--reference-item-gap:4px">
             <div class="reference-group-background-f6pFpT"></div>
             <div class="reference-group-hover-trigger-YTDCQf"></div>
@@ -235,6 +317,96 @@ const collapsedSubmitButtonClass = computed(() =>
                   <input accept="image/jpeg,.jpeg,image/jpg,.jpg,image/png,.png,image/webp,.webp,image/bmp,.bmp"
                          class="file-input-OfqonL sf-hidden"
                          multiple type="file"
+                         value="">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 视频模式：首尾帧上传 -->
+        <div v-else-if="currentType === 'video'" :class="['references-vWIzeo', { 'collapsed-_VpN2b': isCollapsed && !isSidebar }]">
+          <!-- 首帧上传 -->
+          <div :class="['reference-group-_DAGw1', { 'collapsed-J9LsWu': isCollapsed && !isSidebar }]"
+               style="--reference-count:1;--reference-item-width:48px;--reference-item-gap:4px">
+            <div class="reference-group-background-f6pFpT"></div>
+            <div class="reference-group-hover-trigger-YTDCQf"></div>
+            <div class="reference-group-content-ztz9q2 expanded-hIAQK3">
+              <div class="reference-item-aI97LK expanded-fVSy9S"
+                   data-index="0"
+                   style="--index-in-group:0;--rotate:8deg">
+                <div class="reference-upload-h7tmnr light-Bis76t"
+                     style="--rotate:-8deg">
+                  <svg class="icon-TrJRuq" fill="none" height="1em"
+                       preserveAspectRatio="xMidYMid meet"
+                       role="presentation"
+                       viewBox="0 0 24 24"
+                       width="1em"
+                       xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                      <path clip-rule="evenodd"
+                            d="M10.8 20a1.2 1.2 0 0 0 2.4 0v-6.8H20a1.2 1.2 0 1 0 0-2.4h-6.8V4a1.2 1.2 0 0 0-2.4 0v6.8H4a1.2 1.2 0 0 0 0 2.4h6.8V20Z"
+                            data-follow-fill="currentColor"
+                            fill="currentColor"
+                            fill-rule="evenodd"></path>
+                    </g>
+                  </svg>
+                  <div class="label-O_5YLx">首帧</div>
+                  <input accept="image/jpeg,.jpeg,image/jpg,.jpg,image/png,.png,image/webp,.webp,image/bmp,.bmp"
+                         class="file-input-OfqonL sf-hidden"
+                         type="file"
+                         value="">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 交换按钮 -->
+          <button class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square lv-btn-icon-only button-c41WFq swap-button-Sta_GS"
+                  type="button">
+            <svg width="1em" height="1em" viewBox="0 0 24 24"
+                 preserveAspectRatio="xMidYMid meet"
+                 fill="none" role="presentation"
+                 xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <path data-follow-fill="currentColor"
+                      d="M8.5 5.5a1 1 0 0 0-1.707-.707l-3 3A1 1 0 0 0 4.5 9.5h15a1 1 0 0 0 0-2h-11v-2Zm7 13a1 1 0 0 0 1.707.707l3-3A1 1 0 0 0 19.5 14.5h-15a1 1 0 1 0 0 2h11v2Z"
+                      clip-rule="evenodd"
+                      fill-rule="evenodd"
+                      fill="currentColor"></path>
+              </g>
+            </svg>
+          </button>
+
+          <!-- 尾帧上传 -->
+          <div :class="['reference-group-_DAGw1', 'last-frame-JCr045', { 'collapsed-J9LsWu': isCollapsed && !isSidebar }]"
+               style="--reference-count:1;--reference-item-width:48px;--reference-item-gap:4px">
+            <div class="reference-group-background-f6pFpT"></div>
+            <div class="reference-group-hover-trigger-YTDCQf"></div>
+            <div class="reference-group-content-ztz9q2 expanded-hIAQK3">
+              <div class="reference-item-aI97LK expanded-fVSy9S"
+                   data-index="0"
+                   style="--index-in-group:0;--rotate:-5deg">
+                <div class="reference-upload-h7tmnr light-Bis76t"
+                     style="--rotate:5deg">
+                  <svg class="icon-TrJRuq" fill="none" height="1em"
+                       preserveAspectRatio="xMidYMid meet"
+                       role="presentation"
+                       viewBox="0 0 24 24"
+                       width="1em"
+                       xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                      <path clip-rule="evenodd"
+                            d="M10.8 20a1.2 1.2 0 0 0 2.4 0v-6.8H20a1.2 1.2 0 1 0 0-2.4h-6.8V4a1.2 1.2 0 0 0-2.4 0v6.8H4a1.2 1.2 0 0 0 0 2.4h6.8V20Z"
+                            data-follow-fill="currentColor"
+                            fill="currentColor"
+                            fill-rule="evenodd"></path>
+                    </g>
+                  </svg>
+                  <div class="label-O_5YLx">尾帧</div>
+                  <input accept="image/jpeg,.jpeg,image/jpg,.jpg,image/png,.png,image/webp,.webp,image/bmp,.bmp"
+                         class="file-input-OfqonL sf-hidden"
+                         type="file"
                          value="">
                 </div>
               </div>
@@ -298,7 +470,7 @@ const collapsedSubmitButtonClass = computed(() =>
         </div>
 
         <!-- 折叠状态下的提交按钮 -->
-        <div :class="[submitButtonContainerClass, { 'collapsed-WjKggt': isCollapsed, 'has-references-rI7rW7': !isSidebar }]">
+        <div :class="[submitButtonContainerClass, { 'collapsed-WjKggt': isCollapsed, [hasReferencesClass]: hasReferences }]">
           <!-- 根据创作类型显示价格信息（仅图片和视频类型显示） -->
           <div v-if="showPrice" class="commercial-button-content-WWEPba">
             <svg fill="none" height="1em" preserveAspectRatio="xMidYMid meet"

@@ -2,7 +2,7 @@
 // 资产选择器组件
 // 支持选择图片和视频资产
 
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // 资产类型
 export type AssetType = 'image' | 'video'

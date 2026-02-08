@@ -5,6 +5,7 @@ import Canana from '../views/canana/canana.vue'
 import AccountManagement from '../views/account/AccountManagement.vue'
 import PublishCenter from '../views/publish/PublishCenter.vue'
 import AssetManagement from '../views/asset/AssetManagement.vue'
+const Workflow = () => import('../views/workflow/index.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -36,6 +37,11 @@ const routes: RouteRecordRaw[] = [
     path: '/asset',
     name: 'AssetManagement',
     component: AssetManagement
+  },
+  {
+    path: '/workflow',
+    name: 'Workflow',
+    component: Workflow
   }
 ]
 

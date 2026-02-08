@@ -104,6 +104,31 @@
         </div>
       </div>
 
+      <!-- 工作流 -->
+      <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="Workflow" @click="navigateTo('/workflow')">
+        <div class="icon-container-XAovJs" style="--menu-icon-size:48px">
+          <div class="content-XAjJup">
+            <div class="icon-menu-m2Y0RB">
+              <div class="icon-wrap-tBuhBU hide-itzP3D sf-hidden">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" d="M4 5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9v2h6v-2h-.5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2H18a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-.5v2.5a1.5 1.5 0 0 1-1.5 1.5H9v2h.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h.5V14H9v-2H6.5A1.5 1.5 0 0 1 5 10.5V10h-.5A2 2 0 0 1 2.5 8V5Z" fill="currentColor"></path>
+                  </g>
+                </svg>
+              </div>
+              <div class="icon-wrap-tBuhBU">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" fill="none" role="presentation" xmlns="http://www.w3.org/2000/svg">
+                  <g>
+                    <path data-follow-fill="currentColor" d="M6 5h3v3H6V5ZM4 5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9v2h6v-2h-.5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2H18a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-.5v2.5a1.5 1.5 0 0 1-1.5 1.5H9v2h.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h.5V14H9v-2H6.5A1.5 1.5 0 0 1 5 10.5V10H4.5A2 2 0 0 1 2.5 8V5Zm10.5 0h3v3h-3V5ZM6 16h3.5v3H6v-3Z" clip-rule="evenodd" fill-rule="evenodd" fill="currentColor"></path>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="lv-typography text-HLQFZY">工作流</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 账号管理 -->
       <div tabindex="0" role="menuitem" class="lv-menu-item lv-menu-item-size-default" id="AccountManagement" @click="navigateTo('/account')">
         <div class="icon-container-XAovJs" style="--menu-icon-size:48px">

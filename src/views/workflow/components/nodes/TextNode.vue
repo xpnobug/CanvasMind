@@ -8,6 +8,7 @@ import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes } from '
 import { streamChatCompletions } from '../../api/chat'
 import { getApiKey } from '../../api/request'
 import { getAllChatModels } from '../../config/models'
+import WfSelect from '../WfSelect.vue'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()
@@ -133,14 +134,12 @@ const createVideoConfig = () => {
         />
 
         <!-- 润色模型选择 -->
-        <select
+        <WfSelect
           v-model="polishModel"
+          :options="chatModelOptions"
           @change="updateNode(id, { polishModel: polishModel })"
-          @mousedown.stop
-          style="margin-top: 6px; width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 4px 8px; color: var(--text-primary); font-size: 11px; outline: none; cursor: pointer;"
-        >
-          <option v-for="opt in chatModelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
+          style="margin-top: 6px;"
+        />
 
         <!-- AI 润色按钮 -->
         <button

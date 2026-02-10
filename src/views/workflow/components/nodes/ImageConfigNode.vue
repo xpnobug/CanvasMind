@@ -8,6 +8,7 @@ import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes, edges } from '../../composables/useWorkflowCanvas'
 import { IMAGE_MODELS, BANANA_SIZE_OPTIONS, SEEDREAM_SIZE_OPTIONS, SEEDREAM_4K_SIZE_OPTIONS, SEEDREAM_QUALITY_OPTIONS, getAllImageModels } from '../../config/models'
 import { generateImage } from '../../api/image'
+import WfSelect from '../WfSelect.vue'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()
@@ -186,40 +187,19 @@ watch(
         <!-- 模型选择 -->
         <div>
           <label class="wf-node-label">模型</label>
-          <select
-            v-model="model"
-            @change="updateConfig"
-            @mousedown.stop
-            style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;"
-          >
-            <option v-for="opt in modelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="model" :options="modelOptions" @change="updateConfig" />
         </div>
 
         <!-- 画质选择 -->
         <div v-if="qualityOptions.length">
           <label class="wf-node-label">画质</label>
-          <select
-            v-model="quality"
-            @change="updateConfig"
-            @mousedown.stop
-            style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;"
-          >
-            <option v-for="opt in qualityOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="quality" :options="qualityOptions" @change="updateConfig" />
         </div>
 
         <!-- 尺寸选择 -->
         <div v-if="sizeOptions.length">
           <label class="wf-node-label">尺寸</label>
-          <select
-            v-model="size"
-            @change="updateConfig"
-            @mousedown.stop
-            style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;"
-          >
-            <option v-for="opt in sizeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="size" :options="sizeOptions" @change="updateConfig" />
         </div>
 
         <!-- 生成按钮 -->

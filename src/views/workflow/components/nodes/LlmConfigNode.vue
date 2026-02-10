@@ -8,6 +8,7 @@ import { updateNode, removeNode, duplicateNode, nodes, edges } from '../../compo
 import { streamChatCompletions } from '../../api/chat'
 import { getApiKey } from '../../api/request'
 import { getAllChatModels } from '../../config/models'
+import WfSelect from '../WfSelect.vue'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()
@@ -115,16 +116,12 @@ const handleDuplicate = () => {
 
         <div>
           <label class="wf-node-label">模型</label>
-          <select v-model="model" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
-            <option v-for="opt in modelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="model" :options="modelOptions" @change="updateConfig" />
         </div>
 
         <div>
           <label class="wf-node-label">输出格式</label>
-          <select v-model="outputFormat" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
-            <option v-for="opt in outputFormatOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="outputFormat" :options="outputFormatOptions" @change="updateConfig" />
         </div>
 
         <button class="wf-node-generate-btn purple" :disabled="isGenerating" @click="handleGenerate">

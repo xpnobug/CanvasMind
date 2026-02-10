@@ -7,6 +7,7 @@ import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes, edges } from '../../composables/useWorkflowCanvas'
 import { VIDEO_MODELS, VIDEO_RATIO_LIST, getAllVideoModels } from '../../config/models'
 import { createVideoTask, pollVideoTask } from '../../api/video'
+import WfSelect from '../WfSelect.vue'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()
@@ -159,23 +160,17 @@ watch(
 
         <div>
           <label class="wf-node-label">模型</label>
-          <select v-model="model" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
-            <option v-for="opt in modelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="model" :options="modelOptions" @change="updateConfig" />
         </div>
 
         <div v-if="ratioOptions.length">
           <label class="wf-node-label">比例</label>
-          <select v-model="ratio" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
-            <option v-for="opt in ratioOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="ratio" :options="ratioOptions" @change="updateConfig" />
         </div>
 
         <div v-if="durationOptions.length">
           <label class="wf-node-label">时长</label>
-          <select v-model="duration" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
-            <option v-for="opt in durationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <WfSelect v-model="duration" :options="durationOptions" @change="updateConfig" />
         </div>
 
         <button class="wf-node-generate-btn amber" :disabled="isGenerating" @click="handleGenerate">

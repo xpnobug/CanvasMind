@@ -430,25 +430,28 @@
 
 /* 节点悬浮操作 */
 .wf-node-wrapper {
+  padding-right: 50px;
   padding-top: 20px;
   position: relative;
 }
 
 .wf-node-actions {
   position: absolute;
-  top: -5px;
-  left: calc(100% + 6px);
+  left: calc(100% - 42px);
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 1000;
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
-  white-space: nowrap;
 }
 
 .wf-node-action-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
+  gap: 0;
+  padding: 8px;
   background: var(--canvas-float-block-default, rgba(32, 33, 39, 0.72));
   backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
   border: 0.5px solid var(--stroke-tertiary, rgba(204, 221, 255, 0.08));
@@ -457,11 +460,25 @@
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.wf-node-action-btn span {
+  max-width: 0;
+  overflow: hidden;
+  transition: max-width 0.2s, margin-left 0.2s;
+  margin-left: 0;
 }
 
 .wf-node-action-btn:hover {
   background: var(--bg-block-primary-hover, rgba(204, 221, 255, 0.12));
   color: var(--text-primary, #f5fbff);
+}
+
+.wf-node-action-btn:hover span {
+  max-width: 80px;
+  margin-left: 6px;
 }
 
 /* ========== 节点类型颜色 ========== */

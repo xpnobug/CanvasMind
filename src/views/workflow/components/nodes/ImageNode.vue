@@ -216,11 +216,23 @@ const handleDuplicate = () => {
     <!-- 悬浮操作 -->
     <div v-show="showActions" class="wf-node-actions">
       <button class="wf-node-action-btn" @click="handleDuplicate">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
           <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/>
         </svg>
         <span>复制</span>
+      </button>
+      <button v-if="imageUrl" class="wf-node-action-btn" @click="handleDownload">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>下载</span>
+      </button>
+      <button class="wf-node-action-btn" @click="handleDelete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>删除</span>
       </button>
     </div>
   </div>

@@ -42,7 +42,7 @@ export const WORKFLOW_TEMPLATES = [
     category: 'storyboard',
     createNodes: (startPosition) => {
       _counter = 0
-      const sp = 400, rsp = 280
+      const sp = 400, rsp = 420
       const angles = ['front', 'side', 'back', 'top']
       const nodes = [], edges = []
 
@@ -89,7 +89,7 @@ export const WORKFLOW_TEMPLATES = [
     category: 'ecommerce',
     createNodes: (startPosition) => {
       _counter = 0
-      const col = 500, row = 350
+      const col = 500, row = 480
       const nodes = [], edges = []
 
       // 输入：产品信息
@@ -187,7 +187,7 @@ export const WORKFLOW_TEMPLATES = [
     category: 'drama',
     createNodes: (startPosition) => {
       _counter = 0
-      const col = 400, row = 280
+      const col = 400, row = 420
       const nodes = [], edges = []
 
       // 第一阶段：生成正面角色图
@@ -243,7 +243,7 @@ export const WORKFLOW_TEMPLATES = [
     category: 'drama',
     createNodes: (startPosition) => {
       _counter = 0
-      const col = 400, row = 260
+      const col = 400, row = 420
       const nodes = [], edges = []
 
       // 第一阶段：生成基础场景
@@ -294,7 +294,7 @@ export const WORKFLOW_TEMPLATES = [
     category: 'creative',
     createNodes: (startPosition) => {
       _counter = 0
-      const col = 420, row = 300, pageRow = 200
+      const col = 420, row = 420, pageRow = 350
       const nodes = [], edges = []
 
       // 第一阶段：故事输入与角色设计

@@ -54,7 +54,6 @@ const handleSelect = (role) => {
     <div
       :style="{ position: 'absolute', transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`, pointerEvents: 'all' }"
       class="nodrag nopan"
-      style="position: relative;"
     >
       <button
         @click="showMenu = !showMenu"

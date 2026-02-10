@@ -450,7 +450,7 @@
 .wf-node-action-btn {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 6px;
   padding: 8px;
   background: var(--canvas-float-block-default, rgba(32, 33, 39, 0.72));
   backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
@@ -464,7 +464,11 @@
   overflow: hidden;
 }
 
-.wf-node-action-btn span {
+.wf-node-actions .wf-node-action-btn {
+  gap: 0;
+}
+
+.wf-node-actions .wf-node-action-btn span {
   max-width: 0;
   overflow: hidden;
   transition: max-width 0.2s, margin-left 0.2s;
@@ -476,7 +480,7 @@
   color: var(--text-primary, #f5fbff);
 }
 
-.wf-node-action-btn:hover span {
+.wf-node-actions .wf-node-action-btn:hover span {
   max-width: 80px;
   margin-left: 6px;
 }

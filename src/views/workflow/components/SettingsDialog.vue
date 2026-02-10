@@ -164,21 +164,23 @@ watch(() => props.visible, (v) => {
           <!-- 添加自定义模型 -->
           <div class="wf-settings-divider"></div>
           <label class="wf-node-label">添加自定义模型</label>
-          <div class="wf-add-model-form">
-            <select v-model="newModel.category" @mousedown.stop class="wf-settings-input" style="width: auto; flex: 0 0 auto;">
-              <option value="image">图片</option>
-              <option value="video">视频</option>
-              <option value="chat">对话</option>
-            </select>
-            <input v-model="newModel.label" placeholder="显示名称" @mousedown.stop class="wf-settings-input" style="flex: 1;" />
-            <input v-model="newModel.key" placeholder="模型 ID" @mousedown.stop class="wf-settings-input" style="flex: 1;" />
-            <button class="wf-btn wf-btn-sm" @click="addModel" style="height: 32px; padding: 0 12px; background: var(--brand-main-default, #00cae0); color: #000; border-radius: 6px; font-size: 12px;">添加</button>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 6px;">
+              <select v-model="newModel.category" @mousedown.stop class="wf-settings-input" style="width: auto; flex: 0 0 auto; cursor: pointer;">
+                <option value="image">图片</option>
+                <option value="video">视频</option>
+                <option value="chat">对话</option>
+              </select>
+              <input v-model="newModel.label" placeholder="显示名称" @mousedown.stop class="wf-settings-input" style="flex: 1;" />
+              <input v-model="newModel.key" placeholder="模型 ID" @mousedown.stop class="wf-settings-input" style="flex: 1;" />
+            </div>
+            <button class="wf-settings-add-btn" @click="addModel">添加模型</button>
           </div>
         </div>
 
         <!-- 底部按钮 -->
         <div class="wf-settings-footer">
-          <button class="wf-node-generate-btn" @click="save">保存设置</button>
+          <button class="wf-settings-save-btn" @click="save">保存设置</button>
         </div>
       </div>
     </div>

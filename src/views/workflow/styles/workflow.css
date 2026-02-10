@@ -247,6 +247,40 @@
   border-top: 0.5px solid var(--stroke-tertiary, rgba(204, 221, 255, 0.08));
 }
 
+.wf-settings-save-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--brand-main-default, #00cae0);
+  color: #000;
+  transition: background 0.2s;
+}
+
+.wf-settings-save-btn:hover {
+  background: var(--brand-main-hover, #0ad4ea);
+}
+
+.wf-settings-add-btn {
+  width: 100%;
+  padding: 8px;
+  border: 0.5px solid var(--stroke-tertiary, rgba(204, 221, 255, 0.08));
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--bg-block-secondary-default, rgba(204, 221, 255, 0.04));
+  color: var(--text-secondary, rgba(224, 245, 255, 0.6));
+  transition: all 0.2s;
+}
+
+.wf-settings-add-btn:hover {
+  background: var(--bg-block-primary-hover, rgba(204, 221, 255, 0.12));
+  color: var(--text-primary, #f5fbff);
+}
+
 .wf-model-list {
   display: flex;
   flex-wrap: wrap;

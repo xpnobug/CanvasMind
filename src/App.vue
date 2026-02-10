@@ -1,11 +1,12 @@
 <template>
   <div id="app">
     <router-view />
+    <ThemeToggle />
   </div>
 </template>
 
 <script setup>
-// 使用 router-view 来显示路由组件
+import ThemeToggle from '@/components/ThemeToggle.vue'
 </script>
 
 <style>

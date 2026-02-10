@@ -3,7 +3,7 @@
  * 图片配置节点组件
  * 收集连接的提示词和参考图，调用图片生成 API
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes, edges } from '../../composables/useWorkflowCanvas'
 import { IMAGE_MODELS, BANANA_SIZE_OPTIONS, SEEDREAM_SIZE_OPTIONS, SEEDREAM_4K_SIZE_OPTIONS, SEEDREAM_QUALITY_OPTIONS, getAllImageModels } from '../../config/models'
@@ -107,11 +107,14 @@ const handleGenerate = async () => {
       updateNode(outputNodeId, { url, label: '生成结果', loading: false })
       updateNode(props.id, { executed: true, outputNodeId })
     } else {
-      updateNode(outputNodeId, { label: '生成失败', loading: false })
+      updateNode(outputNodeId, { label: '生成失败', loading: false, error: '未返回图片' })
+      updateNode(props.id, { error: '未返回图片' })
     }
   } catch (err) {
     console.error('图片生成失败:', err)
-    if (outputNodeId) updateNode(outputNodeId, { label: '生成失败', loading: false })
+    const msg = err.message || '图片生成失败'
+    if (outputNodeId) updateNode(outputNodeId, { label: '生成失败', loading: false, error: msg })
+    updateNode(props.id, { error: msg })
   } finally {
     isGenerating.value = false
   }
@@ -122,6 +125,17 @@ const handleDuplicate = () => {
   const newId = duplicateNode(props.id)
   if (newId) setTimeout(() => updateNodeInternals(newId), 50)
 }
+
+// 监听自动执行标志
+watch(
+  () => props.data?.autoExecute,
+  (shouldExecute) => {
+    if (shouldExecute && !isGenerating.value) {
+      updateNode(props.id, { autoExecute: false })
+      setTimeout(() => handleGenerate(), 200)
+    }
+  }
+)
 </script>
 
 <template>

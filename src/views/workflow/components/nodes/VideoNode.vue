@@ -12,10 +12,12 @@ const { updateNodeInternals } = useVueFlow()
 const showActions = ref(false)
 const videoUrl = ref(props.data?.url || '')
 const isLoading = ref(!!props.data?.loading)
+const errorMsg = ref(props.data?.error || '')
 
 watch(() => props.data, (d) => {
   if (d?.url !== undefined) videoUrl.value = d.url
   if (d?.loading !== undefined) isLoading.value = d.loading
+  if (d?.error !== undefined) errorMsg.value = d.error
 }, { deep: true })
 
 const handleUpload = () => {
@@ -70,6 +72,10 @@ const handleDuplicate = () => {
             <div class="wf-generating-pulse"></div>
             <div class="wf-generating-icon"><img src="../../assets/loading.webp" alt="" /></div>
             <span class="wf-generating-text">创作中，预计等待 1 分钟</span>
+          </div>
+          <div v-else-if="errorMsg" class="wf-media-error">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>{{ errorMsg }}</span>
           </div>
           <video v-else-if="videoUrl" :src="videoUrl" controls style="max-height: 240px; width: 100%;" />
           <div v-else class="wf-media-placeholder" style="aspect-ratio: 16/9; cursor: pointer;" @click="handleUpload">

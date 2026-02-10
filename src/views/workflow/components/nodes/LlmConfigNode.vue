@@ -15,8 +15,15 @@ const { updateNodeInternals } = useVueFlow()
 const showActions = ref(false)
 const isGenerating = ref(false)
 const systemPrompt = ref(props.data?.systemPrompt || '')
-const model = ref(props.data?.model || 'gpt-4o-mini')
+const model = ref(props.data?.model || 'gemini-3-flash-preview')
 const outputContent = ref(props.data?.outputContent || '')
+const outputFormat = ref(props.data?.outputFormat || 'text')
+
+const outputFormatOptions = [
+  { label: '纯文本', value: 'text' },
+  { label: 'JSON', value: 'json' },
+  { label: 'Markdown', value: 'markdown' }
+]
 
 const modelOptions = computed(() => getAllChatModels().map(m => ({ label: m.label, value: m.key })))
 
@@ -24,10 +31,11 @@ watch(() => props.data, (d) => {
   if (d?.systemPrompt !== undefined) systemPrompt.value = d.systemPrompt
   if (d?.model !== undefined) model.value = d.model
   if (d?.outputContent !== undefined) outputContent.value = d.outputContent
+  if (d?.outputFormat !== undefined) outputFormat.value = d.outputFormat
 }, { deep: true })
 
 const updateConfig = () => {
-  updateNode(props.id, { systemPrompt: systemPrompt.value, model: model.value, outputContent: outputContent.value })
+  updateNode(props.id, { systemPrompt: systemPrompt.value, model: model.value, outputContent: outputContent.value, outputFormat: outputFormat.value })
 }
 
 const getInput = () => {
@@ -53,7 +61,10 @@ const handleGenerate = async () => {
 
   try {
     const messages = []
-    if (systemPrompt.value) messages.push({ role: 'system', content: systemPrompt.value })
+    let sysContent = systemPrompt.value || ''
+    if (outputFormat.value === 'json') sysContent += '\n\n请以合法的 JSON 格式输出结果，不要包含其他内容。'
+    else if (outputFormat.value === 'markdown') sysContent += '\n\n请以 Markdown 格式输出结果。'
+    if (sysContent) messages.push({ role: 'system', content: sysContent })
     messages.push({ role: 'user', content: input || '请根据系统提示词生成内容' })
 
     for await (const chunk of streamChatCompletions({ model: model.value, messages })) {
@@ -106,6 +117,13 @@ const handleDuplicate = () => {
           <label class="wf-node-label">模型</label>
           <select v-model="model" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
             <option v-for="opt in modelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="wf-node-label">输出格式</label>
+          <select v-model="outputFormat" @change="updateConfig" @mousedown.stop style="width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 6px 8px; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;">
+            <option v-for="opt in outputFormatOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
         </div>
 

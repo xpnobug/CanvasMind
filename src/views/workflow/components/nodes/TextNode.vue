@@ -2,20 +2,28 @@
 /**
  * 文本节点组件
  */
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes } from '../../composables/useWorkflowCanvas'
+import { streamChatCompletions } from '../../api/chat'
+import { getApiKey } from '../../api/request'
+import { getAllChatModels } from '../../config/models'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()
 
 const content = ref(props.data?.content || '')
 const showActions = ref(false)
+const isPolishing = ref(false)
+const polishModel = ref(props.data?.polishModel || 'gemini-3-flash-preview')
+
+const chatModelOptions = computed(() => getAllChatModels().map(m => ({ label: m.label, value: m.key })))
 
 watch(() => props.data?.content, (v) => { if (v !== undefined) content.value = v })
+watch(() => props.data?.polishModel, (v) => { if (v !== undefined) polishModel.value = v })
 
 const handleInput = () => {
-  updateNode(props.id, { content: content.value })
+  updateNode(props.id, { content: content.value, polishModel: polishModel.value })
 }
 
 const handleDelete = () => removeNode(props.id)
@@ -25,11 +33,58 @@ const handleDuplicate = () => {
   if (newId) setTimeout(() => updateNodeInternals(newId), 50)
 }
 
+// AI 润色提示词
+const handlePolish = async () => {
+  const input = content.value.trim()
+  if (!input || !getApiKey()) return
+  isPolishing.value = true
+  const original = content.value
+  try {
+    let result = ''
+    for await (const chunk of streamChatCompletions({
+      model: polishModel.value,
+      messages: [
+        { role: 'system', content: '你是一个专业的AI绘画提示词专家。将用户输入的内容美化成高质量的生图提示词，包含风格、光线、构图、细节等要素。直接返回提示词，不要其他解释。' },
+        { role: 'user', content: input }
+      ]
+    })) {
+      result += chunk
+    }
+    if (result) {
+      content.value = result
+      updateNode(props.id, { content: result })
+    }
+  } catch {
+    content.value = original
+  } finally {
+    isPolishing.value = false
+  }
+}
+
 // 快捷创建文生图配置节点
 const createImageConfig = () => {
   const node = nodes.value.find(n => n.id === props.id)
   if (!node) return
   const newId = addNode('imageConfig', {
+    x: node.position.x + 380,
+    y: node.position.y
+  })
+  addEdge({
+    source: props.id,
+    target: newId,
+    sourceHandle: 'right',
+    targetHandle: 'left',
+    type: 'promptOrder',
+    data: { promptOrder: 1 }
+  })
+  setTimeout(() => updateNodeInternals(newId), 50)
+}
+
+// 快捷创建视频配置节点
+const createVideoConfig = () => {
+  const node = nodes.value.find(n => n.id === props.id)
+  if (!node) return
+  const newId = addNode('videoConfig', {
     x: node.position.x + 380,
     y: node.position.y
   })
@@ -77,13 +132,41 @@ const createImageConfig = () => {
           style="min-height: 80px; max-height: 160px; overflow-y: auto;"
         />
 
+        <!-- 润色模型选择 -->
+        <select
+          v-model="polishModel"
+          @change="updateNode(id, { polishModel: polishModel })"
+          @mousedown.stop
+          style="margin-top: 6px; width: 100%; background: var(--bg-block-secondary-default); border: 0.5px solid var(--stroke-tertiary); border-radius: 8px; padding: 4px 8px; color: var(--text-primary); font-size: 11px; outline: none; cursor: pointer;"
+        >
+          <option v-for="opt in chatModelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+
+        <!-- AI 润色按钮 -->
+        <button
+          class="wf-node-action-btn"
+          :disabled="isPolishing || !content.trim()"
+          @click="handlePolish"
+          style="margin-top: 6px; width: 100%; justify-content: center;"
+        >
+          <span v-if="isPolishing" class="wf-spinner"></span>
+          <span v-else>✨</span>
+          <span>{{ isPolishing ? '润色中...' : 'AI 润色' }}</span>
+        </button>
+
         <!-- 快捷操作 -->
-        <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <div style="display: flex; gap: 6px; margin-top: 6px;">
           <button class="wf-node-action-btn" @click="createImageConfig" style="flex: 1; justify-content: center;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <span>生成图片</span>
+          </button>
+          <button class="wf-node-action-btn" @click="createVideoConfig" style="flex: 1; justify-content: center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>生成视频</span>
           </button>
         </div>
       </div>

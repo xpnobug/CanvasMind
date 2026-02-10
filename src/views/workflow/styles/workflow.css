@@ -677,14 +677,32 @@
 
 .wf-media-placeholder {
   width: 100%;
-  aspect-ratio: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--text-placeholder, rgba(224, 245, 255, 0.35));
   font-size: 12px;
   border: 1px dashed var(--stroke-secondary, rgba(204, 221, 255, 0.06));
   border-radius: 8px;
+  padding: 12px;
+}
+
+.wf-media-error {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
 }
 
 /* 加载骨架屏 */

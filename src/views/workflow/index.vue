@@ -16,6 +16,7 @@ import {
 import { WORKFLOW_TEMPLATES } from './config/workflows'
 import SettingsDialog from './components/SettingsDialog.vue'
 import ContentGenerator from '@/components/generate/ContentGenerator.vue'
+import { useWorkflowOrchestrator } from './composables/useWorkflowOrchestrator'
 
 // 节点组件
 import TextNode from './components/nodes/TextNode.vue'
@@ -49,6 +50,9 @@ const edgeTypes = {
   promptOrder: markRaw(PromptOrderEdge),
   imageOrder: markRaw(ImageOrderEdge)
 }
+
+// 工作流编排器
+const { analyzeIntent, executeWorkflow, isAnalyzing, isExecuting } = useWorkflowOrchestrator()
 
 // UI 状态
 const showNodeMenu = ref(false)
@@ -142,37 +146,24 @@ const onEdgesChange = (changes) => {
 // 处理画布点击
 const onPaneClick = () => { showNodeMenu.value = false }
 
-// 处理内容生成器发送
-const handlePromptSend = (message, type) => {
+// 处理内容生成器发送（使用工作流编排器）
+const handlePromptSend = async (message, type) => {
   const cx = -viewport.value.x / viewport.value.zoom + (window.innerWidth / 2) / viewport.value.zoom
   const cy = -viewport.value.y / viewport.value.zoom + (window.innerHeight / 2) / viewport.value.zoom
+  const position = { x: cx - 300, y: cy - 100 }
 
-  if (type === 'image') {
-    // 创建文本节点 + 图片配置节点并连线
-    const textId = addNode('text', { x: cx - 340, y: cy - 50 }, { content: message })
-    const configId = addNode('imageConfig', { x: cx, y: cy - 50 })
-    setTimeout(() => {
-      addEdge({ source: textId, target: configId, sourceHandle: 'right', targetHandle: 'left', type: 'promptOrder', data: { promptOrder: 1 } })
-      updateNodeInternals(textId)
-      updateNodeInternals(configId)
-    }, 50)
+  if (type === 'agent') {
+    // agent 类型：意图分析 + 自动编排执行
+    try {
+      const intent = await analyzeIntent(message)
+      await executeWorkflow(intent, position)
+    } catch (err) {
+      console.error('工作流执行失败:', err)
+    }
+  } else if (type === 'image') {
+    await executeWorkflow({ workflow_type: 'text_to_image', image_prompt: message }, position)
   } else if (type === 'video') {
-    const textId = addNode('text', { x: cx - 340, y: cy - 50 }, { content: message })
-    const configId = addNode('videoConfig', { x: cx, y: cy - 50 })
-    setTimeout(() => {
-      addEdge({ source: textId, target: configId, sourceHandle: 'right', targetHandle: 'left', type: 'promptOrder', data: { promptOrder: 1 } })
-      updateNodeInternals(textId)
-      updateNodeInternals(configId)
-    }, 50)
-  } else {
-    // agent / 其他类型：创建文本节点 + LLM 配置节点
-    const textId = addNode('text', { x: cx - 340, y: cy - 50 }, { content: message })
-    const configId = addNode('llmConfig', { x: cx, y: cy - 50 })
-    setTimeout(() => {
-      addEdge({ source: textId, target: configId, sourceHandle: 'right', targetHandle: 'left' })
-      updateNodeInternals(textId)
-      updateNodeInternals(configId)
-    }, 50)
+    await executeWorkflow({ workflow_type: 'text_to_image_to_video', image_prompt: message, video_prompt: message }, position)
   }
 }
 

@@ -2,13 +2,10 @@
 
 > AI-powered infinite canvas for image generation and creative collaboration
 
-**CanvasMind** 是一个基于 Vue 3 的 AI 图像生成工具，借鉴**即梦AI**的智能画布和多模态创作理念，提供无限画布交互界面，支持图片生成、视频生成、数字人等多种 AI 创作模式。
+**CanvasMind** 是一个基于 Vue 3 的 AI 图像生成工具，提供无限画布交互界面，支持图片生成、视频生成、数字人等多种 AI 创作模式。
 
 ## 🎯 项目定位
 
-参考 [即梦AI](https://jimeng.jianying.com/) (字节跳动AI创作平台)
-
-**差异化优势**:
 - 🎨 **无限画布**: 突破固定尺寸限制，自由扩展的网格布局
 - 🔄 **拖拽重排**: 图片可在画布中拖拽重新排序，实时避让效果
 - 💬 **对话式AI**: 完整的对话面板，支持多轮对话和历史记录
@@ -26,7 +23,7 @@
 - 🎯 **拖拽重排** - 支持图片在画布中拖拽重新排序，实时避让效果
 - 🎭 **引导页面** - 首次进入时显示精美的引导界面，提供清晰的操作指引
 - 🌓 **完整主题系统** - 深色/浅色主题无缝切换
-- 💎 **Dreamina 设计语言** - 完整的即梦 AI 样式系统
+- 💎 **现代设计语言** - 完整的样式系统
 - 🪟 **毛玻璃美学** - Glassmorphism 视觉效果
 - ⚡ **极速开发** - 基于 Vite 构建，热更新快如闪电
 - 🎬 **多模态内容生成** - Agent模式、图片生成、视频生成、数字人、动作模仿
@@ -34,7 +31,7 @@
 - 📤 **发布中心** - 多平台多账号发布，支持定时发布和批量操作
 - 👤 **账号管理** - 多平台账号管理，Cookie 上传/下载/验证
 
-### 规划功能（对标即梦AI）🔲
+### 规划功能 🔲
 
 | 功能 | 优先级 | 状态 |
 |-----|-------|------|
@@ -92,7 +89,7 @@ npm run preview
 | **路由** | Vue Router | ^4.2.5 |
 | **UI 组件库** | Element Plus | ^2.13.1 |
 | **流程图** | Vue Flow | ^1.48.2 |
-| **样式** | Tailwind CSS + Dreamina CSS Variables | ^4.1.18 |
+| **样式** | Tailwind CSS + CSS Variables | ^4.1.18 |
 
 ## 📁 项目结构
 
@@ -172,7 +169,6 @@ canana-vue/
 │
 ├── public/                            # 公共静态资源
 ├── docs/                              # 项目文档
-├── ym/                                # 即梦 AI 样式资源
 ├── index.html                         # HTML 模板
 ├── vite.config.ts                     # Vite 配置
 ├── package.json                       # 项目配置
@@ -220,7 +216,7 @@ canana-vue/
 
 ## 🎨 设计语言
 
-基于即梦 AI (Dreamina) 的完整设计系统：
+基于现代 UI 设计理念的完整设计系统：
 
 - **主题**: 深色/浅色自动切换
 - **品牌色**: #00CAE0 (青色)
@@ -274,21 +270,15 @@ document.documentElement.setAttribute('data-theme', 'dark')
 
 MIT
 
-## 🙏 致谢
-
-设计灵感来自:
-- [即梦AI](https://jimeng.jianying.com/) - 字节跳动AI创作平台
-- [Dreamina](https://www.capcut.com/ai-tool/platform) - 剪映AI创作工具
-
 ## 🔗 相关链接
 
-- [即梦AI官网](https://jimeng.jianying.com/)
 - [Vue 3 文档](https://vuejs.org/)
 - [Vite 文档](https://vitejs.dev/)
 - [Vue Flow 文档](https://vueflow.dev/)
-
+- [Element Plus 文档](https://element-plus.org/)
+- [Tailwind CSS 文档](https://tailwindcss.com/)
+- [即梦AI](https://jimeng.jianying.com/) - 字节跳动AI创作平台
+- [Dreamina](https://www.capcut.com/ai-tool/platform) - 剪映AI创作工具
 ---
 
 **CanvasMind** - 让 AI 创作更简单 🎨✨
-
-*参考即梦AI，打造更自由的无限画布体验*

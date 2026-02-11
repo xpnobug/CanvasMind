@@ -2,9 +2,53 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import SideMenu from '../../components/home/components/SideMenu.vue'
 import ContentGenerator from '../../components/generate/ContentGenerator.vue'
+import ImageLoadingRecord from '../../components/generate/common/ImageLoadingRecord.vue'
+import type { CreationType } from '../../components/generate/selectors'
 
 // ContentGenerator 组件引用
 const contentGeneratorRef = ref<InstanceType<typeof ContentGenerator> | null>(null)
+
+// 图片生成记录列表
+interface GeneratingRecord {
+  id: number
+  prompt: string
+  time: string
+  model: string
+  ratio: string
+  resolution: string
+}
+const generatingRecords = ref<GeneratingRecord[]>([])
+let nextId = 0
+
+// 格式化时间分组标签
+const formatGroupLabel = (date: Date): string => {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const diff = today.getTime() - target.getTime()
+  const dayMs = 86400000
+
+  if (diff === 0) return '今天'
+  if (diff === dayMs) return '昨天'
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.getMonth() + 1}月${date.getDate()}日`
+  }
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+// 处理发送事件
+const handleSend = (message: string, type: CreationType, options?: { model?: string, ratio?: string, resolution?: string }) => {
+  if (type === 'image') {
+    generatingRecords.value.unshift({
+      id: nextId++,
+      prompt: message,
+      time: formatGroupLabel(new Date()),
+      model: options?.model || '图片 5.0',
+      ratio: options?.ratio || '1:1',
+      resolution: options?.resolution || '2K'
+    })
+  }
+}
 
 // 上一次滚动位置
 let lastScrollTop = 0
@@ -104,6 +148,24 @@ onMounted(() => {
                                       <div class=empty-placeholder-dcs8S2></div>
                                     </div>
                                   </div>
+                                  <!-- 正在生成中的图片记录 -->
+                                  <template v-for="(record, index) in generatingRecords" :key="record.id">
+                                    <div class=item-Xh64V7 :data-index="index * 2 + 1" style=z-index:1>
+                                      <ImageLoadingRecord
+                                        :prompt="record.prompt"
+                                        :model="record.model"
+                                        :ratio="record.ratio"
+                                        :resolution="record.resolution"
+                                      />
+                                    </div>
+                                    <div class=item-Xh64V7 :data-index="index * 2 + 2" style=z-index:1>
+                                      <div class=responsive-container-msS_cP>
+                                        <div class="content-DPogfx ai-generated-record-content-hg5EL8">
+                                          <div class=group-title-mhd8yy>{{ record.time }}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </template>
                                   <div id=item_9341e2ed-6804-4e34-9b38-1eb6fe79c48e_034d015f-dde5-f7fc-ad92-e079b6c18e44
                                        class=item-Xh64V7
                                        data-id=034d015f-dde5-f7fc-ad92-e079b6c18e44
@@ -211,19 +273,10 @@ onMounted(() => {
                                       </div>
                                     </div>
                                   </div>
-                                  <div id=item_9341e2ed-6804-4e34-9b38-1eb6fe79c48e_1769243026123
-                                       class=item-Xh64V7 data-id=1769243026123 data-index=1
-                                       style=z-index:1>
-                                    <div class=responsive-container-msS_cP>
-                                      <div class="content-DPogfx ai-generated-record-content-hg5EL8">
-                                        <div class=group-title-mhd8yy>今天</div>
-                                      </div>
-                                    </div>
-                                  </div>
                                   <div id=item_9341e2ed-6804-4e34-9b38-1eb6fe79c48e_febd2940-ccfc-11f0-b294-af2ab3cf6b8b
                                        class=item-Xh64V7
                                        data-id=febd2940-ccfc-11f0-b294-af2ab3cf6b8b
-                                       data-index=2 style=z-index:1>
+                                       data-index=3 style=z-index:1>
                                     <div class="responsive-container-msS_cP responsive-container-NBoaUU">
                                       <div class="content-DPogfx ai-generated-record-content-hg5EL8">
                                         <div class=image-record-ytX6Dp>
@@ -386,7 +439,7 @@ onMounted(() => {
                                     </div>
                                   </div>
                                   <div id=item_9341e2ed-6804-4e34-9b38-1eb6fe79c48e_1764404742876
-                                       class=item-Xh64V7 data-id=1764404742876 data-index=3
+                                       class=item-Xh64V7 data-id=1764404742876 data-index=4
                                        style=z-index:1>
                                     <div class=responsive-container-msS_cP>
                                       <div class="content-DPogfx ai-generated-record-content-hg5EL8">
@@ -467,7 +520,7 @@ onMounted(() => {
                         </div>
                       </div>
                       <!-- 内容生成器输入框组件 -->
-                      <ContentGenerator ref="contentGeneratorRef"/>
+                      <ContentGenerator ref="contentGeneratorRef" @send="handleSend"/>
                       <div class=task-indicator-container-flqXza data-task-indicator-container=true
                            style=--content-generator-collapse-transition-duration:350ms;--content-generator-collapse-transition-timing-function:cubic-bezier(0.15,0.75,0.3,1);--content-generator-height:174px>
                         <div class="task-indicator-wWf8DJ task-indicator-srBESV inside-content-generator-ZzUKJD no-task-pKFF37 hidden-EhjzJD"

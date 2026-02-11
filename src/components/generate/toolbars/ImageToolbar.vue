@@ -82,6 +82,12 @@ const selectSize = (size: string) => {
 const currentSizeConfig = () => {
   return sizeOptions.find(s => s.value === currentSize.value) || sizeOptions[0]
 }
+
+defineExpose({
+  currentModelVersion,
+  currentSize,
+  currentSizeConfig
+})
 </script>
 
 <template>

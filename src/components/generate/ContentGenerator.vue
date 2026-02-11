@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
 // 事件定义
 const emit = defineEmits<{
   // 发送消息事件
-  send: [message: string, type: CreationType]
+  send: [message: string, type: CreationType, options?: { model?: string, ratio?: string, resolution?: string }]
   // 面板宽度调整事件
   resize: [width: number]
 }>()
@@ -55,6 +55,7 @@ const typeSelectorRef = ref<InstanceType<typeof TypeSelector> | null>(null)
 const typeSelectorExpandRef = ref<InstanceType<typeof TypeSelector> | null>(null)
 const agentToolbarRef = ref<InstanceType<typeof AgentToolbar> | null>(null)
 const agentToolbarExpandRef = ref<InstanceType<typeof AgentToolbar> | null>(null)
+const imageToolbarRef = ref<InstanceType<typeof ImageToolbar> | null>(null)
 
 // 当 TypeSelector 弹窗打开时，关闭 AgentToolbar 的面板
 const handleTypeSelectorOpen = () => {
@@ -118,15 +119,20 @@ const handleSubmit = () => {
   if (!message) return
 
   // 触发发送事件
-  emit('send', message, currentType.value)
+  if (currentType.value === 'image' && imageToolbarRef.value) {
+    const toolbar = imageToolbarRef.value
+    const sizeConfig = toolbar.currentSizeConfig()
+    emit('send', message, currentType.value, {
+      model: `图片 ${toolbar.currentModelVersion}`,
+      ratio: toolbar.currentSize,
+      resolution: sizeConfig.quality
+    })
+  } else {
+    emit('send', message, currentType.value)
+  }
 
   // 清空输入
   inputValue.value = ''
-
-  // 如果可折叠，提交后折叠
-  if (props.collapsible) {
-    collapse()
-  }
 }
 
 // 是否禁用提交按钮
@@ -520,7 +526,7 @@ onUnmounted(() => {
               <AgentToolbar v-if="currentType === 'agent'" ref="agentToolbarExpandRef" :placement="popupPlacement" :icon-only="isSidebar" @panelOpen="handleAgentToolbarPanelOpen" />
 
               <!-- 图片生成工具栏 -->
-              <ImageToolbar v-else-if="currentType === 'image'" :placement="popupPlacement" :icon-only="isSidebar" />
+              <ImageToolbar v-else-if="currentType === 'image'" ref="imageToolbarRef" :placement="popupPlacement" :icon-only="isSidebar" />
 
               <!-- 视频生成工具栏 -->
               <VideoToolbar v-else-if="currentType === 'video'" :placement="popupPlacement" :icon-only="isSidebar" />

@@ -11,6 +11,7 @@
       :collapsible="false"
       :default-expanded="true"
       popup-placement="bottom"
+      @send="handleSend"
     />
     <TaskIndicator />
     <HomeBanner />
@@ -18,8 +19,24 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import TypeSelector from './TypeSelector.vue'
 import GenerateContentGenerator from '@/components/generate/ContentGenerator.vue'
 import TaskIndicator from './TaskIndicator.vue'
 import HomeBanner from './HomeBanner.vue'
+
+const router = useRouter()
+
+const handleSend = (message, type, options) => {
+  router.push({
+    path: '/generate',
+    query: {
+      message,
+      type,
+      ...(options?.model && { model: options.model }),
+      ...(options?.ratio && { ratio: options.ratio }),
+      ...(options?.resolution && { resolution: options.resolution })
+    }
+  })
+}
 </script>

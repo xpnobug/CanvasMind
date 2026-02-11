@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import SideMenu from '../../components/home/components/SideMenu.vue'
 import ContentGenerator from '../../components/generate/ContentGenerator.vue'
 import ImageLoadingRecord from '../../components/generate/common/ImageLoadingRecord.vue'
 import type { CreationType } from '../../components/generate/selectors'
+
+const route = useRoute()
+const router = useRouter()
 
 // ContentGenerator 组件引用
 const contentGeneratorRef = ref<InstanceType<typeof ContentGenerator> | null>(null)
@@ -66,6 +70,18 @@ const handlePageClick = (e: MouseEvent) => {
 
 // 修复滚动方向反转问题 + 控制输入框折叠/展开
 onMounted(() => {
+  // 检查路由参数（从首页跳转过来的发送请求）
+  const { message, type, model, ratio, resolution } = route.query
+  if (message && type) {
+    handleSend(
+      message as string,
+      type as CreationType,
+      { model: model as string, ratio: ratio as string, resolution: resolution as string }
+    )
+    // 清除 query 参数，避免刷新重复创建
+    router.replace({ path: '/generate' })
+  }
+
   const scrollContainer = document.querySelector('.virtual-list-gUs6jj') as HTMLElement
 
   // 添加页面点击监听

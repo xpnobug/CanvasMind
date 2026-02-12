@@ -10,7 +10,7 @@
 
 import { ref, watch } from 'vue'
 import { streamChatCompletions } from '../api/chat'
-import { nodes, addNode, addEdge, updateNode } from './useWorkflowCanvas'
+import { nodes, addNode, addEdge } from './useWorkflowCanvas'
 import { MULTI_ANGLE_PROMPTS } from '../config/workflows'
 
 // 工作流类型

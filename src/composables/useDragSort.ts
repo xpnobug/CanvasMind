@@ -6,8 +6,8 @@ import { reactive, computed } from 'vue'
 export function useDragSort(images: any, gridLayout: any) {
   // 拖拽状态
   const dragState = reactive({
-    originalIndex: null,
-    hoverIndex: null,
+    originalIndex: null as number | null,
+    hoverIndex: null as number | null,
     startMouseX: 0,
     startMouseY: 0,
     offsetX: 0,
@@ -26,7 +26,7 @@ export function useDragSort(images: any, gridLayout: any) {
    * 开始拖拽
    */
   function startDrag(imageId: string, mouseX: number, mouseY: number, viewport: any) {
-    const image = images.value.find(img => img.id === imageId)
+    const image = images.value.find((img: any) => img.id === imageId)
     if (!image) return
     
     dragState.originalIndex = image.index
@@ -68,21 +68,21 @@ export function useDragSort(images: any, gridLayout: any) {
   function endDrag(draggedId: string) {
     const targetIndex = dragState.hoverIndex
     const currentIndex = dragState.originalIndex
-    
-    if (targetIndex !== null && targetIndex !== currentIndex) {
-      const draggedItem = images.value.find(img => img.id === draggedId)
-      
+
+    if (targetIndex !== null && currentIndex !== null && targetIndex !== currentIndex) {
+      const draggedItem = images.value.find((img: any) => img.id === draggedId)
+
       if (draggedItem) {
         if (targetIndex < currentIndex) {
           // 向前移动：中间的元素后移
-          images.value.forEach(img => {
+          images.value.forEach((img: any) => {
             if (img.id !== draggedId && img.index >= targetIndex && img.index < currentIndex) {
               img.index++
             }
           })
         } else {
           // 向后移动：中间的元素前移
-          images.value.forEach(img => {
+          images.value.forEach((img: any) => {
             if (img.id !== draggedId && img.index > currentIndex && img.index <= targetIndex) {
               img.index--
             }
@@ -112,7 +112,9 @@ export function useDragSort(images: any, gridLayout: any) {
     
     const originalIdx = dragState.originalIndex
     const hoverIdx = dragState.hoverIndex
-    
+
+    if (originalIdx === null) return image.index
+
     // 计算避让位置
     if (hoverIdx < originalIdx) {
       if (image.index >= hoverIdx && image.index < originalIdx) {

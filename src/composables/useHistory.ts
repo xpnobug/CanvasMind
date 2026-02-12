@@ -86,13 +86,13 @@ export function useHistory(maxSize = 50) {
     push({
       type,
       data: actions,
-      undo: (data) => {
+      undo: (data: any) => {
         // 逆序撤销
         for (let i = data.length - 1; i >= 0; i--) {
           data[i].undo?.(data[i].data)
         }
       },
-      redo: (data) => {
+      redo: (data: any) => {
         // 顺序重做
         for (const action of data) {
           action.redo?.(action.data)

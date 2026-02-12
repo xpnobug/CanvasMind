@@ -2,7 +2,7 @@
  * 画布状态管理
  * 管理节点、边和画布状态
  */
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { IMAGE_MODELS, VIDEO_MODELS, DEFAULT_IMAGE_MODEL, DEFAULT_VIDEO_MODEL, DEFAULT_CHAT_MODEL } from '@/config/models'
 
 // 节点 ID 计数器

@@ -4,7 +4,7 @@
  */
 
 // 多角度提示词模板
-export const MULTI_ANGLE_PROMPTS = {
+export const MULTI_ANGLE_PROMPTS: Record<string, { label: string; english: string; prompt: (character: string) => string }> = {
   front: {
     label: '正视',
     english: 'Front View',

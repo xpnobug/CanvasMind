@@ -132,7 +132,7 @@ const selectDuration = (duration: string) => {
 
 // 获取当前配置
 const getCurrentModelLabel = () => {
-  return modelVersions.find(m => m.value === currentModelVersion.value)?.label || '视频 3.0 Fast'
+  return modelVersions.value.find((m: any) => m.value === currentModelVersion.value)?.label || '视频 3.0 Fast'
 }
 
 const getCurrentFeatureLabel = () => {

@@ -18,7 +18,7 @@ export function useImageResize(images: any) {
    * 开始缩放
    */
   function startResize(imageId: string, mouseX: number, mouseY: number) {
-    const image = images.value.find(img => img.id === imageId)
+    const image = images.value.find((img: any) => img.id === imageId)
     if (!image) return
     
     resizeState.startMouseX = mouseX
@@ -31,12 +31,11 @@ export function useImageResize(images: any) {
    * 更新缩放
    * @param {string} handle - 拖拽的角: top-left, top-right, bottom-left, bottom-right
    */
-  function updateResize(imageId: string, mouseX: number, mouseY: number, handle: string, viewportScale: number) {
-    const image = images.value.find(img => img.id === imageId)
+  function updateResize(imageId: string, mouseX: number, _mouseY: number, handle: string, viewportScale: number) {
+    const image = images.value.find((img: any) => img.id === imageId)
     if (!image) return
     
     const dx = (mouseX - resizeState.startMouseX) / viewportScale
-    const dy = (mouseY - resizeState.startMouseY) / viewportScale
     const aspectRatio = resizeState.startWidth / resizeState.startHeight
     
     let newW = resizeState.startWidth

@@ -23,7 +23,7 @@ export function usePointerEvents(options: any = {}) {
     lastDistance: 0,
     lastCenterX: 0,
     lastCenterY: 0,
-    startTouches: null
+    startTouches: null as any
   })
   
   // 指针状态

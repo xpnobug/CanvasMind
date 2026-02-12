@@ -4139,6 +4139,15 @@ div.normal-button-mS74ha {
     fill: #00CAE0;
 }
 
+/* 未选中时勾选图标隐藏，按钮置灰 */
+.switch-button-GPRaGT:not(.checked-SqLqYu) svg path[fill="#00CAE0"] {
+    display: none;
+}
+
+.switch-button-GPRaGT:not(.checked-SqLqYu) {
+    opacity: 0.5;
+}
+
 /* 视频工具栏时长选择图标旋转 */
 .button-text-gwJnq9 {
     align-items: center;

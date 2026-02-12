@@ -14,7 +14,7 @@ import {
   undo, redo, canUndo, canRedo, manualSaveHistory, initSampleData, initHistory
 } from './composables/useWorkflowCanvas'
 import { WORKFLOW_TEMPLATES } from './config/workflows'
-import SettingsDialog from './components/SettingsDialog.vue'
+import SettingsDialog from '@/components/common/ApiSettingsDialog.vue'
 import ContentGenerator from '@/components/generate/ContentGenerator.vue'
 import { useWorkflowOrchestrator } from './composables/useWorkflowOrchestrator'
 

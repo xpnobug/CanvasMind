@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import SideMenu from '../../components/home/components/SideMenu.vue'
 import ContentGenerator from '../../components/generate/ContentGenerator.vue'
 import ImageLoadingRecord from '../../components/generate/common/ImageLoadingRecord.vue'
+import AgentLoadingRecord from '../../components/generate/common/AgentLoadingRecord.vue'
+import ApiSettingsDialog from '@/components/common/ApiSettingsDialog.vue'
+import { streamChatCompletions } from '@/api/chat'
+import { getAgentModel } from '@/api/agent'
 import type { CreationType } from '../../components/generate/selectors'
 
 const route = useRoute()
@@ -12,17 +16,26 @@ const router = useRouter()
 // ContentGenerator 组件引用
 const contentGeneratorRef = ref<InstanceType<typeof ContentGenerator> | null>(null)
 
-// 图片生成记录列表
+// 生成记录列表
 interface GeneratingRecord {
   id: number
+  type: CreationType
   prompt: string
   time: string
   model: string
   ratio: string
   resolution: string
+  duration: string
+  feature: string
+  content: string
+  done: boolean
+  error: string
 }
 const generatingRecords = ref<GeneratingRecord[]>([])
 let nextId = 0
+
+// 设置弹窗
+const showSettings = ref(false)
 
 // 格式化时间分组标签
 const formatGroupLabel = (date: Date): string => {
@@ -41,17 +54,69 @@ const formatGroupLabel = (date: Date): string => {
 }
 
 // 处理发送事件
-const handleSend = (message: string, type: CreationType, options?: { model?: string, ratio?: string, resolution?: string }) => {
-  if (type === 'image') {
-    generatingRecords.value.unshift({
-      id: nextId++,
-      prompt: message,
-      time: formatGroupLabel(new Date()),
-      model: options?.model || '图片 5.0',
-      ratio: options?.ratio || '1:1',
-      resolution: options?.resolution || '2K'
-    })
+const handleSend = (message: string, type: CreationType, options?: { model?: string, ratio?: string, resolution?: string, duration?: string, feature?: string }) => {
+  const record: GeneratingRecord = {
+    id: nextId++,
+    type,
+    prompt: message,
+    time: formatGroupLabel(new Date()),
+    model: options?.model || '',
+    ratio: options?.ratio || '',
+    resolution: options?.resolution || '',
+    duration: options?.duration || '',
+    feature: options?.feature || '',
+    content: '',
+    done: false,
+    error: ''
   }
+  generatingRecords.value.unshift(record)
+
+  // agent 类型触发流式对话（使用代理后的对象以保证响应式）
+  if (type === 'agent') {
+    runAgentStream(generatingRecords.value[0])
+  }
+}
+
+// agent 流式对话（逐字输出效果）
+const runAgentStream = async (record: GeneratingRecord) => {
+  let buffer = ''
+  let flushing = false
+  let streamDone = false
+
+  // 逐字刷新到页面
+  const flush = () => {
+    if (flushing) return
+    flushing = true
+    const step = () => {
+      if (buffer.length > 0) {
+        // 每次输出 1~3 个字符，模拟打字效果
+        const chars = Math.min(buffer.length, Math.ceil(Math.random() * 2) + 1)
+        record.content += buffer.slice(0, chars)
+        buffer = buffer.slice(chars)
+        requestAnimationFrame(step)
+      } else {
+        flushing = false
+        if (streamDone) record.done = true
+      }
+    }
+    requestAnimationFrame(step)
+  }
+
+  try {
+    const stream = streamChatCompletions({
+      model: getAgentModel(),
+      messages: [{ role: 'user', content: record.prompt }]
+    })
+    for await (const chunk of stream) {
+      buffer += chunk
+      flush()
+    }
+  } catch (e: unknown) {
+    record.error = e instanceof Error ? e.message : '请求失败'
+  }
+  streamDone = true
+  if (!buffer.length) record.done = true
+  else flush()
 }
 
 // 上一次滚动位置
@@ -164,14 +229,17 @@ onMounted(() => {
                                       <div class=empty-placeholder-dcs8S2></div>
                                     </div>
                                   </div>
-                                  <!-- 正在生成中的图片记录 -->
+                                  <!-- 正在生成中的记录 -->
                                   <template v-for="(record, index) in generatingRecords" :key="record.id">
                                     <div class=item-Xh64V7 :data-index="index * 2 + 1" style=z-index:1>
-                                      <ImageLoadingRecord
+                                      <AgentLoadingRecord v-if="record.type === 'agent'" :prompt="record.prompt" :content="record.content" :done="record.done" :error="record.error" />
+                                      <ImageLoadingRecord v-else
                                         :prompt="record.prompt"
                                         :model="record.model"
                                         :ratio="record.ratio"
                                         :resolution="record.resolution"
+                                        :duration="record.duration"
+                                        :feature="record.feature"
                                       />
                                     </div>
                                     <div class=item-Xh64V7 :data-index="index * 2 + 2" style=z-index:1>
@@ -533,10 +601,19 @@ onMounted(() => {
                               data-follow-fill=currentColor
                               fill=currentColor
                               fill-rule=evenodd></path></g></svg></span></div>
+                          <!-- API 设置按钮 -->
+                          <button class="agent-settings-btn" @click="showSettings = true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/>
+                              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                          </button>
                         </div>
                       </div>
                       <!-- 内容生成器输入框组件 -->
                       <ContentGenerator ref="contentGeneratorRef" @send="handleSend"/>
+                      <!-- API 设置弹窗 -->
+                      <ApiSettingsDialog :visible="showSettings" @update:visible="showSettings = $event" />
                       <div class=task-indicator-container-flqXza data-task-indicator-container=true
                            style=--content-generator-collapse-transition-duration:350ms;--content-generator-collapse-transition-timing-function:cubic-bezier(0.15,0.75,0.3,1);--content-generator-height:174px>
                         <div class="task-indicator-wWf8DJ task-indicator-srBESV inside-content-generator-ZzUKJD no-task-pKFF37 hidden-EhjzJD"

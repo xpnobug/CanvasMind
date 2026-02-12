@@ -5,9 +5,9 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { updateNode, removeNode, duplicateNode, addNode, addEdge, nodes, edges } from '../../composables/useWorkflowCanvas'
-import { VIDEO_MODELS, VIDEO_RATIO_LIST, getAllVideoModels } from '../../config/models'
+import { VIDEO_MODELS, VIDEO_RATIO_LIST, getAllVideoModels } from '@/config/models'
 import { createVideoTask, pollVideoTask } from '../../api/video'
-import WfSelect from '../WfSelect.vue'
+import WfSelect from '@/components/common/WfSelect.vue'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()

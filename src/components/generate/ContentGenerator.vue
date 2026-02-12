@@ -39,7 +39,13 @@ const props = withDefaults(defineProps<Props>(), {
 // 事件定义
 const emit = defineEmits<{
   // 发送消息事件
-  send: [message: string, type: CreationType, options?: { model?: string, ratio?: string, resolution?: string }]
+  send: [message: string, type: CreationType, options?: {
+    model?: string
+    ratio?: string
+    resolution?: string
+    duration?: string
+    feature?: string
+  }]
   // 面板宽度调整事件
   resize: [width: number]
 }>()
@@ -56,6 +62,7 @@ const typeSelectorExpandRef = ref<InstanceType<typeof TypeSelector> | null>(null
 const agentToolbarRef = ref<InstanceType<typeof AgentToolbar> | null>(null)
 const agentToolbarExpandRef = ref<InstanceType<typeof AgentToolbar> | null>(null)
 const imageToolbarRef = ref<InstanceType<typeof ImageToolbar> | null>(null)
+const videoToolbarRef = ref<InstanceType<typeof VideoToolbar> | null>(null)
 
 // 当 TypeSelector 弹窗打开时，关闭 AgentToolbar 的面板
 const handleTypeSelectorOpen = () => {
@@ -123,9 +130,24 @@ const handleSubmit = () => {
     const toolbar = imageToolbarRef.value
     const sizeConfig = toolbar.currentSizeConfig()
     emit('send', message, currentType.value, {
-      model: `图片 ${toolbar.currentModelVersion}`,
+      model: toolbar.currentModelLabel,
       ratio: toolbar.currentSize,
       resolution: sizeConfig.quality
+    })
+  } else if (currentType.value === 'video' && videoToolbarRef.value) {
+    const toolbar = videoToolbarRef.value
+    const sizeConfig = toolbar.getCurrentSizeConfig()
+    emit('send', message, currentType.value, {
+      model: toolbar.getCurrentModelLabel(),
+      ratio: toolbar.currentSize,
+      resolution: sizeConfig.quality,
+      duration: toolbar.currentDuration,
+      feature: toolbar.currentFeature
+    })
+  } else if (currentType.value === 'agent') {
+    const toolbar = agentToolbarExpandRef.value || agentToolbarRef.value
+    emit('send', message, currentType.value, {
+      model: toolbar?.currentModelLabel || ''
     })
   } else {
     emit('send', message, currentType.value)
@@ -529,7 +551,7 @@ onUnmounted(() => {
               <ImageToolbar v-else-if="currentType === 'image'" ref="imageToolbarRef" :placement="popupPlacement" :icon-only="isSidebar" />
 
               <!-- 视频生成工具栏 -->
-              <VideoToolbar v-else-if="currentType === 'video'" :placement="popupPlacement" :icon-only="isSidebar" />
+              <VideoToolbar v-else-if="currentType === 'video'" ref="videoToolbarRef" :placement="popupPlacement" :icon-only="isSidebar" />
 
               <!-- 数字人/动作模仿工具栏 -->
               <DigitalHumanToolbar v-else :placement="popupPlacement" :icon-only="isSidebar" />

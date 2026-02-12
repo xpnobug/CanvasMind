@@ -16,8 +16,10 @@
                   </span>
                   <span class="labels-mHLx1x" style="visibility:visible">
                     <span class="label-lhnDlt">{{ model }}</span>
+                    <span v-if="feature" class="label-lhnDlt">{{ feature }}</span>
                     <span class="label-lhnDlt">{{ ratio }}</span>
                     <span class="label-lhnDlt">{{ resolution }}</span>
+                    <span v-if="duration" class="label-lhnDlt">{{ duration }}</span>
                   </span>
                 </div>
               </div>
@@ -72,6 +74,10 @@ const props = defineProps({
   ratio: { type: String, default: '1:1' },
   /** 分辨率标签 */
   resolution: { type: String, default: '2K' },
+  /** 时长（视频模式） */
+  duration: { type: String, default: '' },
+  /** 功能（视频模式） */
+  feature: { type: String, default: '' },
   /** 生成图片数量 */
   count: { type: Number, default: 4 },
   /** 图片宽高比数值 */

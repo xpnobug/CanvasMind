@@ -3,8 +3,9 @@
 // 包含模型版本选择、功能选择、尺寸选择、时长选择
 // 支持弹出方向设置
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import SelectPopup from '../common/SelectPopup.vue'
+import { getAllVideoModels, DEFAULT_VIDEO_MODEL } from '@/config/models'
 
 // 弹出方向类型
 type Placement = 'top' | 'bottom' | 'auto'
@@ -22,12 +23,10 @@ const props = withDefaults(defineProps<Props>(), {
   iconOnly: false
 })
 
-// 模型版本配置
-const modelVersions = [
-  { value: '3.0-fast', label: '视频 3.0 Fast' },
-  { value: '3.0', label: '视频 3.0' },
-  { value: '2.1', label: '视频 2.1' }
-]
+// 模型版本配置（内置 + 自定义）
+const modelVersions = computed(() =>
+  getAllVideoModels().map((m: any) => ({ value: m.key, label: m.label }))
+)
 
 // 功能配置
 const featureOptions = [
@@ -50,7 +49,7 @@ const durationOptions = [
 ]
 
 // 当前选中状态
-const currentModelVersion = ref('3.0-fast')
+const currentModelVersion = ref(DEFAULT_VIDEO_MODEL)
 const currentFeature = ref('first-last-frame')
 const currentSize = ref('16:9')
 const currentDuration = ref('5s')
@@ -143,6 +142,15 @@ const getCurrentFeatureLabel = () => {
 const getCurrentSizeConfig = () => {
   return sizeOptions.find(s => s.value === currentSize.value) || sizeOptions[0]
 }
+
+defineExpose({
+  currentModelVersion,
+  currentSize,
+  currentDuration,
+  currentFeature,
+  getCurrentModelLabel,
+  getCurrentSizeConfig
+})
 </script>
 
 <template>

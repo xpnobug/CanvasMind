@@ -8,7 +8,7 @@ import {
   useImageResize,
   useHistory,
   usePointerEvents
-} from '@/composables/index.js'
+} from '@/composables'
 
 const props = defineProps({
   zoom: { type: Number, default: 100 },

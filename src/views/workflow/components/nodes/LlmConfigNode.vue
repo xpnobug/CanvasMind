@@ -7,8 +7,8 @@ import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { updateNode, removeNode, duplicateNode, nodes, edges } from '../../composables/useWorkflowCanvas'
 import { streamChatCompletions } from '../../api/chat'
 import { getApiKey } from '../../api/request'
-import { getAllChatModels } from '../../config/models'
-import WfSelect from '../WfSelect.vue'
+import { getAllChatModels } from '@/config/models'
+import WfSelect from '@/components/common/WfSelect.vue'
 
 const props = defineProps({ id: String, data: Object })
 const { updateNodeInternals } = useVueFlow()

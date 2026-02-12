@@ -4607,3 +4607,23 @@ div.normal-button-mS74ha {
     background-color: var(--brand-main-pressed);
     opacity: 1
 }
+
+/* API 设置按钮 */
+.agent-settings-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 4px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.agent-settings-btn:hover {
+    background: var(--bg-block-primary-hover, rgba(255, 255, 255, 0.1));
+    color: var(--text-primary);
+}

@@ -41,6 +41,7 @@ const emit = defineEmits<{
   // 发送消息事件
   send: [message: string, type: CreationType, options?: {
     model?: string
+    modelKey?: string
     ratio?: string
     resolution?: string
     duration?: string
@@ -131,6 +132,7 @@ const handleSubmit = () => {
     const sizeConfig = toolbar.currentSizeConfig()
     emit('send', message, currentType.value, {
       model: toolbar.currentModelLabel,
+      modelKey: toolbar.currentModelVersion,
       ratio: toolbar.currentSize,
       resolution: sizeConfig.quality
     })

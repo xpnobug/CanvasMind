@@ -8,6 +8,8 @@ import AgentLoadingRecord from '../../components/generate/common/AgentLoadingRec
 import ApiSettingsDialog from '@/components/common/ApiSettingsDialog.vue'
 import { streamChatCompletions } from '@/api/chat'
 import { getAgentModel } from '@/api/agent'
+import { generateImage } from '@/views/workflow/api/image'
+import { getAllImageModels } from '@/config/models'
 import type { CreationType } from '../../components/generate/selectors'
 
 const route = useRoute()
@@ -23,11 +25,13 @@ interface GeneratingRecord {
   prompt: string
   time: string
   model: string
+  modelKey: string
   ratio: string
   resolution: string
   duration: string
   feature: string
   content: string
+  images: string[]
   done: boolean
   error: string
 }
@@ -54,26 +58,69 @@ const formatGroupLabel = (date: Date): string => {
 }
 
 // 处理发送事件
-const handleSend = (message: string, type: CreationType, options?: { model?: string, ratio?: string, resolution?: string, duration?: string, feature?: string }) => {
+const handleSend = (message: string, type: CreationType, options?: { model?: string, modelKey?: string, ratio?: string, resolution?: string, duration?: string, feature?: string }) => {
   const record: GeneratingRecord = {
     id: nextId++,
     type,
     prompt: message,
     time: formatGroupLabel(new Date()),
     model: options?.model || '',
+    modelKey: options?.modelKey || '',
     ratio: options?.ratio || '',
     resolution: options?.resolution || '',
     duration: options?.duration || '',
     feature: options?.feature || '',
     content: '',
+    images: [],
     done: false,
     error: ''
   }
   generatingRecords.value.unshift(record)
 
-  // agent 类型触发流式对话（使用代理后的对象以保证响应式）
+  // 根据类型触发不同的生成逻辑
   if (type === 'agent') {
     runAgentStream(generatingRecords.value[0])
+  } else if (type === 'image') {
+    runImageGeneration(generatingRecords.value[0])
+  }
+}
+
+// 图片生成
+const runImageGeneration = async (record: GeneratingRecord) => {
+  try {
+    // 根据模型配置构建请求参数
+    const modelConfig = getAllImageModels().find(m => m.key === record.modelKey)
+    const sizeKey = modelConfig?.sizes?.length
+      ? (modelConfig.sizes.find(s => s.includes(record.ratio.replace(':', 'x'))) || modelConfig.defaultParams?.size || '')
+      : ''
+
+    const data: any = {
+      model: record.modelKey,
+      prompt: record.prompt,
+      n: 1
+    }
+    if (sizeKey) data.size = sizeKey
+
+    const result = await generateImage(data)
+
+    // 提取图片 URL
+    const urls: string[] = []
+    if (result?.data) {
+      for (const item of result.data) {
+        if (item.url) urls.push(item.url)
+        else if (item.b64_json) urls.push(`data:image/png;base64,${item.b64_json}`)
+      }
+    }
+
+    if (urls.length) {
+      record.images = urls
+    } else {
+      record.error = '未能获取到生成的图片'
+    }
+  } catch (e: unknown) {
+    record.error = e instanceof Error ? e.message : '图片生成失败'
+  } finally {
+    record.done = true
   }
 }
 
@@ -240,6 +287,9 @@ onMounted(() => {
                                         :resolution="record.resolution"
                                         :duration="record.duration"
                                         :feature="record.feature"
+                                        :done="record.done"
+                                        :images="record.images"
+                                        :error="record.error"
                                       />
                                     </div>
                                     <div class=item-Xh64V7 :data-index="index * 2 + 2" style=z-index:1>

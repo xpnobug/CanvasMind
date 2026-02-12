@@ -2,6 +2,7 @@
   <div class="responsive-container-msS_cP responsive-container-NBoaUU">
     <div class="content-DPogfx ai-generated-record-content-hg5EL8">
       <div class="image-record-ytX6Dp">
+        <!-- 头部：提示词和标签 -->
         <div class="record-header-E91Dfj">
           <div class="record-header-content-Lkk9CM">
             <div class="prompt-suffix-labels-wrapper-qthJZj"
@@ -27,7 +28,45 @@
           </div>
         </div>
         <div class="record-box-wrapper-MDgaBP">
-          <div class="image-record-content-TuJi21">
+          <!-- 错误状态 -->
+          <div v-if="error" class="image-error-container">
+            <div class="image-error-content">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>{{ error }}</span>
+            </div>
+          </div>
+          <!-- 生成完成：显示图片 -->
+          <div v-else-if="done && images.length" class="image-record-content-TuJi21">
+            <div class="responsive-image-grid-WOh0lB">
+              <div v-for="(url, i) in images" :key="i"
+                   class="image-card-wrapper-WOgXrk landscape-Ven8Mz"
+                   :style="`--aspect-ratio:${aspectRatio}`">
+                <div class="image-record-item-W6Y7Df">
+                  <div class="context-menu-trigger-WJ6VDZ">
+                    <div class="slot-card-container-gulhrr image-card-container-dFemyw">
+                      <div class="content-container-z0JOWv">
+                        <div class="image-card-container-qy7ui4">
+                          <div class="container-bG3PQ9 image-GnB1sY">
+                            <div style="transition:opacity 300ms;opacity:1">
+                              <img class="image-TLmgkP"
+                                   crossorigin="anonymous"
+                                   draggable="false"
+                                   loading="lazy"
+                                   :src="url" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 加载中 -->
+          <div v-else class="image-record-content-TuJi21">
             <div class="responsive-image-grid-WOh0lB">
               <div v-for="i in count" :key="i"
                    class="image-card-wrapper-WOgXrk landscape-Ven8Mz"
@@ -62,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import loadingVideoUrl from '@/assets/animations/record-loading-animation.mp4'
 
 const props = defineProps({
@@ -83,25 +122,47 @@ const props = defineProps({
   /** 图片宽高比数值 */
   aspectRatio: { type: Number, default: 1 },
   /** 初始进度百分比 */
-  progress: { type: Number, default: 0 }
+  progress: { type: Number, default: 0 },
+  /** 是否生成完成 */
+  done: { type: Boolean, default: false },
+  /** 生成的图片 URL 列表 */
+  images: { type: Array, default: () => [] },
+  /** 错误信息 */
+  error: { type: String, default: '' }
 })
 
 const currentProgress = ref(props.progress)
 let timer = null
 
-onMounted(() => {
+const startTimer = () => {
   timer = setInterval(() => {
     if (currentProgress.value < 99) {
-      // 越接近 99 增长越慢
       const remaining = 99 - currentProgress.value
       const step = Math.max(1, Math.floor(remaining * 0.08))
       currentProgress.value = Math.min(99, currentProgress.value + step)
     }
   }, 800)
+}
+
+const stopTimer = () => {
+  if (timer) { clearInterval(timer); timer = null }
+}
+
+// 完成时停止进度条
+watch(() => props.done, (val) => {
+  if (val) stopTimer()
+})
+
+watch(() => props.error, (val) => {
+  if (val) stopTimer()
+})
+
+onMounted(() => {
+  if (!props.done && !props.error) startTimer()
 })
 
 onUnmounted(() => {
-  clearInterval(timer)
+  stopTimer()
 })
 </script>
 
@@ -171,5 +232,22 @@ onUnmounted(() => {
   left: 8px;
   position: absolute;
   top: 8px;
+}
+
+/* 错误状态 */
+.image-error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 24px;
+}
+
+.image-error-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--functional-danger, #f53f3f);
+  font-size: 14px;
 }
 </style>

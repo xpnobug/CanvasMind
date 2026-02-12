@@ -3,8 +3,9 @@
 // 包含模型版本选择、尺寸选择、文字工具按钮
 // 支持弹出方向设置
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import SelectPopup from '../common/SelectPopup.vue'
+import { getAllImageModels, DEFAULT_IMAGE_MODEL } from '@/config/models'
 
 // 弹出方向类型
 type Placement = 'top' | 'bottom' | 'auto'
@@ -22,12 +23,10 @@ const props = withDefaults(defineProps<Props>(), {
   iconOnly: false
 })
 
-// 模型版本配置
-const modelVersions = [
-  { value: '4.1', label: '图片 4.1' },
-  { value: '4.0', label: '图片 4.0' },
-  { value: '3.5', label: '图片 3.5' }
-]
+// 模型版本配置（内置 + 自定义）
+const modelVersions = computed(() =>
+  getAllImageModels().map((m: any) => ({ value: m.key, label: m.label }))
+)
 
 // 尺寸配置
 const sizeOptions = [
@@ -39,7 +38,7 @@ const sizeOptions = [
 ]
 
 // 当前选中的模型版本
-const currentModelVersion = ref('4.1')
+const currentModelVersion = ref(DEFAULT_IMAGE_MODEL)
 
 // 当前选中的尺寸
 const currentSize = ref('1:1')
@@ -78,6 +77,12 @@ const selectSize = (size: string) => {
   isSizeSelectOpen.value = false
 }
 
+// 当前模型显示名称
+const currentModelLabel = computed(() => {
+  const m = modelVersions.value.find(v => v.value === currentModelVersion.value)
+  return m?.label || currentModelVersion.value
+})
+
 // 获取当前尺寸配置
 const currentSizeConfig = () => {
   return sizeOptions.find(s => s.value === currentSize.value) || sizeOptions[0]
@@ -85,6 +90,7 @@ const currentSizeConfig = () => {
 
 defineExpose({
   currentModelVersion,
+  currentModelLabel,
   currentSize,
   currentSizeConfig
 })
@@ -98,7 +104,7 @@ defineExpose({
          role="combobox"
          tabindex="0"
          :aria-expanded="isModelSelectOpen"
-         :title="iconOnly ? '图片 ' + currentModelVersion : undefined"
+         :title="iconOnly ? currentModelLabel : undefined"
          @click.stop="toggleModelSelect">
       <div class="lv-select-view">
         <span class="lv-select-view-selector">
@@ -113,7 +119,7 @@ defineExpose({
                       fill-rule="evenodd"></path>
               </g>
             </svg>
-            <span v-if="!iconOnly">图片 {{ currentModelVersion }}</span>
+            <span v-if="!iconOnly">{{ currentModelLabel }}</span>
           </span>
         </span>
         <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">

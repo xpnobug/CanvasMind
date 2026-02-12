@@ -5,6 +5,9 @@
 
 import { ref, computed } from 'vue'
 import PreferencePanel from '../common/PreferencePanel.vue'
+import SelectPopup from '../common/SelectPopup.vue'
+import { getAllChatModels } from '@/config/models'
+import { getAgentModel, setAgentModel } from '@/api/agent'
 
 // 弹出方向类型
 type Placement = 'top' | 'bottom' | 'auto'
@@ -32,6 +35,31 @@ const emit = defineEmits<{
 const inspirationSearchEnabled = ref(true)
 const creativeDesignEnabled = ref(true)
 
+// 模型选择
+const chatModels = computed(() =>
+  getAllChatModels().map((m: any) => ({ value: m.key, label: m.label }))
+)
+const currentModel = ref(getAgentModel())
+const isModelSelectOpen = ref(false)
+const modelTriggerRef = ref<HTMLElement | null>(null)
+
+const currentModelLabel = computed(() => {
+  const m = chatModels.value.find(v => v.value === currentModel.value)
+  return m?.label || currentModel.value
+})
+
+const toggleModelSelect = (e: Event) => {
+  e.stopPropagation()
+  isModelSelectOpen.value = !isModelSelectOpen.value
+  if (isPreferencePanelOpen.value) closePanel()
+}
+
+const selectModel = (key: string) => {
+  currentModel.value = key
+  setAgentModel(key)
+  isModelSelectOpen.value = false
+}
+
 // 生成偏好面板状态
 const isPreferencePanelOpen = ref(false)
 const preferenceTriggerRef = ref<HTMLElement | null>(null)
@@ -53,7 +81,9 @@ const closePanel = () => {
 // 暴露方法和状态
 defineExpose({
   isPreferencePanelOpen,
-  closePanel
+  closePanel,
+  currentModel,
+  currentModelLabel
 })
 
 // 切换生成偏好面板
@@ -82,6 +112,74 @@ const toggleCreativeDesign = () => {
 
 <template>
   <div class="agent-toolbar">
+    <!-- 模型选择 -->
+    <div ref="modelTriggerRef"
+         :class="['lv-select', 'lv-select-single', 'lv-select-size-default', 'toolbar-select-h345g7', 'select-joF5y7', { 'compact-OC0Z0c': iconOnly }]"
+         role="combobox"
+         tabindex="0"
+         :aria-expanded="isModelSelectOpen"
+         :title="iconOnly ? currentModelLabel : undefined"
+         @click.stop="toggleModelSelect">
+      <div class="lv-select-view">
+        <span class="lv-select-view-selector">
+          <span class="lv-select-view-value">
+            <svg fill="none" height="16" preserveAspectRatio="xMidYMid meet"
+                 role="presentation" viewBox="0 0 24 24" width="16"
+                 xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <path clip-rule="evenodd"
+                      d="M13.25 2.682a2.5 2.5 0 0 0-2.5 0L4.556 6.258a2.5 2.5 0 0 0-1.25 2.165v7.153a2.5 2.5 0 0 0 1.25 2.165l6.194 3.576a2.5 2.5 0 0 0 2.5 0l6.194-3.576a2.5 2.5 0 0 0 1.25-2.165V8.423a2.5 2.5 0 0 0-1.25-2.165L13.25 2.682Zm-1.6 1.559a.7.7 0 0 1 .7 0L17.995 7.5 12 10.96 6.005 7.5l5.645-3.26Zm1.25 8.279v6.92l5.644-3.258a.7.7 0 0 0 .35-.606V9.059l-5.994 3.46ZM5.106 9.059l5.994 3.46v6.922l-5.644-3.259a.7.7 0 0 1-.35-.606V9.059Z"
+                      data-follow-fill="currentColor" fill="currentColor"
+                      fill-rule="evenodd"></path>
+              </g>
+            </svg>
+            <span v-if="!iconOnly">{{ currentModelLabel }}</span>
+          </span>
+        </span>
+        <div v-if="!iconOnly" aria-hidden="true" class="lv-select-suffix">
+          <div class="lv-select-arrow-icon">
+            <svg width="1em" height="1em" viewBox="0 0 24 24"
+                 preserveAspectRatio="xMidYMid meet" fill="none"
+                 role="presentation" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                      d="M21.01 7.982A1.2 1.2 0 0 1 21 9.679l-8.156 8.06a1.2 1.2 0 0 1-1.688 0L3 9.68a1.2 1.2 0 0 1 1.687-1.707L12 15.199l7.313-7.227a1.2 1.2 0 0 1 1.697.01Z"
+                      fill="currentColor"></path>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div v-else aria-hidden="true" class="lv-select-suffix sf-hidden"></div>
+      </div>
+    </div>
+
+    <!-- 模型选择弹窗 -->
+    <SelectPopup v-model:visible="isModelSelectOpen" :trigger-ref="modelTriggerRef" :placement="placement" title="对话模型">
+      <ul class="lv-select-popup-inner">
+        <li v-for="m in chatModels"
+            :key="m.value"
+            :class="['lv-select-option', { 'lv-select-option-wrapper-selected': currentModel === m.value }]"
+            @click.stop="selectModel(m.value)">
+          <div class="select-option-label-Ct6NRy">
+            <div class="select-option-label-content-tmGvFs">
+              <span>{{ m.label }}</span>
+            </div>
+            <span v-if="currentModel === m.value" class="select-option-check-icon-uOxlr2">
+              <svg width="1em" height="1em" viewBox="0 0 24 24"
+                   preserveAspectRatio="xMidYMid meet" fill="none"
+                   role="presentation" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                  <path data-follow-fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+                        d="M20.774 6.289a1 1 0 0 1 .1 1.41l-9.666 11a1 1 0 0 1-1.447.063l-5.334-5a1 1 0 0 1 1.368-1.458l4.572 4.286 9.002-10.2a1 1 0 0 1 1.405-.101Z"
+                        fill="currentColor"></path>
+                </g>
+              </svg>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </SelectPopup>
+
     <!-- 自动按钮（打开生成偏好面板） -->
     <button ref="preferenceTriggerRef"
             :class="['lv-btn', 'lv-btn-secondary', 'lv-btn-size-default', 'lv-btn-shape-square', 'button-lc3WzE', 'toolbar-button-FhFnQ_', { 'lv-btn-icon-only': iconOnly, 'active-Rs99sz active-mrQmUS': isPreferencePanelOpen }]"

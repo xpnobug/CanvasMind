@@ -259,11 +259,12 @@ document.documentElement.setAttribute('data-theme', 'dark')
 - [ ] 数字人功能完善
 
 ## 💬 交流群
+微信: 加群洽谈，过期请备注 进群
 
 欢迎加入微信群交流 AI 产品体验：
-
 <p align="center">
   <img src="./微信图片.jpg" width="300" alt="AI 产品体验交流群" />
+  <img src="./wechat.jpg" width="300" alt="AI 产品体验交流群" />
 </p>
 
 ## 📄 License

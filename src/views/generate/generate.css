@@ -3896,7 +3896,7 @@ div.normal-button-mS74ha {
     position: relative;
 }
 
-/* lv-select-popup 弹出菜单样式 - 来自即梦AI参考 */
+/* lv-select-popup 弹出菜单样式*/
 :root .lv-select-popup {
     background-color: var(--bg-dropdown-menu);
     border: .5px solid var(--stroke-tertiary);

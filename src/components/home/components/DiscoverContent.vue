@@ -126,7 +126,7 @@ import {
   HERO_RECT,
   buildFeedLayoutsFromSizes,
   masonryScrollHeight,
-} from '../discoverMasonryLayout'
+} from '@/components/home/discoverMasonryLayout'
 
 /** 可替换为接口数据；默认 01–40 共 40 张 */
 const feedImageBase = 'https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen'

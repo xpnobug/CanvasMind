@@ -1,9 +1,20 @@
 <template>
-  <div class="masonry-layout-ynW6QL masonry-layout" style="height:1000px">
-    <div class="masonry-layout-scroll-content-clXJoF" style="height:1000px;max-height:1000px">
-      <!-- Carousel Item -->
-      <div class="masonry-layout-item-J63wqA masonry-layout-item" data-index="0"
-           data-col="0" style="left:0px;top:0px;height:244px;width:650px">
+  <div class="discover-masonry-viewport">
+    <div
+      class="masonry-layout-ynW6QL masonry-layout discover-masonry-shell"
+      :style="{ height: `${scrollHeight}px` }"
+    >
+      <div
+        class="masonry-layout-scroll-content-clXJoF discover-masonry-track"
+        :style="{ height: `${scrollHeight}px`, maxHeight: 'none' }"
+      >
+      <!-- 顶部大卡：固定占位，占两列宽 -->
+      <div
+        class="masonry-layout-item-J63wqA masonry-layout-item discover-masonry-hero"
+        data-index="0"
+        data-col="0"
+        :style="heroInlineStyle"
+      >
         <div class="carousel-FWRj1r">
           <div class="list-container-vuJDVb">
             <div
@@ -15,12 +26,12 @@
                 <div class="container-bG3PQ9">
                   <div style="transition:opacity 300ms;opacity:1">
                     <img
-                      crossorigin="anonymous"
                       data-apm-action="feed-item-video"
                       fetchpriority="high"
                       loading="lazy"
-                      class="image-dDSP59"
+                      class="image-dDSP59 discover-masonry-cover"
                       :src="item.image"
+                      :alt="item.title"
                     >
                   </div>
                 </div>
@@ -74,36 +85,126 @@
           </div>
         </div>
       </div>
-      
-      <!-- Feed Item -->
-<!--      <div class="masonry-layout-item-J63wqA masonry-layout-item" data-index="1" data-col="2" style="left:652px;top:0px;height:576px;width:324px">-->
-<!--        <div class="feed-item-IXsc39 feed-item-image-NrtAVV cover-container-zfPgao">-->
-<!--          <div class="content-TIH4aR">-->
-<!--            <div class="container-bG3PQ9">-->
-<!--              <div style="transition:opacity 300ms;opacity:1">-->
-<!--                <img-->
-<!--                  crossorigin="anonymous"-->
-<!--                  data-apm-action="feed-item-image"-->
-<!--                  elementtiming-->
-<!--                  fetchpriority="high"-->
-<!--                  loading="lazy"-->
-<!--                  class="cover-W9HnBB"-->
-<!--                  ccfmp-element="true"-->
-<!--                >-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
+
+      <!-- Feed：位置由图片 natural 尺寸换算高度 + 最短列堆叠 -->
+      <div
+        v-for="(item, index) in feedItems"
+        :key="item.src"
+        class="masonry-layout-item-J63wqA masonry-layout-item"
+        :data-index="index + 1"
+        :style="feedTileStyle(index)"
+      >
+        <div class="feed-item-IXsc39 feed-item-image-NrtAVV cover-container-zfPgao">
+          <div class="content-TIH4aR">
+            <div class="container-bG3PQ9">
+              <div style="transition:opacity 300ms;opacity:1">
+                <img
+                  data-apm-action="feed-item-image"
+                  elementtiming
+                  :fetchpriority="index < 4 ? 'high' : 'low'"
+                  loading="lazy"
+                  class="cover-W9HnBB discover-masonry-cover"
+                  ccfmp-element="true"
+                  :src="item.src"
+                  :alt="item.alt"
+                  @load="onFeedImgLoad($event, index)"
+                  @error="onFeedImgError(index)"
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  <div>
-    <div class="feed-list-normal-PjbW7g"></div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import {
+  HERO_RECT,
+  buildFeedLayoutsFromSizes,
+  masonryScrollHeight,
+} from '../discoverMasonryLayout'
+
+/** 可替换为接口数据；默认 01–40 共 40 张 */
+const feedImageBase = 'https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen'
+
+/** 使用 .png 的编号（从 1 开始），未列出的为 .jpeg，例如 new Set([3, 7, 15]) 表示 03.png、07.png、15.png */
+const FEED_USE_PNG = new Set(
+  /** @type {number[]} */
+  ([5,39]),
+)
+
+function buildFeedSrc(n) {
+  const name = `${String(n).padStart(2, '0')}.${FEED_USE_PNG.has(n) ? 'png' : 'jpeg'}`
+  return `${feedImageBase}/${name}`
+}
+
+const feedItems = ref(
+  Array.from({ length: 40 }, (_, i) => {
+    const n = i + 1
+    return {
+      n,
+      src: buildFeedSrc(n),
+      alt: `Feed ${n}`,
+    }
+  }),
+)
+
+/** 每张图 natural 尺寸；null 表示未加载，布局按 1:1 占位 */
+const feedNaturalSizes = ref(
+  /** @type {Array<{ w: number; h: number } | null>} */
+  ([]),
+)
+
+watch(
+  () => feedItems.value.map((x) => x.src),
+  (urls) => {
+    feedNaturalSizes.value = urls.map(() => null)
+  },
+  { immediate: true },
+)
+
+function onFeedImgLoad(ev, index) {
+  const el = ev.target
+  if (!el || !el.naturalWidth || !el.naturalHeight) return
+  const next = feedNaturalSizes.value.slice()
+  next[index] = { w: el.naturalWidth, h: el.naturalHeight }
+  feedNaturalSizes.value = next
+}
+
+function onFeedImgError(index) {
+  if (feedNaturalSizes.value[index]) return
+  const next = feedNaturalSizes.value.slice()
+  next[index] = { w: 1, h: 1 }
+  feedNaturalSizes.value = next
+}
+
+const feedLayouts = computed(() => buildFeedLayoutsFromSizes(feedNaturalSizes.value))
+
+const scrollHeight = computed(() => masonryScrollHeight(feedLayouts.value))
+
+const heroInlineStyle = computed(() => ({
+  left: `${HERO_RECT.left}px`,
+  top: `${HERO_RECT.top}px`,
+  width: `${HERO_RECT.width}px`,
+  height: `${HERO_RECT.height}px`,
+}))
+
+function feedTileStyle(index) {
+  const r = feedLayouts.value[index]
+  if (!r) {
+    return { left: '0', top: '0', width: '0', height: '0', visibility: 'hidden' }
+  }
+  return {
+    left: `${r.left}px`,
+    top: `${r.top}px`,
+    width: `${r.width}px`,
+    height: `${r.height}px`,
+  }
+}
 
 const currentSlide = ref(0)
 
@@ -111,24 +212,29 @@ const carouselItems = ref([
   {
     title: '视觉实验室第1期 · 图标银行',
     participants: 4888,
-    image: 'https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/7854351dae514807b2411d3ed374be2f~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=9CfIpRLH%2BnjqJMGA0iOyWYBmqIQ%3D'
+    image:
+      'https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/7854351dae514807b2411d3ed374be2f~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=9CfIpRLH%2BnjqJMGA0iOyWYBmqIQ%3D',
   },
   {
     title: '第105届ADC年度设计大奖·AI设计作品征集',
     participants: null,
-    image: 'https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/35cb2eb1fd6a465090d743cd79344dcc~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=rJdP73v4TQQ6I%2BGP0yeUGGIOLkA%3D'
+    image:
+      'https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/35cb2eb1fd6a465090d743cd79344dcc~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=rJdP73v4TQQ6I%2BGP0yeUGGIOLkA%3D',
   },
   {
     title: '迷你剧场第21期 · 看见那一刻的发生',
     participants: 926,
-    image: 'https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/62a31d95776e4106b2e2533626551ad2~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=m5M3guAWnzX5TTgBNdpTuFZUNZQ%3D'
-  }
+    image:
+      'https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/62a31d95776e4106b2e2533626551ad2~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=m5M3guAWnzX5TTgBNdpTuFZUNZQ%3D',
+  },
 ])
 
 const getCarouselItemClass = (index) => {
   if (index === currentSlide.value) return 'curr-F1jSlh'
   if (index === (currentSlide.value + 1) % carouselItems.value.length) return 'next-fFJk8u'
-  if (index === (currentSlide.value - 1 + carouselItems.value.length) % carouselItems.value.length) return 'prev-CbPcEG'
+  if (index === (currentSlide.value - 1 + carouselItems.value.length) % carouselItems.value.length) {
+    return 'prev-CbPcEG'
+  }
   return ''
 }
 
@@ -146,5 +252,31 @@ const goToSlide = (index) => {
 </script>
 
 <style scoped>
-/* 发现内容样式已在全局样式中定义 */
+.discover-masonry-viewport {
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  /* 避免子层圆角裁切抗锯齿问题 */
+  isolation: isolate;
+}
+
+.discover-masonry-shell {
+  min-width: 0;
+  overflow-x: auto;
+  position: relative;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.discover-masonry-track {
+  box-sizing: border-box;
+  min-width: 1654px;
+  position: relative;
+  width: 100%;
+}
+
+.discover-masonry-cover {
+  object-fit: cover;
+}
 </style>

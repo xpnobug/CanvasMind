@@ -5,6 +5,7 @@
       :style="{ height: `${scrollHeight}px` }"
     >
       <div
+        ref="trackRef"
         class="masonry-layout-scroll-content-clXJoF discover-masonry-track"
         :style="{ height: `${scrollHeight}px`, maxHeight: 'none' }"
       >
@@ -121,10 +122,10 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
-  HERO_RECT,
   buildFeedLayoutsFromSizes,
+  computeMasonryMetrics,
   masonryScrollHeight,
 } from '@/components/home/discoverMasonryLayout'
 
@@ -196,16 +197,59 @@ function onFeedImgError(index) {
   feedNaturalSizes.value = next
 }
 
-const feedLayouts = computed(() => buildFeedLayoutsFromSizes(feedNaturalSizes.value))
+/** 瀑布流轨道宽度，用于按屏宽重算列；ResizeObserver 更新 */
+const trackRef = ref(null)
+const trackWidth = ref(1653)
 
-const scrollHeight = computed(() => masonryScrollHeight(feedLayouts.value))
+let trackResizeObserver = null
+/** @type {(() => void) | null} */
+let trackWinResize = null
 
-const heroInlineStyle = computed(() => ({
-  left: `${HERO_RECT.left}px`,
-  top: `${HERO_RECT.top}px`,
-  width: `${HERO_RECT.width}px`,
-  height: `${HERO_RECT.height}px`,
-}))
+onMounted(() => {
+  const el = trackRef.value
+  if (!el) return
+  const apply = () => {
+    const w = el.getBoundingClientRect().width
+    if (w > 0) trackWidth.value = w
+  }
+  apply()
+  if (typeof ResizeObserver !== 'undefined') {
+    trackResizeObserver = new ResizeObserver(() => apply())
+    trackResizeObserver.observe(el)
+  } else {
+    trackWinResize = apply
+    window.addEventListener('resize', trackWinResize)
+  }
+})
+
+onBeforeUnmount(() => {
+  trackResizeObserver?.disconnect()
+  trackResizeObserver = null
+  if (trackWinResize) {
+    window.removeEventListener('resize', trackWinResize)
+    trackWinResize = null
+  }
+})
+
+const masonryMetrics = computed(() => computeMasonryMetrics(trackWidth.value))
+
+const feedLayouts = computed(() =>
+  buildFeedLayoutsFromSizes(feedNaturalSizes.value, masonryMetrics.value),
+)
+
+const scrollHeight = computed(() =>
+  masonryScrollHeight(feedLayouts.value, masonryMetrics.value.heroRect),
+)
+
+const heroInlineStyle = computed(() => {
+  const h = masonryMetrics.value.heroRect
+  return {
+    left: `${h.left}px`,
+    top: `${h.top}px`,
+    width: `${h.width}px`,
+    height: `${h.height}px`,
+  }
+})
 
 function feedTileStyle(index) {
   const r = feedLayouts.value[index]
@@ -285,7 +329,7 @@ const goToSlide = (index) => {
 
 .discover-masonry-track {
   box-sizing: border-box;
-  min-width: 1654px;
+  min-width: 0;
   position: relative;
   width: 100%;
 }

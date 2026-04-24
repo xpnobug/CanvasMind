@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+
+# 不维护 npm lock，CI 使用 npm install（无 setup-node 缓存）
+package-lock.json
 *.local
 
 # Editor directories and files

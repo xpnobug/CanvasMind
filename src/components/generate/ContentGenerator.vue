@@ -55,6 +55,7 @@ const emit = defineEmits<{
     resolution?: string
     duration?: string
     feature?: string
+    skill?: string
   }]
   // 面板宽度调整事件
   resize: [width: number]
@@ -184,7 +185,8 @@ const handleSubmit = () => {
   } else if (currentType.value === 'agent') {
     const toolbar = agentToolbarExpandRef.value || agentToolbarRef.value
     emit('send', message, currentType.value, {
-      model: toolbar?.currentModelLabel || ''
+      model: toolbar?.currentModelLabel || '',
+      skill: toolbar?.currentSkill || 'general'
     })
   } else {
     emit('send', message, currentType.value)

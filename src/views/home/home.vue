@@ -44,6 +44,14 @@
       v-model="workDetailOpen"
       :image-src="workDetailImageSrc"
       :prompt-text="workDetailPromptText"
+      :author-name="workDetailAuthorName"
+      :author-avatar-src="workDetailAuthorAvatarSrc"
+      :like-count="workDetailLikeCount"
+      :create-date="workDetailCreateDate"
+      :ai-generated-text="workDetailAiGeneratedText"
+      :prompt-tip-label="workDetailPromptTipLabel"
+      :model-label="workDetailModelLabel"
+      :aspect-ratio-label="workDetailAspectRatioLabel"
       :gallery-length="workDetailGallery.length"
       @gallery-nav="handleGalleryNav"
     />
@@ -66,7 +74,7 @@ const handleSearch = (searchText) => {
 }
 
 const workDetailOpen = ref(false)
-/** @type {import('vue').Ref<Array<{ imageSrc: string, promptText?: string }>>} */
+/** @type {import('vue').Ref<Array<{ imageSrc: string, promptText?: string, user?: { name?: string, avatarSrc?: string }, favoriteCount?: number|string, detail?: { createDate?: string, aiGeneratedText?: string, promptTipLabel?: string, modelLabel?: string, aspectRatioLabel?: string } }>>} */
 const workDetailGallery = ref([])
 const workDetailGalleryIndex = ref(0)
 
@@ -85,12 +93,60 @@ const workDetailPromptText = computed(() => {
   return t
 })
 
+const workDetailAuthorName = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.user?.name || '创作者'
+})
+
+const workDetailAuthorAvatarSrc = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.user?.avatarSrc || ''
+})
+
+const workDetailLikeCount = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.favoriteCount ?? 999
+})
+
+const workDetailCreateDate = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.detail?.createDate || '2026-04-16'
+})
+
+const workDetailAiGeneratedText = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.detail?.aiGeneratedText || '内容由 AI 生成'
+})
+
+const workDetailPromptTipLabel = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.detail?.promptTipLabel || '图片提示词'
+})
+
+const workDetailModelLabel = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.detail?.modelLabel || '图片 4.1'
+})
+
+const workDetailAspectRatioLabel = computed(() => {
+  const g = workDetailGallery.value
+  const i = workDetailGalleryIndex.value
+  return g[i]?.detail?.aspectRatioLabel || '9:16'
+})
+
 /**
  * 发现页点击图片/轮播：可带整组画廊以便弹层内上下切换
  * @param {{
- *   gallery: Array<{ imageSrc: string, promptText?: string }>
+ *   gallery: Array<{ imageSrc: string, promptText?: string, user?: { name?: string, avatarSrc?: string }, favoriteCount?: number|string, detail?: { createDate?: string, aiGeneratedText?: string, promptTipLabel?: string, modelLabel?: string, aspectRatioLabel?: string } }>
  *   index: number
- * } | { imageSrc: string, promptText?: string }} payload
+ * } | { imageSrc: string, promptText?: string, user?: { name?: string, avatarSrc?: string }, favoriteCount?: number|string, detail?: { createDate?: string, aiGeneratedText?: string, promptTipLabel?: string, modelLabel?: string, aspectRatioLabel?: string } }} payload
  */
 function handleOpenWorkDetail(payload) {
   if ('gallery' in payload && Array.isArray(payload.gallery) && payload.gallery.length > 0) {
@@ -98,7 +154,13 @@ function handleOpenWorkDetail(payload) {
     const ix = payload.index ?? 0
     workDetailGalleryIndex.value = Math.min(Math.max(0, ix), payload.gallery.length - 1)
   } else {
-    workDetailGallery.value = [{ imageSrc: payload.imageSrc, promptText: payload.promptText }]
+    workDetailGallery.value = [{
+      imageSrc: payload.imageSrc,
+      promptText: payload.promptText,
+      user: payload.user,
+      favoriteCount: payload.favoriteCount,
+      detail: payload.detail,
+    }]
     workDetailGalleryIndex.value = 0
   }
   workDetailOpen.value = true

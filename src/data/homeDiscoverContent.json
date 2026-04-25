@@ -1,0 +1,747 @@
+{
+  "heroItems": [
+    {
+      "id": "hero-01",
+      "title": "视觉实验室第1期 · 图标银行",
+      "participants": 4888,
+      "imageSrc": "https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/7854351dae514807b2411d3ed374be2f~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=9CfIpRLH%2BnjqJMGA0iOyWYBmqIQ%3D",
+      "promptText": "图标银行主题视觉海报，强调实验感、设计感和未来创作氛围"
+    },
+    {
+      "id": "hero-02",
+      "title": "第105届ADC年度设计大奖·AI设计作品征集",
+      "participants": null,
+      "imageSrc": "https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/35cb2eb1fd6a465090d743cd79344dcc~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=rJdP73v4TQQ6I%2BGP0yeUGGIOLkA%3D",
+      "promptText": "AI设计大奖征集海报，突出赛事感、艺术感和品牌识别度"
+    },
+    {
+      "id": "hero-03",
+      "title": "迷你剧场第21期 · 看见那一刻的发生",
+      "participants": 926,
+      "imageSrc": "https://p9-heycan-hgt-sign.byteimg.com/tos-cn-i-31yrirwxg7/62a31d95776e4106b2e2533626551ad2~tplv-3jr8j4ixpe-resize:720:720.webp?lk3s=8e790bc3&x-expires=1800580713&x-signature=m5M3guAWnzX5TTgBNdpTuFZUNZQ%3D",
+      "promptText": "迷你剧场封面视觉，突出故事瞬间、戏剧张力和画面叙事感"
+    }
+  ],
+  "feedItems": [
+    {
+      "id": "feed-01",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/01.jpeg",
+      "alt": "Feed 01",
+      "promptText": "9:16 vertical — a 3x3 grid collage (nine images) forming a Korean idol portrait photoshoot series. Each frame features the same young Korean female idol, maintaining 100% consistency in facial features, hairstyle, and styling across all nine images. Each photo showcases a different pose, expression, and subtle outfit variation (same white oversized button-up shirt, variations in how it’s worn). Natural window light, soft and airy aesthetic, minimal clean indoor background, authentic film-like color grading with gentle pastel tones, editorial photography style. The collage should look like a professional photoshoot contact sheet or Instagram carousel layout. Soft focus, slight grain, warm highlights, gentle shadows. Extremely consistent identity across all frames while showing range in posing and mood.",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 253,
+      "detail": {
+        "createDate": "2026-04-25",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-02",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/02.jpeg",
+      "alt": "Feed 02",
+      "promptText": "一张充满新春喜庆氛围但不失高雅格调的 2026 城市宣传海报。 双重曝光，构图延续了S型的流动感； 在纯白的纹理背景右下角，一个身穿中国传统服饰的微缩人物正在挥舞着一条长长的红色丝绸舞带，这条红绸在空中舞动，不仅展现出丝绸的柔顺质感，更在向左上方飘动的过程中，奇幻地变形成了一条壮丽的山脉河流。 在这条“河流”中，叠加了一个有山有海河的上海城市手绘图，国潮，景色尽在眼底，壮阔雄伟，令人震撼。 上海的地标建筑(东方明珠广播电视塔，外滩建筑群，黄浦江江, 豫园，龙华寺，佘山）。 云雾环绕，仙气缥缈，色彩丰富，结构复杂，细节丰富，但因为大面积的留白，画面依然显得清新脱俗，左下角排版着“SPRING 2026”和竖排的宣传语，整体寓意“经济中心，魅力魔都”。 文字排版优美，大方，字迹清晰完整，尺寸9:16。",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 188,
+      "detail": {
+        "createDate": "2026-04-24",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-03",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/03.jpeg",
+      "alt": "Feed 03",
+      "promptText": "A young woman in a long pale-blue dress stands on a mossy cliff at dawn, surroundedby drifting mountain mist. Her back is turned to the camera; her long silver hair flowsin the cold breeze. Sunlight breaks through the fog in soft golden rays, illuminating hersilhouette like an ancient painting. The atmosphere is ethereal, quiet, and almostmythical.",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 276,
+      "detail": {
+        "createDate": "2026-04-23",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-04",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/04.jpeg",
+      "alt": "Feed 04",
+      "promptText": "一张秦始皇国风游戏人物宣传海报，统一采用竖版主视觉构图。每张海报都使用上大下小的层级结构：画面上半部分以人物最具辨识度的头部、面部轮廓、面具或半身外轮廓作为巨大的视觉主体，形成强识别的剪影式主形；中下部安排完整人物作为第二主体，稳定站姿或轻动作姿态，构成画面的视觉核心。大轮廓内部以及角色周围采用双重曝光与拼贴式叙事构图，将若干场景、意象、小型人物关系、辅助元素和环境层层融合在云雾、水墨和留白之中。左右侧设置呼应性辅景，使画面产生故事张力与空间变化。以一条贯穿画面上下的流动线索连接主角色、内部拼贴和上方大轮廓，增强整体性和视线引导。整体画面保持大面积留白，边缘采用水墨晕染和虚化破碎处理，形成东方美学中的虚实关系和呼吸感。整体风格统一、高级、克制，强调层次感、叙事感、主视觉冲击力和系列化海报语言",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 145,
+      "detail": {
+        "createDate": "2026-04-22",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-05",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/05.png",
+      "alt": "Feed 05",
+      "promptText": "A breathtakingly beautiful ancient Chinese woman in a flowing silk hanfu of soft jade-green and blush pink, embroidered with delicate golden peonies and cranes. She sits gracefully by a moon-shaped window, warm afternoon sunlight filtering through translucent gauze curtains, casting dappled golden light across her porcelain skin. Her long black hair is elegantly pinned with a jade hairpin and fresh camellia blossoms, with loose tendrils falling softly around her face. She gazes down tenderly, her slender fingers gently dangling a golden silk tassel to tease a fluffy, pure white cat resting on the embroidered silk cushion beside her. The white cat playfully bats its soft paws with half-closed, blissful eyes. On the lacquered rosewood table nearby: a celadon tea set, a half-unrolled scroll of ink calligraphy, and a small vase of pink plum blossoms. Scattered white petals float gently in the air. The background features a classical Chinese courtyard with carved wooden latticework, a distant misty garden of bamboo and weeping willows, and a koi pond shimmering in the golden afternoon light. The overall mood is serene, romantic, and dreamlike — painted in the style of ultra-detailed digital art blending Song Dynasty aesthetics with contemporary illustration, warm golden-hour palette, cinematic depth of field, 8K resolution.",
+      "user": {
+        "name": "木白序章",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 321,
+      "detail": {
+        "createDate": "2026-04-21",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-06",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/06.jpeg",
+      "alt": "Feed 06",
+      "promptText": "A hyper-detailed miniature steampunk city built inside the glass bulb of a partially shattered vintage incandescent lightbulb. The lightbulb is resting on a lush, bioluminescent mossy forest floor. Tiny glowing windows, intricate brass gears, and miniature airships floating inside the bulb. Surrounded by glowing blue fireflies and ethereal glowing dust. Magical cinematic lighting, soft god rays filtering through a dense forest canopy above. Macro photography, depth of field, 8k resolution, Unreal Engine 5 render, surreal fantasy art, masterpiece.",
+      "user": {
+        "name": "风起南枝",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 167,
+      "detail": {
+        "createDate": "2026-04-20",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-07",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/07.jpeg",
+      "alt": "Feed 07",
+      "promptText": "根据凡人修仙传自动生成一张收藏版史诗叙事海报：巨大的韩立侧脸剪影作为外轮廓，剪影内部自动生长出最契合该主题的完整世界观、标志性场景、角色关系、象征符号、关键建筑、生物、道具与氛围。整体不是普通拼贴，而是高级的剪影轮廓填充式叙事合成，带有双重曝光式联想，但更偏电影海报与梦幻水彩插画融合风格；柔和空气透视，轻雾化过渡，纸张颗粒，边缘飞白与刷痕，大面积留白，版式克制高级，安静、宏大、神圣、怀旧、诗意、传说感，修仙仙侠。风格、色彩、场景、材质全部根据主题自动适配，所有元素必须强绑定主题，一眼识别，不要杂乱，不要硬拼贴，不要模板化背景，不要廉价奇幻素材。",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 294,
+      "detail": {
+        "createDate": "2026-04-19",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-08",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/08.jpeg",
+      "alt": "Feed 08",
+      "promptText": "",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 132,
+      "detail": {
+        "createDate": "2026-04-18",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-09",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/09.jpeg",
+      "alt": "Feed 09",
+      "promptText": "以这首诗为蓝本，创造有趣的印象海报，强调解构主义、新存在主义摄影拼贴：\n我当然知道那不是我的月亮\n但有一刻，月亮的确照在了我的身上\n可生活不是电影，我也缺少点运气\n我悄然触摸你，却未曾料想\n你像蒲公英散开了\n到处都是你的模样",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 265,
+      "detail": {
+        "createDate": "2026-04-17",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-10",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/10.jpeg",
+      "alt": "Feed 10",
+      "promptText": "蜜雪冰城雪王变装KFC员工，戴红色围裙，手举炸鸡桶，\n夸张表情，大喊“V我50”，\n疯狂星期四主题，搞笑 meme 风，\n夸张字体，贴纸元素，弹幕风格，\n强对比红白配色，动感构图，\n社交媒体爆款视觉，抖音风海报，\n高清，强光，高锐度，商业广告质感，2比3比例",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 173,
+      "detail": {
+        "createDate": "2026-04-16",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-11",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/11.jpeg",
+      "alt": "Feed 11",
+      "promptText": "一张充满清新淡雅氛围但不失高雅格调的镇平石佛寺玉器宣传海报。 双重曝光，构图延续了S型的流动感； 在纯白的纹理背景右下角，一个身穿中国传统服饰的微缩人物正在挥舞着一条长长的墨绿色丝绸舞带，这条墨绿色丝绸在空中舞动，不仅展现出丝绸的柔顺质感，更在向左上方飘动的过程中，奇幻地变形成了一条壮丽的山脉河流。 在这条“河流”中，叠加了一个水墨风的有山有海河的玉器手绘图，国潮，景色尽在眼底，壮阔雄伟，令人震撼。 主要的玉器为手镯(其他的有玉佛、貔貅、观音、竹子等各种和田玉玉雕）。 云雾环绕，仙气缥缈，色彩丰富，结构复杂，细节丰富，但因为大面积的留白，画面依然显得清新脱俗，左下角排版着“SPRING 2026”和竖排的宣传语，整体寓意“世界非物质文化遗产玉雕石佛寺”。 文字排版优美，大方，字迹清晰完整，尺寸9:16。",
+      "user": {
+        "name": "木白序章",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 309,
+      "detail": {
+        "createDate": "2026-04-15",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-12",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/12.jpeg",
+      "alt": "Feed 12",
+      "promptText": "An epic concept poster of Xiang Yu. Double exposure, S-curve composition. Lower right on white rice paper texture: miniature Xiang Yu in black armor, his scarlet cape sweeping up-left and morphing into the turbulent Wu River. Superimposed Guochao hand-drawn ancient battlefield: Gaixia camps, scattered poppy petals, solitary Wu Zhui horse silhouette. Color palette: profound black, blood red, antique gold, with ink wash mist and extensive negative space. Lower left typography includes the title “西楚霸王项羽” (Xiang Yu, the Hegemon-King of Western Chu) and a vertical line of poetry “力拔山兮气盖世” (My strength plucked up the hills). Aspect ratio 9:16.",
+      "user": {
+        "name": "风起南枝",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 186,
+      "detail": {
+        "createDate": "2026-04-14",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-13",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/13.jpeg",
+      "alt": "Feed 13",
+      "promptText": "Cinematic indoor portrait, elegant urban lady, quiet relaxed posture, fair delicate skin with natural soft radiance, gentle soft eyes, refined facial features, fluffy layered hairstyle, exquisite soft lace home loungewear, warm cozy bedroom ambient light, soft contour backlight, hazy bokeh background, high-end magazine shooting texture, mild contrast, quiet and tender atmosphere, hyper-realistic human skin detail, vertical 2:3",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 241,
+      "detail": {
+        "createDate": "2026-04-13",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-14",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/14.jpeg",
+      "alt": "Feed 14",
+      "promptText": "A surreal yet photorealistic ultra-telephoto geographic photograph with extreme spatial compression, vertical composition, stacked world landmarks aligned along a single line of sight from bottom to top. At the bottom: Shanghai skyline with Shanghai Tower, Shanghai World Financial Center, and Oriental Pearl Tower. In the middle foreground: layered hills, temples, and atmospheric mountain ranges. In the center: the Potala Palace on a mountain ridge, majestic and sharply detailed. Above it: the Taj Mahal with white dome and minarets. Higher above: the Great Pyramid of Khufu in a dry desert landscape. At the very top: the Statue of Liberty near a bay with a distant city skyline. Warm sunrise or sunset light, cinematic haze, atmospheric perspective, natural colors, documentary realism, national geographic style, ultra detailed architecture, realistic terrain transitions, compressed depth, 800mm–1200mm telephoto lens look, no collage seams, no fantasy floating objects, no illustration, no text, no watermark.",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 158,
+      "detail": {
+        "createDate": "2026-04-12",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-15",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/15.jpeg",
+      "alt": "Feed 15",
+      "promptText": "",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 336,
+      "detail": {
+        "createDate": "2026-04-11",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-16",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/16.jpeg",
+      "alt": "Feed 16",
+      "promptText": "A young woman wearing thin round glasses, delicate and natural facial features, clear and realistic skin texture, visible pores, subtle imperfections, soft natural makeup, calm and introspective expression, long slightly wavy hair, natural flow She is sitting closely beside a cat, gentle and intimate interaction, softly touching or leaning near the cat, emotional connection between human and animal, quiet and poetic atmosphere The cat is fluffy and elegant, highly detailed fur, realistic texture, calm posture, looking slightly away or toward the woman, soft and natural presence Lighting: cinematic soft lighting, volumetric light rays, rim light outlining the subject, natural window light, soft shadows, warm highlights with subtle cool contrast, balanced exposure Composition: shallow depth of field, 50mm or 85mm portrait lens, f/1.8, strong subject focus, creamy bokeh background, rule of thirds, cinematic framing, slight foreground blur for depth Environment: minimal indoor setting near a window, soft curtains, sunlight passing through, clean and aesthetic composition, no clutter, artistic simplicity Color grading: soft cinematic tones, slightly desaturated colors, warm highlights, cool shadows, film-like color grading, subtle film grain Details: extremely detailed, sharp focus on eyes, high dynamic range, professional photography, 8K resolution，natural skin texture, skin pores, subtle blemishes, realistic imperfections, RAW photo",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 194,
+      "detail": {
+        "createDate": "2026-04-10",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-17",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/17.jpeg",
+      "alt": "Feed 17",
+      "promptText": "对比观沧海和浪淘沙·北戴河\n画面左端： 极度的动感。曹操在暴风雨中登高，身边是乱石穿空，惊涛拍岸，展现“萧瑟秋风”的肃杀。\n画面中间： 一道如长河般的笔墨线条漂浮着诗词。\n画面右端： 极度的静谧与广阔。1954年的夏天，大雨初晴，海面辽阔，远方是繁忙的港口和飞翔的海鸥，毛泽东在岸边踱步，展现“换了人间”的祥和。",
+      "user": {
+        "name": "木白序章",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 227,
+      "detail": {
+        "createDate": "2026-04-09",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-18",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/18.jpeg",
+      "alt": "Feed 18",
+      "promptText": "Create a cinematic still in 2.39:1 widescreen.\nAt the edge of a rural landscape at the very end of dusk, depict a young Korean female dancer, age 20–28, with shoulder-length short hair, a slender body, thin arms, and a graceful swan-like neck. She is shown from behind, with only her upper body visible. Her back and both arms are fully bare. Place her in the center of the frame. Her head and torso lean slightly toward the left side of the image. One arm is raised high above her head, forming a soft, relaxed arc, as if the image has captured a fleeting moment of improvised dance.\nThe figure must be rendered as a near-complete pure black silhouette. Keep only the clean outer contours of the back, shoulders, arms, head, and hair. No skin detail, no tonal modeling on the back, no visible anatomy inside the silhouette, no glowing skin, no illuminated flesh tones. The silhouette should feel solid, dense, and graphic.\nThe sky should be a low-saturation, low-contrast twilight gradient: the top of the frame is a muted dark blue with gray-cyan tones, transitioning in the lower middle area into a very thin layer of dim yellow-orange light near the horizon. The atmosphere should feel dark, heavy, subdued, and restrained, like a film still, not a luminous or picturesque sunset photograph.\nIn the background, include thin power lines, utility poles, one streetlamp already turned on, and sparse shrub shadows on the right side. All ground elements and vegetation should be significantly darkened, almost sinking into black.\nUse natural backlighting. The entire image should feel underexposed by about 1.5 to 2 stops. Keep highlights only near the horizon line. Let the shadows be deeply crushed, with rich blacks, low saturation, and subtle film grain. The final mood should feel real, rough, poetic, lonely, and restrained.\nVisual tone: cinematic, austere, understated, melancholic, tactile, not polished, not glossy, not romanticized.",
+      "user": {
+        "name": "风起南枝",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 149,
+      "detail": {
+        "createDate": "2026-04-08",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-19",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/19.jpeg",
+      "alt": "Feed 19",
+      "promptText": "一张秦始皇国风游戏人物宣传海报，统一采用竖版主视觉构图。每张海报都使用上大下小的层级结构：画面上半部分以人物最具辨识度的头部、面部轮廓、面具或半身外轮廓作为巨大的视觉主体，形成强识别的剪影式主形；中下部安排完整人物作为第二主体，稳定站姿或轻动作姿态，构成画面的视觉核心。大轮廓内部以及角色周围采用双重曝光与拼贴式叙事构图，将若干场景、意象、小型人物关系、辅助元素和环境层层融合在云雾、水墨和留白之中。左右侧设置呼应性辅景，使画面产生故事张力与空间变化。以一条贯穿画面上下的流动线索连接主角色、内部拼贴和上方大轮廓，增强整体性和视线引导。整体画面保持大面积留白，边缘采用水墨晕染和虚化破碎处理，形成东方美学中的虚实关系和呼吸感。整体风格统一、高级、克制，强调层次感、叙事感、主视觉冲击力和系列化海报语言",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 281,
+      "detail": {
+        "createDate": "2026-04-25",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-20",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/20.jpeg",
+      "alt": "Feed 20",
+      "promptText": "一间充满复古氛围的中国老式无线电维修店，暖金色夕阳从窗边洒入，室内摆满老收音机、旧时钟、唱片和木质家具。画面中一位年轻男维修工穿着深蓝色工装，低头调试一台老式木壳收音机；对面一位年轻女性顾客，长发微卷，穿着棕色大衣和浅色碎花衬衫，背着单肩包，微微俯身注视他。两人隔着玻璃柜台对视，气氛安静、暧昧、治愈，带有电影感。环境细节丰富，复古招牌、老海报、植物、暖光、高级景深、真实皮肤质感、柔和阴影、胶片色调，东亚人物，超写实，cinematic, nostalgic, emotional, volumetric light, depth of field, highly detailed, photorealistic",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 176,
+      "detail": {
+        "createDate": "2026-04-24",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-21",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/21.jpeg",
+      "alt": "Feed 21",
+      "promptText": "写实风抓拍照片，埃隆·马斯克、萨姆·奥尔特曼、黄仁勋三人并排坐在中国传统家庭客厅的沙发上，春节家庭聚会的暖光氛围，门上贴着红色福字，墙上挂着写有“新春新禧迎富贵”的春联，右侧老式TCL显像管电视播放着央视春节联欢晚会，面前茶几摆着零食、橘子、花生和几杯饮品，穿着休闲居家服饰，表情自然放松，画面充满春节喜庆氛围，背景有简单家具和盆栽，胶片颗粒感，真实抓拍，4K高清，带红眼，",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 318,
+      "detail": {
+        "createDate": "2026-04-23",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-22",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/22.jpeg",
+      "alt": "Feed 22",
+      "promptText": "一幅让人感到放松和安静的傍晚河边画面：夏末傍晚，城市边缘安静的河岸步道旁，风很轻，天色是灰蓝里带一点微暖的过渡时刻。一个年轻东方女孩坐在河边矮墙上，穿着简单的浅色针织开衫和深色半裙，白色帆布鞋随意落地，姿态自然放松，没有明显摆拍感。她手里拿着一小束刚买来的花，身旁放着一个帆布袋。河面平静，岸边的树叶被风轻轻吹动，对岸是模糊的低矮建筑和零星亮起的暖色灯光。整个画面干净、舒服、克制，重点表现晚风、安静水面、衣物纹理、肤色、树影和暮色空气。颜色以灰蓝、浅米、柔和墨绿、暖黄小灯光为主，不浓烈，不戏剧化，像一张真实又带一点诗意的胶片摄影。photorealistic, calm riverside evening, soft ambient dusk light, natural candid pose, subtle film-like color grading, breathable composition, quiet emotional realism, no text, no watermark",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 203,
+      "detail": {
+        "createDate": "2026-04-22",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-23",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/23.jpeg",
+      "alt": "Feed 23",
+      "promptText": "An Oriental Freehand Fantasy Illustration Centered on Traditional Chinese Ink Wash\nA vertical long-scroll poster composition that naturally integrates a female silhouette into a landscape. The artwork unfolds through the brushwork relationship of solid and void in harmony, emphasizing blank space and rhythmic flow, embodying the classic artistic conception of literati painting.\nThe female silhouette faces right in a horizontal gaze, with soft contours of the forehead, nose bridge, lip line, neck and shoulders outlined in light ink. Her expression is reserved and tranquil, with no detailed facial features required. Her long hair is rendered with splashed ink and dry brush (fēibái) strokes, surging like mist and flowing like vapor, spreading outward from the head and gradually transforming into mountain ranges, clouds and water ripples, merging seamlessly with nature.\nWithin her hair and silhouette unfolds a landscape realm:\nDistant view: Layered blue-green mountains, with ink tones graduating from dark to light, shrouded in winding clouds and mist.\nMiddle view: A cascading waterfall plunging from high cliffs, surrounded by misty vapor, interwoven with blank space.\nForeground: Scattered pavilions, terraces and ancient towers hidden among the mountains, arranged in picturesque disorder and partially concealed, creating a profound sense of space.\nThe sky and blank areas are washed with light ink to form flowing clouds, with several soaring white cranes dotted at the upper part, depicted with concise strokes to convey dynamism and spirit.Between her hair and shoulders are scattered freehand floral branches (plum, cherry blossom or crabapple), lightly tinted in pale pink or rouge, with petals drifting gently to add vitality and poetry.\nIn the lower-middle part, a curved water surface and a stone arch bridge are painted with minimal strokes. The bridge is outlined with central-tip brush lines, while the water beneath is dominated by blank space, with only light ink washes suggesting ripples. A small skiff floats on the water with a lone figure seated inside, rendered in extremely simplified form, emphasizing solitude and ethereal tranquility.\nLight is not realistically depicted but implied through coloring and blank space: the upper right is gently tinted with light ochre and pale gold, resembling morning glow, forming a warm contrast with the overall cool blue-black tones, enhancing depth and rhythm.\nThe overall style combines traditional Chinese freehand ink wash with blue-green landscape coloring, emphasizing varied brush techniques (central tip, side tip, dry brush, splashed ink), ink layering and rice-paper bleeding effects. Details are restrained and refined, achieving balanced breathing and rhythm between blank space and scenery.\nA blank area is reserved at the bottom right for vertical calligraphy of “Mountains and Rivers into Painting” in running script or clerical script, with natural and smooth brushwork, followed by two red seals (zhuànwén or báiwén) to strengthen the classic scroll atmosphere.\nMain Colors\nInk black, blue-green pigments, light ochre, rouge, and rice-paper off-white\nKey Composition\nNatural integration of the female silhouette with landscape ink brushwork\nAtmosphere\nEthereal, serene, distant, poetic",
+      "user": {
+        "name": "木白序章",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 257,
+      "detail": {
+        "createDate": "2026-04-21",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-24",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/24.jpeg",
+      "alt": "Feed 24",
+      "promptText": "一张充满新春喜庆氛围但不失高雅格调的 2026 城市宣传海报。双重曝光，构图延续了S型的流动感；在纯白的纹理背景右下角，一个身穿中国传统岭南服饰的微缩人物正在挥舞着一条长长的红色丝绸舞带，这条红绸在空中舞动，不仅展现出丝绸的柔顺质感，更在向左上方飘动的过程中，奇幻地变形成了一条壮丽的山水河流。 在这条“河流”中，叠加了一个有山有江有城的广州城市手绘图，国潮风格，景色尽收眼底，壮阔而灵动。广州的地标建筑（广州塔、珠江、陈家祠、沙面岛、白云山、永庆坊、广州歌剧院）融合其中。 云雾环绕，仙气缥缈，色彩丰富，结构复杂，细节精致，既体现岭南文化的细腻工艺之美（如陈家祠的雕刻艺术），又展现现代都市的活力与高度（如广州塔与珠江夜景）。但由于大面积留白，画面整体依然清新雅致。 左下角排版着“SPRING 2026”和竖排的宣传语，整体寓意“千年商都，湾区核心”。文字排版优美大方，字迹清晰完整，尺寸9:16。\n\n",
+      "user": {
+        "name": "风起南枝",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 165,
+      "detail": {
+        "createDate": "2026-04-20",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-25",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/25.jpeg",
+      "alt": "Feed 25",
+      "promptText": "一张充满新春喜庆氛围但不失高雅格调的 2026 武汉城市宣传海报，采用 双重曝光 表现手法，整体构图延续 S 型流动感，画面高级、空灵、大气。 在 纯白色纹理背景 的右下角，一个身穿 中国传统服饰 的微缩人物正在挥舞一条长长的 红色丝绸舞带，动作轻盈优雅，富有节庆气息。红色丝带在空中飘舞，展现出丝绸柔顺细腻的质感，并在向左上方延展的过程中，奇幻地变形成一条壮丽恢宏的 山脉与江河。\n在这条如诗如画的“江河”之中，叠加出一幅 有山、有水、有城的武汉城市手绘图卷，整体风格为 国潮插画，场景丰富，层次宏大，细节精致，令人震撼。\n画面中清晰融入 武汉代表性地标建筑与景观：\n黄鹤楼、武汉长江大桥、东湖、武汉大学樱花建筑群、江汉关钟楼、龟山电视塔、晴川阁、汉口江滩。\n整体展现出武汉 “两江交汇、三镇辉映、山水江城” 的城市风貌，山水绵延，城景壮阔，江河奔涌，尽显武汉的历史底蕴与现代活力。\n\n画面中加入 云雾缭绕、仙气缥缈 的氛围，增强意境感与空间层次；色彩以 中国红、鎏金、青绿山水色、淡墨灰、暖云霞色 为主，整体 色彩丰富但不过分浓艳，既有新春喜庆感，又不失高级雅致。\n画面 结构复杂、细节丰富，但由于保留了大面积留白，因此整体依然显得 清新脱俗、呼吸感强、富有设计感。\n\n左下角进行精美排版，放置英文标题 “SPRING 2026”，同时搭配一组 竖排中文宣传语，例如：\n“江城潮涌，魅力武汉”\n或\n“九省通衢，活力武汉”。\n\n要求 文字排版优美大方，字迹清晰完整，整体具有高端城市宣传海报质感，兼具节庆氛围、文化底蕴与现代审美。\n画幅比例：9:16 竖版。\n\nMake the aspect ratio 9:16",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 347,
+      "detail": {
+        "createDate": "2026-04-19",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-26",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/26.jpeg",
+      "alt": "Feed 26",
+      "promptText": "",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 212,
+      "detail": {
+        "createDate": "2026-04-18",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-27",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/27.jpeg",
+      "alt": "Feed 27",
+      "promptText": "一张充满清新淡雅氛围但不失高雅格调的庆阳北石窟寺宣传海报。 双重曝光，构图延续了 S 型的流动感； 在纯白的纹理背景右下角，一个身穿中国传统服饰的微缩人物正在挥舞着一条长长的靛蓝色丝绸舞带，这条靛蓝色丝绸在空中舞动，不仅展现出丝绸的柔顺质感，更在向左上方飘动的过程中，奇幻地变形成了一条壮丽的山脉河流。 在这条 “河流” 中，叠加了一个水墨风的有山有海河的北石窟寺手绘图，国潮，景色尽在眼底，壮阔雄伟，令人震撼。 主要的元素为佛像 (其他的有壁画、石窟、僧侣、石塔等各种佛教元素）。 云雾环绕，仙气缥缈，色彩丰富，结构复杂，细节丰富，但因为大面积的留白，画面依然显得清新脱俗，左下角排版着 “SPRING 2026” 和竖排的宣传语，整体寓意 “世界非物质文化遗产北石窟寺”。 文字排版优美，大方，字迹清晰完整，尺寸 9:16。",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 269,
+      "detail": {
+        "createDate": "2026-04-17",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-28",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/28.jpeg",
+      "alt": "Feed 28",
+      "promptText": "中国动画《剑来》风格人物海报，主角“陈平安”，少年剑客气质，朴素布衣，背负长剑，眼神坚毅但内敛，站在风雪与山崖交界处，背景为云海与破碎山河意境，整体画面写意东方玄幻风格，电影级光影，细腻笔触，高级国风插画质感，人物形象高度还原动画设定。 画面构图为竖版电影海报，中间为人物主体，下方有墨色书法标题“陈平安”。 海报中加入金色或淡白色书法名句排版： “天不生我陈平安，剑道万古如长夜。” 整体氛围：帅气、坚韧、成长、剑道初心，极具史诗感与东方哲学气质。",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 171,
+      "detail": {
+        "createDate": "2026-04-16",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-29",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/29.jpeg",
+      "alt": "Feed 29",
+      "promptText": "a beautiful young Japanese woman, delicate face, fair glowing skin, soft yet seductive eyes, ultra realistic skin texture, wearing luxurious gypsy dancer costume, coin belt, sheer layered skirt, rich metallic jewelry, forehead chain, temple chain\nin an exotic bohemian palace hall, tall space, aged stone walls, red pillars, layered fabrics and drapes, hanging bronze lanterns, detailed Persian carpets, musicians and background figures subtly visible\ndynamic candid dance moment, leaning forward toward camera, strong waist twist, skirt flowing outward, fabric motion blur, hair flying, captured mid-spin\ncamera:\nlow angle shot, wide angle lens (24mm), close perspective, subject dominates frame, cinematic framing, shallow depth of field (background readable but softened)\nlighting:\nstrong focused spotlight on subject (face and body brightest point)\nwarm key light with soft falloff\nbackground dim but visible (NOT black)\npractical lights from lanterns creating warm pools of light in environment\nselective lighting on background elements (pillars, fabrics, people silhouettes)\ndeep shadows but with detail (not crushed black)\nsubtle golden rim light outlining hair and fabric\nspecular highlights on jewelry\nexposure:\nexpose for subject\nbackground underexposed by 1–2 stops\ncontrolled dynamic range (retain shadow detail)\ncolor:\nwarm gold, amber, deep red, olive green, dark teal shadows\nslightly desaturated environment, rich highlights on subject\nmood:\ncinematic, immersive, layered depth, strong subject focus, environment supporting subject\n\n",
+      "user": {
+        "name": "木白序章",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 302,
+      "detail": {
+        "createDate": "2026-04-15",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-30",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/30.jpeg",
+      "alt": "Feed 30",
+      "promptText": "A colossal Chinese dragon coiling through a misty bamboo valley, its long serpentine body looping through waterfalls and ancient mossy stone terraces, flowing whiskers and mane, greenish scales with warm golden-brown accents, the dragon head emerging in the lower right foreground, roaring toward the viewer, tiny human figures wading through shallow water below for scale, dramatic vertical composition, S-curve body guiding the eye through the scene, low-angle view, cinematic volumetric light filtering through bamboo leaves, ethereal fog, strong atmospheric perspective, ancient hidden sanctuary, epic oriental fantasy, painterly digital concept art, dynamic brushwork, majestic, mysterious, awe-inspiring",
+      "user": {
+        "name": "风起南枝",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 184,
+      "detail": {
+        "createDate": "2026-04-14",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-31",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/31.jpeg",
+      "alt": "Feed 31",
+      "promptText": "可莉希亚：好漂亮的花，是送给我的吗\n小洛克：（害羞）嗯嗯，你喜欢就好\n等我长大后再来找你玩。\n\n“毕业好烦人，找工作好烦人，想做一辈子小孩，可是我要努力”\n\n小洛克开始上班，渐渐变成了充满班味的大叔。\n\n可丽希亚看着胡子拉碴已经长大的小洛克一脸温柔的看着，露出微笑，踮起脚尖，抚摸你的头，说道： “这些年你经历了很多吧，辛苦了，现在，休息一下吧。”\n\n一页短漫，多个分镜，精美插图画风。\n\n",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 289,
+      "detail": {
+        "createDate": "2026-04-13",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-32",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/32.jpeg",
+      "alt": "Feed 32",
+      "promptText": "A top-down sequence shot from a high-angle, looking down at a young Chinese woman with delicate East Asian features and soft black hair. She is crouching on a garden path, gently teasing a fluffy ginger cat. Dense foliage overhead filters the sunlight, creating a dynamic “Komorebi” effect—shifting, circular patches of light that dance across her skin and the cat’s fur. A subtle, humid haze hangs in the air, catching the sunbeams to create soft, visible volumetric rays (Tyndall effect). As she tilts her head up toward the lens, a light mist softens the edges of the frame, adding a dreamy atmosphere. Her expression shifts from a light, playful pout to a genuine, crinkled-eye smile, with the dappled light highlighting the fine texture of her skin and the moisture in her eyes.",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 163,
+      "detail": {
+        "createDate": "2026-04-12",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-33",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/33.jpeg",
+      "alt": "Feed 33",
+      "promptText": "请根据【主题：xxx】自动生成一张高审美的“轮廓宇宙 / 收藏版叙事海报”风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、怀表之类的常规载体，而是由 AI 根据主题自行判断并选择一个最契合、最有象征意义、轮廓最强、最适合承载完整叙事世界的主轮廓载体。这个主轮廓可以是器物、建筑、门、塔、拱门、穹顶、楼梯井、长廊、雕像、侧脸、眼睛、手掌、头骨、羽翼、面具、镜面、王座、圆环、裂缝、光幕、阴影、几何结构、空间切面、舞台框景、抽象符号或其他更有创意与主题代表性的视觉轮廓，要求合理布局。优先选择最能放大主题气质、最能形成强烈视觉记忆点、最能体现史诗感、神秘感、诗意感或设计感的轮廓，而不是最安全、最普通、最常见的容器。\n\n画面的核心不是简单把世界装进某个物体里，而是让完整的主题世界自然生长在这个主轮廓之中、之内、之上、之边界里或与其结构融为一体，形成一种“主题宇宙依附于一个象征性轮廓展开”的高级叙事效果。主轮廓必须清晰、优雅、有辨识度，并在整体构图中占据核心地位。轮廓内部或边界中需要自动生成与主题强绑定的完整叙事世界，内容应当丰富、饱满、层次清晰，包括最能代表主题的标志性场景、核心建筑或空间结构、象征符号与隐喻元素、角色关系或文明痕迹、远景中景近景的空间递进、具有命运感和情绪张力的氛围层次，以及门、台阶、桥梁、水面、烟雾、路径、光源、遗迹、机械结构、自然景观、抽象形态、生物或道具等叙事细节。所有元素必须统一、自然、有主次、有层级地融合，像一个完整世界真实孕育在这个轮廓结构之中，而不是简单拼贴、裁切填充、素材堆叠或模板化背景。\n\n整体构图需要具有强烈的收藏版海报气质与高级设计感，大结构稳定，主轮廓强烈明确，内部世界具有纵深、秩序和呼吸感，细节丰富但不拥挤，内容丰满但不杂乱，可以适度加入小比例人物剪影、远处建筑、光柱、门洞、桥、阶梯、回廊、倒影、天光或远景结构来增强尺度感、故事感与史诗感。整体画面要安静、宏大、凝练、富有余味，不要平均铺满，不要廉价热闹，不要无重点堆砌。\n\n风格融合收藏版电影海报构图、高级叙事型视觉设计、梦幻水彩质感与纸张印刷品气质，强调纸张颗粒感、边缘飞白、水彩刷痕、轻微晕染、空气透视、柔和雾化、局部体积光、光雾穿透、大面积留白与克制版式，让画面看起来像设计师完成的高端收藏版视觉作品，而不是普通 AI 跑图。整体气质要高级、诗意、宏大、神圣、怀旧、安静、具有传说感和叙事感。\n\n色彩由 AI 根据主题自动判断并匹配最合适的高级配色方案，但必须保持统一、克制、耐看、低饱和、高级，不要杂乱高饱和，不要廉价霓虹感，不要塑料数码感。配色可以围绕黑金灰、冷蓝灰、雾白灰、褐红米白、暗铜、旧纸色、深海蓝、暮色紫、银灰等体系自由变化，但必须始终服务主题，并保持海报级审美与整体和谐。\n\n最终要求：第一眼有强烈的主题识别度和轮廓记忆点，第二眼有完整丰富的叙事世界，第三眼仍有细节和余味。轮廓选择必须具有创意和主题匹配度，尽量避免重复、保守、常见的容器套路，优先选择更有象征性、更有空间感、更有设计潜力的轮廓形式。不要普通背景拼接，不要生硬裁切，不要模板化奇幻素材，不要游戏宣传图感，不要过度卡通化，不要过度写实导致失去艺术感，不要形式大于内容。如果合适，可以自然加入低调克制的标题、编号、签名或落款，让它更像收藏版海报设计的一部分，但不要喧宾夺主。",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 328,
+      "detail": {
+        "createDate": "2026-04-11",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-34",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/34.jpeg",
+      "alt": "Feed 34",
+      "promptText": "请根据【主题：毛泽东】自动生成一张高审美的 “轮廓宇宙 / 收藏版叙事海报” 风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、怀表之类的常规载体，而是由 AI 根据主题自行判断并选择一个最契合、最有象征意义、轮廓最强、最适合承载完整叙事世界的主轮廓载体。这个主轮廓可以是器物、建筑、门、塔、拱门、穹顶、楼梯井、长廊、雕像、侧脸、眼睛、手掌、头骨、羽翼、面具、镜面、王座、圆环、裂缝、光幕、阴影、几何结构、空间切面、舞台框景、抽象符号或其他更有创意与主题代表性的视觉轮廓，要求合理布局。优先选择最能放大主题气质、最能形成强烈视觉记忆点、最能体现史诗感、神秘感、诗意感或设计感的轮廓，而不是最安全、最普通、最常见的容器。 画面的核心不是简单把世界装进某个物体里，而是让完整的主题世界自然生长在这个主轮廓之中、之内、之上、之边界里或与其结构融为一体，形成一种 “主题宇宙依附于一个象征性轮廓展开” 的高级叙事效果。主轮廓必须清晰、优雅、有辨识度，并在整体构图中占据核心地位。轮廓内部或边界中需要自动生成与主题强绑定的完整叙事世界，内容应当丰富、饱满、层次清晰，包括最能代表主题的标志性场景、核心建筑或空间结构、象征符号与隐喻元素、角色关系或文明痕迹、远景中景近景的空间递进、具有命运感和情绪张力的氛围层次，以及门、台阶、桥梁、水面、烟雾、路径、光源、遗迹、机械结构、自然景观、抽象形态、生物或道具等叙事细节。所有元素必须统一、自然、有主次、有层级地融合，像一个完整世界真实孕育在这个轮廓结构之中，而不是简单拼贴、裁切填充、素材堆叠或模板化背景。 整体构图需要具有强烈的收藏版海报气质与高级设计感，大结构稳定，主轮廓强烈明确，内部世界具有纵深、秩序和呼吸感，细节丰富但不拥挤，内容丰满但不杂乱，可以适度加入小比例人物剪影、远处建筑、光柱、门洞、桥、阶梯、回廊、倒影、天光或远景结构来增强尺度感、故事感与史诗感。整体画面要安静、宏大、凝练、富有余味，不要平均铺满，不要廉价热闹，不要无重点堆砌。 风格融合收藏版电影海报构图、高级叙事型视觉设计、梦幻水彩质感与纸张印刷品气质，强调纸张颗粒感、边缘飞白、水彩刷痕、轻微晕染、空气透视、柔和雾化、局部体积光、光雾穿透、大面积留白与克制版式，让画面看起来像设计师完成的高端收藏版视觉作品，而不是普通 AI 跑图。整体气质要高级、诗意、宏大、神圣、怀旧、安静、具有传说感和叙事感。 色彩由 AI 根据主题自动判断并匹配最合适的高级配色方案，但必须保持统一、克制、耐看、低饱和、高级，不要杂乱高饱和，不要廉价霓虹感，不要塑料数码感。配色可以围绕黑金灰、冷蓝灰、雾白灰、褐红米白、暗铜、旧纸色、深海蓝、暮色紫、银灰等体系自由变化，但必须始终服务主题，并保持海报级审美与整体和谐。 最终要求：第一眼有强烈的主题识别度和轮廓记忆点，第二眼有完整丰富的叙事世界，第三眼仍有细节和余味。轮廓选择必须具有创意和主题匹配度，尽量避免重复、保守、常见的容器套路，优先选择更有象征性、更有空间感、更有设计潜力的轮廓形式。不要普通背景拼接，不要生硬裁切，不要模板化奇幻素材，不要游戏宣传图感，不要过度卡通化，不要过度写实导致失去艺术感，不要形式大于内容。如果合适，可以自然加入低调克制的标题、编号、签名或落款，让它更像收藏版海报设计的一部分，但不要喧宾夺主。",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 197,
+      "detail": {
+        "createDate": "2026-04-10",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-35",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/35.jpeg",
+      "alt": "Feed 35",
+      "promptText": "一张千与千寻电影的宣传海报，统一采用竖版主视觉构图。每张海报都使用上大下小的层级结构：画面上半部分以人物最具辨识度的头部、面部轮廓、面具或半身外轮廓作为巨大的视觉主体，形成强识别的剪影式主形；中下部安排完整人物作为第二主体，稳定站姿或轻动作姿态，构成画面的视觉核心。大轮廓内部以及角色周围采用双重曝光与拼贴式叙事构图，将若干场景、意象、小型人物关系、辅助元素和环境层层融合在云雾、水墨和留白之中。左右侧设置呼应性辅景，使画面产生故事张力与空间变化。以一条贯穿画面上下的流动线索连接主角色、内部拼贴和上方大轮廓，增强整体性和视线引导。整体画面保持大面积留白，边缘采用水墨晕染和虚化破碎处理，形成东方美学中的虚实关系和呼吸感。整体风格统一、高级、克制，强调层次感、叙事感、主视觉冲击力和系列化海报语言。",
+      "user": {
+        "name": "木白序章",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 244,
+      "detail": {
+        "createDate": "2026-04-09",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-36",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/36.jpeg",
+      "alt": "Feed 36",
+      "promptText": "一张充满新春喜庆氛围但不失高雅格调的 2026 杭州城市宣传海报。\n采用双重曝光手法，整体构图延续 S 型的流动感；在纯白的纹理背景右下角，一个身穿中国传统服饰的微缩人物正在挥舞一条长长的红色丝绸舞带，红绸在空中轻盈舞动，展现出丝绸柔顺细腻的质感，并在向左上方飘动的过程中，奇幻地变形成一条壮丽的山水河流。\n\n在这条“河流”之中，叠加出一幅有山、有湖、有江、有城的杭州城市手绘图，整体风格偏国潮，景色尽收眼底，壮阔而秀雅，令人震撼。\n画面中融入杭州地标建筑与景观：西湖、断桥、雷峰塔、三潭印月、六和塔、钱塘江、京杭大运河杭州段、灵隐寺、城隍阁。\n云雾环绕，仙气缥缈，兼具江南诗意与大城气象；色彩丰富，结构复杂，细节繁盛，但由于大面积留白，画面依然显得清新脱俗、雅致高级。\n\n左下角排版着 “SPRING 2026”，并搭配竖排宣传语，整体寓意：“人间天堂，数字之城”、“诗画江南，活力杭州”。\n文字排版优美大方，字迹清晰完整，整体视觉兼具新春节庆感、东方美学、城市文化底蕴与现代都会气质。\n海报尺寸 9:16，高清，细节丰富，适合城市文旅宣传。",
+      "user": {
+        "name": "风起南枝",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 156,
+      "detail": {
+        "createDate": "2026-04-08",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-37",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/37.jpeg",
+      "alt": "Feed 37",
+      "promptText": "首页瀑布流作品 37",
+      "user": {
+        "name": "蓮芸日子",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 311,
+      "detail": {
+        "createDate": "2026-04-25",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    },
+    {
+      "id": "feed-38",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/38.jpeg",
+      "alt": "Feed 38",
+      "promptText": "首页瀑布流作品 38",
+      "user": {
+        "name": "青禾照影",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 191,
+      "detail": {
+        "createDate": "2026-04-24",
+        "aiGeneratedText": "作品由 AI 生成",
+        "promptTipLabel": "创作提示词",
+        "modelLabel": "图片 4.0",
+        "aspectRatioLabel": "2:3"
+      }
+    },
+    {
+      "id": "feed-39",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/39.png",
+      "alt": "Feed 39",
+      "promptText": "Jiangnan ink painting illustration style, ancient Chinese woman, Suzhou water town (Gusu), small bridges and flowing canals, misty rainy atmosphere, soft drizzle, holding an oil-paper umbrella, wearing light cyan and white Hanfu, flowing sleeves, long delicate hair, elegant hair ornaments, looking back gently, graceful and poetic\n\nChinese ink wash painting, soft color palette, hand-drawn illustration, visible brush strokes, rice paper texture, minimal composition, foggy ambiance, willow trees, distant wooden boats, arched bridge, poetic Jiangnan mood\n\nhigh quality, detailed illustration, non-photorealistic, 2D art style",
+      "user": {
+        "name": "云栖小筑",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 272,
+      "detail": {
+        "createDate": "2026-04-23",
+        "aiGeneratedText": "画面由 AI 生成",
+        "promptTipLabel": "生成提示词",
+        "modelLabel": "图片 3.5",
+        "aspectRatioLabel": "3:4"
+      }
+    },
+    {
+      "id": "feed-40",
+      "imageSrc": "https://qwe-oss.oss-cn-beijing.aliyuncs.com/ai-gen/40.jpeg",
+      "alt": "Feed 40",
+      "promptText": "首页瀑布流作品 40",
+      "user": {
+        "name": "山海入梦",
+        "avatarSrc": ""
+      },
+      "favoriteCount": 178,
+      "detail": {
+        "createDate": "2026-04-22",
+        "aiGeneratedText": "内容由 AI 生成",
+        "promptTipLabel": "图片提示词",
+        "modelLabel": "图片 4.1",
+        "aspectRatioLabel": "9:16"
+      }
+    }
+  ]
+}

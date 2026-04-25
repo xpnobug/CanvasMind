@@ -166,11 +166,11 @@
                           <div class="left-container-vYu9RS">
                             <div class="user-section-O05SIg">
                               <div class="user-avatar-gP6jYP"><img
-                                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill-opacity='0'/%3E%3C/svg%3E"
+                                  :src="resolvedAuthorAvatarSrc"
                                   class="avatar-image-Xos7qj"
                                   crossorigin="anonymous"
-                                  alt=""
-                                  style="background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-20)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important">
+                                  :alt="authorName"
+                                  :style="authorAvatarSrc ? undefined : fallbackAvatarStyle">
                               </div>
                               <div class="user-name-UPyK2X">{{ authorName }}</div>
                             </div>
@@ -349,6 +349,10 @@ const FOCUSABLE_SELECTOR =
 
 const DEFAULT_DETAIL_PROMPT =
     '极简线画，黑色潦草线条，纯白背景，随性勾勒出极简轮廓，剔除所有细节，以最凝练的线条捕捉瞬间'
+const EMPTY_AVATAR_DATA_URI =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill-opacity='0'/%3E%3C/svg%3E"
+const fallbackAvatarStyle =
+    'background-blend-mode:normal!important;background-clip:content-box!important;background-position:50% 50%!important;background-color:rgba(0,0,0,0)!important;background-image:var(--sf-img-20)!important;background-size:100% 100%!important;background-origin:content-box!important;background-repeat:no-repeat!important'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -356,6 +360,7 @@ const props = defineProps({
   /** 当前画廊条目数；大于 1 时可点左侧上下箭头切换 */
   galleryLength: { type: Number, default: 0 },
   authorName: { type: String, default: '创作者' },
+  authorAvatarSrc: { type: String, default: '' },
   likeCount: { type: [String, Number], default: 999 },
   createDate: { type: String, default: '2026-04-16' },
   aiGeneratedText: { type: String, default: '内容由 AI 生成' },
@@ -388,6 +393,8 @@ const detailImageReady = ref(true)
 const generatorPromptForSync = computed(() =>
     props.promptText.trim() !== '' ? props.promptText : DEFAULT_DETAIL_PROMPT,
 )
+
+const resolvedAuthorAvatarSrc = computed(() => props.authorAvatarSrc || EMPTY_AVATAR_DATA_URI)
 
 const contentGeneratorPromptSyncKey = computed(
     () => `${props.imageSrc}\0${contentGeneratorSyncNonce.value}`,

@@ -57,7 +57,7 @@ export const forwardMultipartRequest = async (params: {
   const upstreamResponse = await fetch(upstreamUrl, {
     method: params.method,
     headers,
-    body: bodyBuffer,
+    body: bodyBuffer as unknown as BodyInit,
   })
 
   setGatewayDebugHeaders(params.res, {

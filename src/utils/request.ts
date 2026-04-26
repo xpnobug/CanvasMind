@@ -1,5 +1,6 @@
 // API 请求工具
 import { ErrorHandler } from './errorHandler'
+import { API_BASE_URL, buildApiUrl } from '@/api/http'
 
 // 类型定义
 export interface RequestOptions extends RequestInit {
@@ -14,8 +15,6 @@ export interface ApiResponse<T = any> {
   message?: string
   [key: string]: any
 }
-
-const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5409'
 
 /**
  * 通用请求方法（带错误处理和重试）
@@ -33,7 +32,7 @@ export async function request<T = any>(
 
   const makeRequest = async (): Promise<T> => {
     try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const response = await fetch(buildApiUrl(url), {
         ...defaultOptions,
         ...options
       })
@@ -107,7 +106,7 @@ export async function upload<T = any>(
   url: string,
   formData: FormData
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const response = await fetch(buildApiUrl(url), {
     method: 'POST',
     body: formData
   })

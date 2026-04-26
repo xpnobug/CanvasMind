@@ -1,31 +1,45 @@
-<script setup>
+<script setup lang="ts">
 /**
  * 通用 API 设置弹窗
  * 包含 API 配置 + 模型管理，可在任意页面引入使用
  */
 import { ref, watch } from 'vue'
-import { getBaseUrl, setBaseUrl, getApiKey, setApiKey, getEndpoint, setEndpoint } from '@/api/request'
+import { ElMessage } from 'element-plus'
+import {
+  getProviderRuntimeConfig,
+  loadProviderRuntimeConfig,
+  saveProviderRuntimeConfig,
+  setCustomModels,
+  type CustomModelCategory,
+} from '@/api/provider-config'
 import { IMAGE_MODELS, VIDEO_MODELS, CHAT_MODELS } from '@/config/models'
-import { getAgentModel, setAgentModel } from '@/api/agent'
+import { getAgentModel } from '@/api/agent'
 
 const props = defineProps({ visible: Boolean })
 const emit = defineEmits(['update:visible'])
 
 // API 设置
-const apiBaseUrl = ref(getBaseUrl())
-const apiKey = ref(getApiKey())
-const chatEndpoint = ref(getEndpoint('chat'))
-const imageEndpoint = ref(getEndpoint('image'))
-const videoEndpoint = ref(getEndpoint('video'))
+const currentConfig = getProviderRuntimeConfig()
+const apiBaseUrl = ref(currentConfig.baseUrl)
+const apiKey = ref(currentConfig.apiKey)
+const chatEndpoint = ref(currentConfig.chatEndpoint)
+const imageEndpoint = ref(currentConfig.imageEndpoint)
+const videoEndpoint = ref(currentConfig.videoEndpoint)
 const selectedModel = ref(getAgentModel())
+const isSaving = ref(false)
 
 // Tab 切换
 const activeTab = ref('api')
 
 // 自定义模型
-const customImageModels = ref(JSON.parse(localStorage.getItem('wf-custom-image-models') || '[]'))
-const customVideoModels = ref(JSON.parse(localStorage.getItem('wf-custom-video-models') || '[]'))
-const customChatModels = ref(JSON.parse(localStorage.getItem('wf-custom-chat-models') || '[]'))
+const customImageModels = ref(currentConfig.customModels.image)
+const customVideoModels = ref(currentConfig.customModels.video)
+const customChatModels = ref(currentConfig.customModels.chat)
+const customModelMap = {
+  image: customImageModels,
+  video: customVideoModels,
+  chat: customChatModels,
+}
 
 // 新增模型表单
 const newModel = ref({ label: '', key: '', category: 'chat' })
@@ -34,29 +48,56 @@ const close = () => emit('update:visible', false)
 
 const addModel = () => {
   if (!newModel.value.label || !newModel.value.key) return
+  const category = newModel.value.category as CustomModelCategory
   const item = { label: newModel.value.label, key: newModel.value.key }
-  const map = { image: customImageModels, video: customVideoModels, chat: customChatModels }
-  const storageKey = { image: 'wf-custom-image-models', video: 'wf-custom-video-models', chat: 'wf-custom-chat-models' }
-  map[newModel.value.category].value.push(item)
-  localStorage.setItem(storageKey[newModel.value.category], JSON.stringify(map[newModel.value.category].value))
-  newModel.value = { label: '', key: '', category: newModel.value.category }
+  customModelMap[category].value.push(item)
+  setCustomModels(category, customModelMap[category].value)
+  newModel.value = { label: '', key: '', category: category }
 }
 
-const removeModel = (category, index) => {
-  const map = { image: customImageModels, video: customVideoModels, chat: customChatModels }
-  const storageKey = { image: 'wf-custom-image-models', video: 'wf-custom-video-models', chat: 'wf-custom-chat-models' }
-  map[category].value.splice(index, 1)
-  localStorage.setItem(storageKey[category], JSON.stringify(map[category].value))
+const removeModel = (category: CustomModelCategory, index: number) => {
+  customModelMap[category].value.splice(index, 1)
+  setCustomModels(category, customModelMap[category].value)
 }
 
-const save = () => {
-  setBaseUrl(apiBaseUrl.value)
-  setApiKey(apiKey.value)
-  setEndpoint('chat', chatEndpoint.value)
-  setEndpoint('image', imageEndpoint.value)
-  setEndpoint('video', videoEndpoint.value)
-  setAgentModel(selectedModel.value)
-  close()
+const syncFormState = async () => {
+  const config = await loadProviderRuntimeConfig()
+  apiBaseUrl.value = config.baseUrl
+  apiKey.value = config.apiKey
+  chatEndpoint.value = config.chatEndpoint
+  imageEndpoint.value = config.imageEndpoint
+  videoEndpoint.value = config.videoEndpoint
+  selectedModel.value = config.defaultChatModel || getAgentModel()
+  customImageModels.value = [...config.customModels.image]
+  customVideoModels.value = [...config.customModels.video]
+  customChatModels.value = [...config.customModels.chat]
+}
+
+// 保存配置时给出明确反馈，避免用户无法判断是否写库成功。
+const save = async () => {
+  if (isSaving.value) return
+  isSaving.value = true
+  try {
+    await saveProviderRuntimeConfig({
+      baseUrl: apiBaseUrl.value,
+      apiKey: apiKey.value,
+      chatEndpoint: chatEndpoint.value,
+      imageEndpoint: imageEndpoint.value,
+      videoEndpoint: videoEndpoint.value,
+      defaultChatModel: selectedModel.value,
+      customModels: {
+        image: customImageModels.value,
+        video: customVideoModels.value,
+        chat: customChatModels.value,
+      },
+    })
+    ElMessage.success('配置已保存')
+    close()
+  } catch (error: unknown) {
+    ElMessage.error(error instanceof Error ? error.message : '保存配置失败')
+  } finally {
+    isSaving.value = false
+  }
 }
 
 // 获取所有对话模型（内置 + 自定义）
@@ -64,15 +105,7 @@ const allChatModels = () => [...CHAT_MODELS, ...customChatModels.value]
 
 watch(() => props.visible, (v) => {
   if (v) {
-    apiBaseUrl.value = getBaseUrl()
-    apiKey.value = getApiKey()
-    chatEndpoint.value = getEndpoint('chat')
-    imageEndpoint.value = getEndpoint('image')
-    videoEndpoint.value = getEndpoint('video')
-    selectedModel.value = getAgentModel()
-    customImageModels.value = JSON.parse(localStorage.getItem('wf-custom-image-models') || '[]')
-    customVideoModels.value = JSON.parse(localStorage.getItem('wf-custom-video-models') || '[]')
-    customChatModels.value = JSON.parse(localStorage.getItem('wf-custom-chat-models') || '[]')
+    void syncFormState()
   }
 })
 </script>

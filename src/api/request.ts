@@ -17,6 +17,7 @@ import {
   createGatewayPayload,
   normalizeGatewayMethod,
 } from './ai-gateway'
+import { buildApiUrl } from './http'
 
 export {
   getApiKey,
@@ -44,7 +45,7 @@ export const request = async (
 ) => {
   if (isFormData(options.data)) {
     const payload = createGatewayPayload(type, options)
-    const response = await fetch(AI_GATEWAY_REQUEST_PATH, {
+    const response = await fetch(buildApiUrl(AI_GATEWAY_REQUEST_PATH), {
       method: 'POST',
       headers: {
         'x-upstream-base-url': payload.upstream.baseUrl,
@@ -64,7 +65,7 @@ export const request = async (
     return response.json()
   }
 
-  const response = await fetch(AI_GATEWAY_REQUEST_PATH, {
+  const response = await fetch(buildApiUrl(AI_GATEWAY_REQUEST_PATH), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import '@styles/styles.css'
 import App from './App.vue'
 import router from './router'
+import { loadProviderRuntimeConfig } from './api/provider-config'
 
 const app = createApp(App)
 
@@ -15,4 +16,7 @@ app.use(ElementPlus, {
 })
 
 app.use(router)
-app.mount('#app')
+
+void loadProviderRuntimeConfig().finally(() => {
+  app.mount('#app')
+})

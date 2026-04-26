@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     name: 构建并部署
     env:
-      NODE_ENV: production
       VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PROVIDER_CONFIG_SECRET: ${{ secrets.PROVIDER_CONFIG_SECRET }}
@@ -28,7 +27,7 @@ jobs:
           node-version: '20'
 
       - name: 安装依赖
-        run: npm install
+        run: npm install --include=dev
 
       - name: 生成生产环境配置
         run: |
@@ -67,6 +66,8 @@ jobs:
           EOF
 
       - name: 构建项目
+        env:
+          NODE_ENV: production
         run: npm run build
 
       - name: 创建部署包

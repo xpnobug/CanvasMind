@@ -12,6 +12,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     name: 构建并部署
+    env:
+      NODE_ENV: production
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_PROVIDER_DEFAULT_BASE_URL: ${{ vars.VITE_PROVIDER_DEFAULT_BASE_URL }}
+      SERVER_PORT: ${{ vars.SERVER_PORT }}
+      CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
+      PROVIDER_DEFAULT_BASE_URL: ${{ vars.PROVIDER_DEFAULT_BASE_URL }}
+      UPLOADS_DIR: ${{ vars.UPLOADS_DIR }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROVIDER_CONFIG_SECRET: ${{ secrets.PROVIDER_CONFIG_SECRET }}
 
     steps:
       - name: 检出代码
@@ -25,16 +35,56 @@ jobs:
       - name: 安装依赖
         run: npm install
 
+      - name: 生成生产环境配置
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "缺少 GitHub Actions 密钥 DATABASE_URL"
+            exit 1
+          fi
+
+          if [ -z "${PROVIDER_CONFIG_SECRET}" ]; then
+            echo "缺少 GitHub Actions 密钥 PROVIDER_CONFIG_SECRET"
+            exit 1
+          fi
+
+          if [ -z "${SERVER_PORT}" ]; then
+            SERVER_PORT="5409"
+          fi
+
+          if [ -z "${VITE_PROVIDER_DEFAULT_BASE_URL}" ]; then
+            VITE_PROVIDER_DEFAULT_BASE_URL="https://api.chatfire.site/v1"
+          fi
+
+          if [ -z "${PROVIDER_DEFAULT_BASE_URL}" ]; then
+            PROVIDER_DEFAULT_BASE_URL="${VITE_PROVIDER_DEFAULT_BASE_URL}"
+          fi
+
+          printf '%s\n' \
+            "# 由 GitHub Actions 在部署时生成，请勿在仓库中提交真实生产配置" \
+            "VITE_API_BASE_URL=${VITE_API_BASE_URL}" \
+            "VITE_PROVIDER_DEFAULT_BASE_URL=${VITE_PROVIDER_DEFAULT_BASE_URL}" \
+            "SERVER_PORT=${SERVER_PORT}" \
+            "CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}" \
+            "DATABASE_URL=${DATABASE_URL}" \
+            "PROVIDER_CONFIG_SECRET=${PROVIDER_CONFIG_SECRET}" \
+            "PROVIDER_DEFAULT_BASE_URL=${PROVIDER_DEFAULT_BASE_URL}" \
+            "STATIC_DIST_DIR=dist" \
+            "UPLOADS_DIR=${UPLOADS_DIR:-uploads}" \
+            > .env.production
+
       - name: 构建项目
         run: npm run build
-        env:
-          NODE_ENV: production
 
       - name: 创建部署包
         run: |
-          cd dist
-          tar -czf ../deploy.tar.gz .
-          cd ..
+          tar -czf deploy.tar.gz \
+            dist \
+            server \
+            prisma \
+            scripts \
+            package.json \
+            package-lock.json \
+            .env.production
 
       - name: 通过 SSH 上传文件到服务器
         uses: appleboy/scp-action@v0.1.7
@@ -55,6 +105,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
             DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
+            APP_LOG_PATH="${DEPLOY_DIR}/app.log"
+            APP_PID_PATH="${DEPLOY_DIR}/app.pid"
 
             if [ -d "$DEPLOY_DIR" ]; then
               echo "正在创建备份..."
@@ -66,9 +118,29 @@ jobs:
             mkdir -p "$DEPLOY_DIR"
 
             echo "正在部署新版本..."
+            rm -rf "$DEPLOY_DIR/dist" "$DEPLOY_DIR/server" "$DEPLOY_DIR/prisma" "$DEPLOY_DIR/scripts"
             tar -xzf /tmp/deploy.tar.gz -C "$DEPLOY_DIR"
 
             rm -f /tmp/deploy.tar.gz
+
+            cd "$DEPLOY_DIR"
+
+            echo "正在安装生产依赖..."
+            npm install
+
+            if [ -f "$APP_PID_PATH" ]; then
+              OLD_PID=$(cat "$APP_PID_PATH")
+              if kill -0 "$OLD_PID" 2>/dev/null; then
+                echo "正在停止旧进程: $OLD_PID"
+                kill "$OLD_PID"
+                sleep 3
+              fi
+              rm -f "$APP_PID_PATH"
+            fi
+
+            echo "正在启动新版本..."
+            nohup npm run start > "$APP_LOG_PATH" 2>&1 &
+            echo $! > "$APP_PID_PATH"
 
             chown -R www-data:www-data "$DEPLOY_DIR"
             chmod -R 755 "$DEPLOY_DIR"

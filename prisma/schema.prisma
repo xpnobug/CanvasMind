@@ -1,0 +1,413 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/// 第一版用户表。
+/// 当前项目还没有完整登录体系，这里先预留用户实体，
+/// 允许业务表中的 userId 为空，后续接入登录态时可平滑迁移。
+model AppUser {
+  id                String             @id @default(cuid()) @db.VarChar(36)
+  name              String?            @db.VarChar(100)
+  avatarUrl         String?            @map("avatar_url") @db.Text
+  email             String?            @unique(map: "uk_app_users_email") @db.VarChar(191)
+  phone             String?            @unique(map: "uk_app_users_phone") @db.VarChar(32)
+  status            UserStatus         @default(ANONYMOUS)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  providerConfigs   AiProviderConfig[]
+  storageConfigs    ObjectStorageConfig[]
+  generationRecords GenerationRecord[]
+  agentRuns         AgentRun[]
+  assets            AssetItem[]
+  assetFavorites    AssetFavorite[]
+
+  @@map("app_users")
+}
+
+/// 用户自定义厂商配置。
+/// 用于替代当前 localStorage 中的 baseUrl / apiKey / endpoint / 默认模型配置。
+model AiProviderConfig {
+  id                String                  @id @default(cuid()) @db.VarChar(36)
+  userId            String?                 @map("user_id") @db.VarChar(36)
+  scene             String                  @default("generate") @db.VarChar(50)
+  name              String                  @db.VarChar(100)
+  providerType      ProviderType            @default(OPENAI_COMPATIBLE) @map("provider_type")
+  baseUrl           String                  @map("base_url") @db.Text
+  apiKeyEncrypted   String?                 @map("api_key_encrypted") @db.LongText
+  apiKeyHint        String?                 @map("api_key_hint") @db.VarChar(64)
+  chatEndpoint      String                  @default("/chat/completions") @map("chat_endpoint") @db.VarChar(255)
+  imageEndpoint     String                  @default("/images/generations") @map("image_endpoint") @db.VarChar(255)
+  videoEndpoint     String                  @default("/videos") @map("video_endpoint") @db.VarChar(255)
+  defaultChatModel  String?                 @map("default_chat_model") @db.VarChar(191)
+  defaultImageModel String?                 @map("default_image_model") @db.VarChar(191)
+  defaultVideoModel String?                 @map("default_video_model") @db.VarChar(191)
+  isDefault         Boolean                 @default(false) @map("is_default")
+  isEnabled         Boolean                 @default(true) @map("is_enabled")
+  extraJson         Json?                   @map("extra_json")
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+  user              AppUser?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customModels      AiProviderCustomModel[]
+  generationRecords GenerationRecord[]
+
+  @@index([userId, scene], map: "idx_ai_provider_configs_user_scene")
+  @@index([userId, isDefault], map: "idx_ai_provider_configs_user_default")
+  @@map("ai_provider_configs")
+}
+
+/// 用户新增的自定义模型。
+/// 当前前端分为 image / video / chat 三类，这里拆成独立表方便管理与过滤。
+model AiProviderCustomModel {
+  id                String           @id @default(cuid()) @db.VarChar(36)
+  providerConfigId  String           @map("provider_config_id") @db.VarChar(36)
+  category          ModelCategory
+  label             String           @db.VarChar(100)
+  modelKey          String           @map("model_key") @db.VarChar(191)
+  capabilityJson    Json?            @map("capability_json")
+  defaultParamsJson Json?            @map("default_params_json")
+  sortOrder         Int              @default(0) @map("sort_order")
+  isEnabled         Boolean          @default(true) @map("is_enabled")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  providerConfig    AiProviderConfig @relation(fields: [providerConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([providerConfigId, category, modelKey], map: "uk_ai_provider_custom_models_config_category_key")
+  @@index([providerConfigId, category, sortOrder], map: "idx_ai_provider_custom_models_config_category_sort")
+  @@map("ai_provider_custom_models")
+}
+
+/// 对象存储配置表。
+/// 用于保存 S3 兼容存储的接入参数，支持后端统一切换上传目标。
+model ObjectStorageConfig {
+  id                 String              @id @default(cuid()) @db.VarChar(36)
+  userId             String?             @map("user_id") @db.VarChar(36)
+  scene              String              @default("global") @db.VarChar(50)
+  name               String              @db.VarChar(100)
+  code               String              @db.VarChar(30)
+  providerType       StorageProviderType @default(S3_COMPATIBLE) @map("provider_type")
+  accessKeyEncrypted String              @map("access_key_encrypted") @db.LongText
+  secretKeyEncrypted String              @map("secret_key_encrypted") @db.LongText
+  endpoint           String              @db.Text
+  region             String?             @db.VarChar(100)
+  bucket             String              @db.VarChar(255)
+  domain             String?             @db.Text
+  sortOrder          Int                 @default(999) @map("sort_order")
+  description        String?             @db.VarChar(200)
+  isEnabled          Boolean             @default(true) @map("is_enabled")
+  isDefault          Boolean             @default(false) @map("is_default")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  user               AppUser?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([scene, code], map: "uk_object_storage_configs_scene_code")
+  @@index([userId, scene], map: "idx_object_storage_configs_user_scene")
+  @@index([scene, isDefault], map: "idx_object_storage_configs_scene_default")
+  @@index([scene, isEnabled, sortOrder], map: "idx_object_storage_configs_scene_enabled_sort")
+  @@map("object_storage_configs")
+}
+
+/// 统一生成记录表。
+/// 覆盖 generate 页面里当前所有记录字段，并为后续服务端持久化留出扩展空间。
+model GenerationRecord {
+  id               String             @id @default(cuid()) @db.VarChar(36)
+  userId           String?            @map("user_id") @db.VarChar(36)
+  providerConfigId String?            @map("provider_config_id") @db.VarChar(36)
+  clientRecordId   Int?               @map("client_record_id")
+  type             GenerationType
+  status           GenerationStatus   @default(PENDING)
+  prompt           String             @db.LongText
+  content          String?            @db.LongText
+  errorMessage     String?            @map("error_message") @db.LongText
+  modelLabel       String?            @map("model_label") @db.VarChar(100)
+  modelKey         String?            @map("model_key") @db.VarChar(191)
+  ratio            String?            @db.VarChar(32)
+  resolution       String?            @db.VarChar(64)
+  durationLabel    String?            @map("duration_label") @db.VarChar(64)
+  feature          String?            @db.VarChar(100)
+  skill            String?            @db.VarChar(100)
+  agentTaskId      String?            @map("agent_task_id") @db.VarChar(191)
+  metaJson         Json?              @map("meta_json")
+  startedAt        DateTime?          @map("started_at")
+  finishedAt       DateTime?          @map("finished_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  user             AppUser?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  providerConfig   AiProviderConfig?  @relation(fields: [providerConfigId], references: [id], onDelete: SetNull)
+  outputs          GenerationOutput[]
+  assets           AssetItem[]
+  agentRun         AgentRun?
+
+  @@index([userId, createdAt], map: "idx_generation_records_user_created_at")
+  @@index([type, status, createdAt], map: "idx_generation_records_type_status_created_at")
+  @@index([providerConfigId, createdAt], map: "idx_generation_records_provider_created_at")
+  @@map("generation_records")
+}
+
+/// 统一输出结果表。
+/// 图片、视频、文本结果都走这张表，不再依赖前端临时数组。
+model GenerationOutput {
+  id                 String           @id @default(cuid()) @db.VarChar(36)
+  generationRecordId String           @map("generation_record_id") @db.VarChar(36)
+  outputType         OutputType       @map("output_type")
+  url                String?          @db.LongText
+  textContent        String?          @map("text_content") @db.LongText
+  mimeType           String?          @map("mime_type") @db.VarChar(100)
+  width              Int?
+  height             Int?
+  durationSeconds    Int?             @map("duration_seconds")
+  fileSizeBytes      BigInt?          @map("file_size_bytes")
+  sortOrder          Int              @default(0) @map("sort_order")
+  metaJson           Json?            @map("meta_json")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  generationRecord   GenerationRecord @relation(fields: [generationRecordId], references: [id], onDelete: Cascade)
+  assets             AssetItem[]
+
+  @@index([generationRecordId, sortOrder], map: "idx_generation_outputs_record_sort")
+  @@index([outputType, createdAt], map: "idx_generation_outputs_type_created_at")
+  @@map("generation_outputs")
+}
+
+/// 资源层主表。
+/// 首页瀑布流与资产页都应查询该表，而不是直接查询 generation_outputs。
+model AssetItem {
+  id                 String             @id @default(cuid()) @db.VarChar(36)
+  userId             String?            @map("user_id") @db.VarChar(36)
+  generationRecordId String?            @map("generation_record_id") @db.VarChar(36)
+  generationOutputId String?            @map("generation_output_id") @db.VarChar(36)
+  assetType          AssetType          @map("asset_type")
+  title              String?            @db.VarChar(255)
+  description        String?            @db.LongText
+  coverUrl           String?            @map("cover_url") @db.LongText
+  fileUrl            String             @map("file_url") @db.LongText
+  thumbnailUrl       String?            @map("thumbnail_url") @db.LongText
+  width              Int?
+  height             Int?
+  durationSeconds    Int?               @map("duration_seconds")
+  fileSizeBytes      BigInt?            @map("file_size_bytes")
+  promptText         String?            @map("prompt_text") @db.LongText
+  modelLabel         String?            @map("model_label") @db.VarChar(100)
+  aspectRatio        String?            @map("aspect_ratio") @db.VarChar(32)
+  visibility         AssetVisibility    @default(PRIVATE)
+  publishStatus      AssetPublishStatus @default(DRAFT) @map("publish_status")
+  reviewStatus       AssetReviewStatus  @default(APPROVED) @map("review_status")
+  favoriteCount      Int                @default(0) @map("favorite_count")
+  viewCount          Int                @default(0) @map("view_count")
+  downloadCount      Int                @default(0) @map("download_count")
+  source             AssetSource        @default(GENERATED)
+  sourceMetaJson     Json?              @map("source_meta_json")
+  isDeleted          Boolean            @default(false) @map("is_deleted")
+  publishedAt        DateTime?          @map("published_at")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  user               AppUser?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  generationRecord   GenerationRecord?  @relation(fields: [generationRecordId], references: [id], onDelete: SetNull)
+  generationOutput   GenerationOutput?  @relation(fields: [generationOutputId], references: [id], onDelete: SetNull)
+  favorites          AssetFavorite[]
+
+  @@index([userId, assetType, createdAt], map: "idx_asset_items_user_type_created_at")
+  @@index([assetType, visibility, publishStatus, reviewStatus, createdAt], map: "idx_asset_items_public_feed")
+  @@index([generationRecordId], map: "idx_asset_items_generation_record_id")
+  @@index([generationOutputId], map: "idx_asset_items_generation_output_id")
+  @@map("asset_items")
+}
+
+/// 资源收藏关系表。
+/// 用于支持首页收藏、个人收藏和收藏数量统计。
+model AssetFavorite {
+  id        String    @id @default(cuid()) @db.VarChar(36)
+  assetId    String    @map("asset_id") @db.VarChar(36)
+  userId     String?   @map("user_id") @db.VarChar(36)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  asset      AssetItem @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user       AppUser?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([assetId, userId], map: "uk_asset_favorites_asset_user")
+  @@index([userId, createdAt], map: "idx_asset_favorites_user_created_at")
+  @@map("asset_favorites")
+}
+
+/// Agent 运行主表。
+/// 一次 agent 执行对应一条记录，承接当前前端的 AgentRunState。
+model AgentRun {
+  id                   String                @id @default(cuid()) @db.VarChar(36)
+  generationRecordId   String                @unique(map: "uk_agent_runs_generation_record_id") @map("generation_record_id") @db.VarChar(36)
+  userId               String?               @map("user_id") @db.VarChar(36)
+  query                String                @db.LongText
+  skill                String?               @db.VarChar(100)
+  status               AgentRunStatus        @default(IDLE)
+  agentName            String?               @map("agent_name") @db.VarChar(100)
+  agentAvatarUrl       String?               @map("agent_avatar_url") @db.Text
+  indicatorStatus      AgentIndicatorStatus? @default(IDLE) @map("indicator_status")
+  indicatorTitle       String?               @map("indicator_title") @db.VarChar(100)
+  indicatorDescription String?               @map("indicator_description") @db.LongText
+  resultTitle          String?               @map("result_title") @db.VarChar(255)
+  resultSummary        String?               @map("result_summary") @db.LongText
+  expectedImageCount   Int?                  @default(0) @map("expected_image_count")
+  outputVisible        Boolean               @default(false) @map("output_visible")
+  errorMessage         String?               @map("error_message") @db.LongText
+  stopReason           String?               @map("stop_reason") @db.LongText
+  startedAt            DateTime?             @map("started_at")
+  finishedAt           DateTime?             @map("finished_at")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  generationRecord     GenerationRecord      @relation(fields: [generationRecordId], references: [id], onDelete: Cascade)
+  user                 AppUser?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  steps                AgentRunStep[]
+  processSections      AgentProcessSection[]
+
+  @@index([userId, createdAt], map: "idx_agent_runs_user_created_at")
+  @@index([status, createdAt], map: "idx_agent_runs_status_created_at")
+  @@map("agent_runs")
+}
+
+/// Agent 顶部阶段步骤表。
+/// 对应当前 UI 中的 steps 列表，便于顺序展示和状态追踪。
+model AgentRunStep {
+  id          String          @id @default(cuid()) @db.VarChar(36)
+  agentRunId  String          @map("agent_run_id") @db.VarChar(36)
+  stepKey     String          @map("step_key") @db.VarChar(100)
+  title       String          @db.VarChar(100)
+  status      AgentStepStatus @default(PENDING)
+  description String?         @db.LongText
+  sortOrder   Int             @default(0) @map("sort_order")
+  startedAt   DateTime?       @map("started_at")
+  completedAt DateTime?       @map("completed_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  agentRun    AgentRun        @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@unique([agentRunId, stepKey], map: "uk_agent_run_steps_run_step_key")
+  @@index([agentRunId, sortOrder], map: "idx_agent_run_steps_run_sort")
+  @@map("agent_run_steps")
+}
+
+/// Agent 过程分组表。
+/// 对应当前 processSections，先保留 paragraphs / taskItems 的 JSON 结构，
+/// 既能快速落地，也方便后续按需继续拆分事件表。
+model AgentProcessSection {
+  id             String                  @id @default(cuid()) @db.VarChar(36)
+  agentRunId     String                  @map("agent_run_id") @db.VarChar(36)
+  sectionKey     String                  @map("section_key") @db.VarChar(100)
+  kind           AgentProcessSectionKind
+  label          String                  @db.VarChar(100)
+  paragraphsJson Json?                   @map("paragraphs_json")
+  taskItemsJson  Json?                   @map("task_items_json")
+  sortOrder      Int                     @default(0) @map("sort_order")
+  isCollapsed    Boolean                 @default(false) @map("is_collapsed")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  updatedAt      DateTime                @updatedAt @map("updated_at")
+  agentRun       AgentRun                @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@unique([agentRunId, sectionKey], map: "uk_agent_process_sections_run_section_key")
+  @@index([agentRunId, sortOrder], map: "idx_agent_process_sections_run_sort")
+  @@map("agent_process_sections")
+}
+
+enum UserStatus {
+  ANONYMOUS
+  ACTIVE
+  DISABLED
+}
+
+enum ProviderType {
+  OPENAI_COMPATIBLE
+  CUSTOM
+}
+
+/// 对象存储供应商类型。
+enum StorageProviderType {
+  S3_COMPATIBLE
+}
+
+enum ModelCategory {
+  CHAT
+  IMAGE
+  VIDEO
+}
+
+enum GenerationType {
+  AGENT
+  IMAGE
+  VIDEO
+  DIGITAL_HUMAN
+  MOTION
+}
+
+enum GenerationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  STOPPED
+}
+
+enum OutputType {
+  IMAGE
+  VIDEO
+  TEXT
+  FILE
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+}
+
+enum AssetVisibility {
+  PRIVATE
+  PUBLIC
+  UNLISTED
+}
+
+enum AssetPublishStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+enum AssetReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AssetSource {
+  GENERATED
+  UPLOADED
+  IMPORTED
+}
+
+enum AgentRunStatus {
+  IDLE
+  THINKING
+  RUNNING
+  COMPLETED
+  ERROR
+  STOPPED
+}
+
+enum AgentIndicatorStatus {
+  IDLE
+  THINKING
+  RUNNING
+  COMPLETED
+  ERROR
+  STOPPED
+}
+
+enum AgentStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  ERROR
+}
+
+enum AgentProcessSectionKind {
+  SKILL
+  REASONING
+}

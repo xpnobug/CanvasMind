@@ -1,0 +1,27 @@
+-- 对象存储配置表：统一保存 S3 兼容存储的接入信息
+CREATE TABLE `object_storage_configs` (
+  `id` VARCHAR(36) NOT NULL COMMENT '主键 ID',
+  `user_id` VARCHAR(36) NULL COMMENT '所属用户 ID，当前为空表示全局配置',
+  `scene` VARCHAR(50) NOT NULL DEFAULT 'global' COMMENT '配置场景',
+  `name` VARCHAR(100) NOT NULL COMMENT '存储名称',
+  `code` VARCHAR(30) NOT NULL COMMENT '存储编码',
+  `provider_type` ENUM('S3_COMPATIBLE') NOT NULL DEFAULT 'S3_COMPATIBLE' COMMENT '存储供应商类型',
+  `access_key_encrypted` LONGTEXT NOT NULL COMMENT '加密后的 Access Key',
+  `secret_key_encrypted` LONGTEXT NOT NULL COMMENT '加密后的 Secret Key',
+  `endpoint` TEXT NOT NULL COMMENT '对象存储 Endpoint',
+  `region` VARCHAR(100) NULL COMMENT '区域',
+  `bucket` VARCHAR(255) NOT NULL COMMENT 'Bucket 名称',
+  `domain` TEXT NULL COMMENT '自定义访问域名',
+  `sort_order` INT NOT NULL DEFAULT 999 COMMENT '排序值',
+  `description` VARCHAR(200) NULL COMMENT '描述',
+  `is_enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
+  `is_default` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否默认',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_object_storage_configs_scene_code` (`scene`, `code`),
+  KEY `idx_object_storage_configs_user_scene` (`user_id`, `scene`),
+  KEY `idx_object_storage_configs_scene_default` (`scene`, `is_default`),
+  KEY `idx_object_storage_configs_scene_enabled_sort` (`scene`, `is_enabled`, `sort_order`),
+  CONSTRAINT `fk_object_storage_configs_user_id` FOREIGN KEY (`user_id`) REFERENCES `app_users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='对象存储配置表';

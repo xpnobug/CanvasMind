@@ -3,7 +3,6 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import fs from 'node:fs/promises'
-import { createAiGatewayPlugin } from './server/ai-gateway/plugin'
 
 const MOCK_AGENT_HTTP_RAW_PATH = path.resolve(__dirname, 'src/views/generate/mocks/http_raw.txt')
 
@@ -62,7 +61,7 @@ export default defineConfig({
   plugins: [
     vue(),
     tailwindcss(),
-    createAiGatewayPlugin(),
+    // 仅保留前端本地调试所需的 mock 文件服务。
     createMockAgentRawPlugin(),
   ],
 
@@ -72,18 +71,8 @@ export default defineConfig({
     host: '0.0.0.0',      // 允许外部访问
     open: true,           // 启动时自动打开浏览器
 
-    // 跨域代理配置
+    // 保留示例代理，便于接第三方接口调试。
     proxy: {
-      // 代理 /api 请求到后端服务器
-      '/api': {
-        target: 'http://localhost:8080',  // 后端服务器地址
-        changeOrigin: true,               // 修改请求头中的 Origin
-        rewrite: (path) => path.replace(/^\/api/, ''), // 重写路径
-        secure: false,                    // 如果是 https，需要配置证书
-        ws: true,                         // 支持 WebSocket
-      },
-
-      // 示例：代理即梦AI的API（如果需要）
       '/jimeng-api': {
         target: 'https://api.jimeng.jianying.com',
         changeOrigin: true,
@@ -92,7 +81,7 @@ export default defineConfig({
       },
     },
 
-    // CORS 配置
+    // 允许开发时跨域调试。
     cors: true,
   },
 

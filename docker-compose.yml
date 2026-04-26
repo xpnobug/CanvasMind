@@ -1,0 +1,69 @@
+services:
+  # MySQL 数据库服务。
+  mysql:
+    image: mysql:8.0
+    container_name: canana-vue-mysql
+    restart: unless-stopped
+    environment:
+      # 设置 root 密码。
+      MYSQL_ROOT_PASSWORD: 1q2w3e4r
+      # 初始化数据库名称。
+      MYSQL_DATABASE: canana_mind
+      # 允许外部 root 连接。
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      # 映射本地开发端口。
+      - "13306:3306"
+    volumes:
+      # 持久化数据库数据。
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # 等待数据库完成启动。
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p1q2w3e4r"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  # 应用服务，同时承载前端与后端。
+  app:
+    build:
+      # 使用当前仓库构建应用镜像。
+      context: .
+      dockerfile: Dockerfile
+    container_name: canana-vue-app
+    restart: unless-stopped
+    environment:
+      # 统一应用对外端口。
+      SERVER_PORT: "5409"
+      # 同源部署时前端接口地址留空即可。
+      VITE_API_BASE_URL: ""
+      # 前端初始化时默认展示的厂商地址。
+      VITE_PROVIDER_DEFAULT_BASE_URL: "https://api.chatfire.site/v1"
+      # 服务端默认上游厂商地址。
+      PROVIDER_DEFAULT_BASE_URL: "https://api.chatfire.site/v1"
+      # 数据库连接改为容器内主机名。
+      DATABASE_URL: "mysql://root:1q2w3e4r@mysql:3306/canana_mind"
+      # Provider 配置加密密钥。
+      PROVIDER_CONFIG_SECRET: "please-change-this-secret"
+      # 容器内静态资源目录。
+      STATIC_DIST_DIR: "/app/dist"
+      # 容器内上传目录。
+      UPLOADS_DIR: "/app/uploads"
+      # 允许浏览器访问来源。
+      CORS_ALLOWED_ORIGINS: "http://localhost:5409"
+    ports:
+      # 对外暴露统一应用端口。
+      - "5409:5409"
+    volumes:
+      # 持久化上传文件。
+      - uploads_data:/app/uploads
+    depends_on:
+      mysql:
+        # 等待数据库健康后再启动应用。
+        condition: service_healthy
+
+# 定义持久化卷。
+volumes:
+  mysql_data:
+  uploads_data:

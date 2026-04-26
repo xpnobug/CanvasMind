@@ -1,0 +1,178 @@
+-- 第一版初始化表结构
+-- 面向 generate / agent / 自定义 AI Provider 配置的持久化需求
+
+CREATE TABLE `app_users` (
+  `id` VARCHAR(36) NOT NULL COMMENT '用户主键 ID',
+  `name` VARCHAR(100) NULL COMMENT '用户昵称',
+  `avatar_url` TEXT NULL COMMENT '用户头像地址',
+  `email` VARCHAR(191) NULL COMMENT '用户邮箱',
+  `phone` VARCHAR(32) NULL COMMENT '用户手机号',
+  `status` ENUM('ANONYMOUS', 'ACTIVE', 'DISABLED') NOT NULL DEFAULT 'ANONYMOUS' COMMENT '用户状态：匿名、启用、禁用',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  UNIQUE INDEX `uk_app_users_email`(`email`),
+  UNIQUE INDEX `uk_app_users_phone`(`phone`),
+  PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='应用用户表';
+
+CREATE TABLE `ai_provider_configs` (
+  `id` VARCHAR(36) NOT NULL COMMENT '厂商配置主键 ID',
+  `user_id` VARCHAR(36) NULL COMMENT '所属用户 ID，允许为空表示匿名配置',
+  `scene` VARCHAR(50) NOT NULL DEFAULT 'generate' COMMENT '使用场景，如 generate',
+  `name` VARCHAR(100) NOT NULL COMMENT '配置名称',
+  `provider_type` ENUM('OPENAI_COMPATIBLE', 'CUSTOM') NOT NULL DEFAULT 'OPENAI_COMPATIBLE' COMMENT '厂商类型：OpenAI 兼容或自定义',
+  `base_url` TEXT NOT NULL COMMENT '厂商基础地址',
+  `api_key_encrypted` LONGTEXT NULL COMMENT '加密后的 API Key',
+  `api_key_hint` VARCHAR(64) NULL COMMENT 'API Key 提示信息，如后四位',
+  `chat_endpoint` VARCHAR(255) NOT NULL DEFAULT '/chat/completions' COMMENT '对话接口路径',
+  `image_endpoint` VARCHAR(255) NOT NULL DEFAULT '/images/generations' COMMENT '图片接口路径',
+  `video_endpoint` VARCHAR(255) NOT NULL DEFAULT '/videos' COMMENT '视频接口路径',
+  `default_chat_model` VARCHAR(191) NULL COMMENT '默认对话模型',
+  `default_image_model` VARCHAR(191) NULL COMMENT '默认图片模型',
+  `default_video_model` VARCHAR(191) NULL COMMENT '默认视频模型',
+  `is_default` BOOLEAN NOT NULL DEFAULT false COMMENT '是否为默认配置',
+  `is_enabled` BOOLEAN NOT NULL DEFAULT true COMMENT '是否启用',
+  `extra_json` JSON NULL COMMENT '扩展配置 JSON',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  INDEX `idx_ai_provider_configs_user_scene`(`user_id`, `scene`),
+  INDEX `idx_ai_provider_configs_user_default`(`user_id`, `is_default`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_ai_provider_configs_user_id` FOREIGN KEY (`user_id`) REFERENCES `app_users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='AI 厂商配置表';
+
+CREATE TABLE `ai_provider_custom_models` (
+  `id` VARCHAR(36) NOT NULL COMMENT '自定义模型主键 ID',
+  `provider_config_id` VARCHAR(36) NOT NULL COMMENT '所属厂商配置 ID',
+  `category` ENUM('CHAT', 'IMAGE', 'VIDEO') NOT NULL COMMENT '模型分类：对话、图片、视频',
+  `label` VARCHAR(100) NOT NULL COMMENT '模型显示名称',
+  `model_key` VARCHAR(191) NOT NULL COMMENT '模型标识',
+  `capability_json` JSON NULL COMMENT '模型能力描述 JSON',
+  `default_params_json` JSON NULL COMMENT '默认参数 JSON',
+  `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序值，越小越靠前',
+  `is_enabled` BOOLEAN NOT NULL DEFAULT true COMMENT '是否启用',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  UNIQUE INDEX `uk_ai_provider_custom_models_config_category_key`(`provider_config_id`, `category`, `model_key`),
+  INDEX `idx_ai_provider_custom_models_config_category_sort`(`provider_config_id`, `category`, `sort_order`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_ai_provider_custom_models_config_id` FOREIGN KEY (`provider_config_id`) REFERENCES `ai_provider_configs`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='AI 厂商自定义模型表';
+
+CREATE TABLE `generation_records` (
+  `id` VARCHAR(36) NOT NULL COMMENT '生成记录主键 ID',
+  `user_id` VARCHAR(36) NULL COMMENT '所属用户 ID',
+  `provider_config_id` VARCHAR(36) NULL COMMENT '使用的厂商配置 ID',
+  `client_record_id` INT NULL COMMENT '前端本地记录 ID',
+  `type` ENUM('AGENT', 'IMAGE', 'VIDEO', 'DIGITAL_HUMAN', 'MOTION') NOT NULL COMMENT '生成类型',
+  `status` ENUM('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'STOPPED') NOT NULL DEFAULT 'PENDING' COMMENT '生成状态',
+  `prompt` LONGTEXT NOT NULL COMMENT '用户输入提示词',
+  `content` LONGTEXT NULL COMMENT '文本结果或中间内容',
+  `error_message` LONGTEXT NULL COMMENT '错误信息',
+  `model_label` VARCHAR(100) NULL COMMENT '模型显示名称',
+  `model_key` VARCHAR(191) NULL COMMENT '模型标识',
+  `ratio` VARCHAR(32) NULL COMMENT '画幅比例',
+  `resolution` VARCHAR(64) NULL COMMENT '分辨率',
+  `duration_label` VARCHAR(64) NULL COMMENT '时长描述',
+  `feature` VARCHAR(100) NULL COMMENT '功能特性标识',
+  `skill` VARCHAR(100) NULL COMMENT '技能标识',
+  `agent_task_id` VARCHAR(191) NULL COMMENT 'Agent 任务 ID',
+  `meta_json` JSON NULL COMMENT '扩展元数据 JSON',
+  `started_at` DATETIME(3) NULL COMMENT '开始执行时间',
+  `finished_at` DATETIME(3) NULL COMMENT '结束执行时间',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  INDEX `idx_generation_records_user_created_at`(`user_id`, `created_at`),
+  INDEX `idx_generation_records_type_status_created_at`(`type`, `status`, `created_at`),
+  INDEX `idx_generation_records_provider_created_at`(`provider_config_id`, `created_at`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_generation_records_user_id` FOREIGN KEY (`user_id`) REFERENCES `app_users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_generation_records_provider_config_id` FOREIGN KEY (`provider_config_id`) REFERENCES `ai_provider_configs`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='统一生成记录表';
+
+CREATE TABLE `generation_outputs` (
+  `id` VARCHAR(36) NOT NULL COMMENT '输出结果主键 ID',
+  `generation_record_id` VARCHAR(36) NOT NULL COMMENT '所属生成记录 ID',
+  `output_type` ENUM('IMAGE', 'VIDEO', 'TEXT', 'FILE') NOT NULL COMMENT '输出类型',
+  `url` LONGTEXT NULL COMMENT '资源地址',
+  `text_content` LONGTEXT NULL COMMENT '文本内容',
+  `mime_type` VARCHAR(100) NULL COMMENT '资源 MIME 类型',
+  `width` INT NULL COMMENT '宽度',
+  `height` INT NULL COMMENT '高度',
+  `duration_seconds` INT NULL COMMENT '时长（秒）',
+  `file_size_bytes` BIGINT NULL COMMENT '文件大小（字节）',
+  `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序值，越小越靠前',
+  `meta_json` JSON NULL COMMENT '输出元数据 JSON',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  INDEX `idx_generation_outputs_record_sort`(`generation_record_id`, `sort_order`),
+  INDEX `idx_generation_outputs_type_created_at`(`output_type`, `created_at`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_generation_outputs_record_id` FOREIGN KEY (`generation_record_id`) REFERENCES `generation_records`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='生成输出结果表';
+
+CREATE TABLE `agent_runs` (
+  `id` VARCHAR(36) NOT NULL COMMENT 'Agent 运行主键 ID',
+  `generation_record_id` VARCHAR(36) NOT NULL COMMENT '关联生成记录 ID',
+  `user_id` VARCHAR(36) NULL COMMENT '所属用户 ID',
+  `query` LONGTEXT NOT NULL COMMENT '用户请求内容',
+  `skill` VARCHAR(100) NULL COMMENT '技能标识',
+  `status` ENUM('IDLE', 'THINKING', 'RUNNING', 'COMPLETED', 'ERROR', 'STOPPED') NOT NULL DEFAULT 'IDLE' COMMENT '运行状态',
+  `agent_name` VARCHAR(100) NULL COMMENT 'Agent 名称',
+  `agent_avatar_url` TEXT NULL COMMENT 'Agent 头像地址',
+  `indicator_status` ENUM('IDLE', 'THINKING', 'RUNNING', 'COMPLETED', 'ERROR', 'STOPPED') NULL DEFAULT 'IDLE' COMMENT '顶部指示器状态',
+  `indicator_title` VARCHAR(100) NULL COMMENT '顶部指示器标题',
+  `indicator_description` LONGTEXT NULL COMMENT '顶部指示器描述',
+  `result_title` VARCHAR(255) NULL COMMENT '结果标题',
+  `result_summary` LONGTEXT NULL COMMENT '结果摘要',
+  `expected_image_count` INT NULL DEFAULT 0 COMMENT '预期产出图片数量',
+  `output_visible` BOOLEAN NOT NULL DEFAULT false COMMENT '结果区域是否可见',
+  `error_message` LONGTEXT NULL COMMENT '错误信息',
+  `stop_reason` LONGTEXT NULL COMMENT '停止原因',
+  `started_at` DATETIME(3) NULL COMMENT '开始执行时间',
+  `finished_at` DATETIME(3) NULL COMMENT '结束执行时间',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  UNIQUE INDEX `uk_agent_runs_generation_record_id`(`generation_record_id`),
+  INDEX `idx_agent_runs_user_created_at`(`user_id`, `created_at`),
+  INDEX `idx_agent_runs_status_created_at`(`status`, `created_at`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_agent_runs_generation_record_id` FOREIGN KEY (`generation_record_id`) REFERENCES `generation_records`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_agent_runs_user_id` FOREIGN KEY (`user_id`) REFERENCES `app_users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='Agent 运行主表';
+
+CREATE TABLE `agent_run_steps` (
+  `id` VARCHAR(36) NOT NULL COMMENT '阶段步骤主键 ID',
+  `agent_run_id` VARCHAR(36) NOT NULL COMMENT '所属 Agent 运行 ID',
+  `step_key` VARCHAR(100) NOT NULL COMMENT '步骤标识',
+  `title` VARCHAR(100) NOT NULL COMMENT '步骤标题',
+  `status` ENUM('PENDING', 'RUNNING', 'COMPLETED', 'ERROR') NOT NULL DEFAULT 'PENDING' COMMENT '步骤状态',
+  `description` LONGTEXT NULL COMMENT '步骤描述',
+  `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序值，越小越靠前',
+  `started_at` DATETIME(3) NULL COMMENT '开始时间',
+  `completed_at` DATETIME(3) NULL COMMENT '完成时间',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  UNIQUE INDEX `uk_agent_run_steps_run_step_key`(`agent_run_id`, `step_key`),
+  INDEX `idx_agent_run_steps_run_sort`(`agent_run_id`, `sort_order`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_agent_run_steps_run_id` FOREIGN KEY (`agent_run_id`) REFERENCES `agent_runs`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='Agent 阶段步骤表';
+
+CREATE TABLE `agent_process_sections` (
+  `id` VARCHAR(36) NOT NULL COMMENT '过程分组主键 ID',
+  `agent_run_id` VARCHAR(36) NOT NULL COMMENT '所属 Agent 运行 ID',
+  `section_key` VARCHAR(100) NOT NULL COMMENT '分组标识',
+  `kind` ENUM('SKILL', 'REASONING') NOT NULL COMMENT '分组类型：技能或思考',
+  `label` VARCHAR(100) NOT NULL COMMENT '分组标题',
+  `paragraphs_json` JSON NULL COMMENT '段落内容 JSON',
+  `task_items_json` JSON NULL COMMENT '任务项 JSON',
+  `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序值，越小越靠前',
+  `is_collapsed` BOOLEAN NOT NULL DEFAULT false COMMENT '是否折叠',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  UNIQUE INDEX `uk_agent_process_sections_run_section_key`(`agent_run_id`, `section_key`),
+  INDEX `idx_agent_process_sections_run_sort`(`agent_run_id`, `sort_order`),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_agent_process_sections_run_id` FOREIGN KEY (`agent_run_id`) REFERENCES `agent_runs`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='Agent 过程分组表';

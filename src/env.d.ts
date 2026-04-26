@@ -10,7 +10,7 @@ declare module '*.vue' {
 // 环境变量类型定义
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string
-  // 在这里添加更多环境变量类型
+  readonly VITE_PROVIDER_DEFAULT_BASE_URL: string
 }
 
 interface ImportMeta {

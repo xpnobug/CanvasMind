@@ -47,7 +47,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-            type=raw,value=v${{ steps.package-version.outputs.version }},enable=${{ steps.package-version.outputs.version != "" }}
+            type=raw,value=v${{ steps.package-version.outputs.version }},enable=${{ steps.package-version.outputs.version != '' }}
             type=ref,event=tag
             type=sha,prefix=sha-
 

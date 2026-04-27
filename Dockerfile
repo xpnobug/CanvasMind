@@ -5,7 +5,7 @@ FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 
 # 复制依赖声明文件。
-COPY package.json package-lock.json ./
+COPY package.json ./
 
 # 安装构建阶段所需依赖。
 # 额外补装前端构建链路中的 Linux 原生包，规避 npm 漏装 optionalDependencies 的问题。

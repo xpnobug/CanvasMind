@@ -1,7 +1,7 @@
 import { sendJson } from '../ai-gateway/shared'
 import { requireCurrentSessionUser } from '../auth/session'
 import { isPrismaConfigured } from '../db/prisma'
-import { createGenerationRecord, listGenerationRecords, updateGenerationRecord } from './service'
+import { createGenerationRecord, getGenerationRecordById, listGenerationRecords, updateGenerationRecord } from './service'
 import { GENERATION_RECORDS_BASE_PATH } from './constants'
 import { readGenerationRecordBody, sendGenerationRecordError } from './shared'
 
@@ -25,6 +25,12 @@ export const handleGenerationRecordsRequest = async (req: any, res: any) => {
 
     if (req.method === 'GET' && requestUrl === GENERATION_RECORDS_BASE_PATH) {
       const data = await listGenerationRecords(currentUser.id)
+      sendJson(res, 200, { data })
+      return
+    }
+
+    if (req.method === 'GET' && recordId) {
+      const data = await getGenerationRecordById(recordId, currentUser.id)
       sendJson(res, 200, { data })
       return
     }

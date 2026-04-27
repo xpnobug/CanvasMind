@@ -454,6 +454,23 @@ export const listGenerationRecords = async (currentUserId?: string | null) => {
   return records.map(serializeGenerationRecord)
 }
 
+// 按 id 获取单条生成记录详情，并校验归属用户。
+export const getGenerationRecordById = async (id: string, currentUserId: string) => {
+  const record = await prisma.generationRecord.findFirst({
+    where: {
+      id,
+      userId: currentUserId,
+    },
+    include: buildRecordInclude(),
+  })
+
+  if (!record) {
+    throw new Error('生成记录不存在或无权访问')
+  }
+
+  return serializeGenerationRecord(record)
+}
+
 // 创建一条新的生成记录，并同步写入输出与 Agent 过程
 export const createGenerationRecord = async (payload: GenerationRecordPayload, currentUserId: string) => {
   if (!String(payload.prompt || '').trim()) {

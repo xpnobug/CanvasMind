@@ -1,10 +1,13 @@
 import 'dotenv/config'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
-import { PrismaClient } from '@prisma/client'
+import prismaClientPackage from '@prisma/client'
+import type { PrismaClient as PrismaClientInstance } from '@prisma/client'
+
+const { PrismaClient } = prismaClientPackage
 
 declare global {
   // eslint-disable-next-line no-var
-  var __cananaPrisma__: PrismaClient | undefined
+  var __cananaPrisma__: PrismaClientInstance | undefined
 }
 
 /**
@@ -40,7 +43,7 @@ export const getPrismaClient = () => {
   return prisma
 }
 
-export const prisma = new Proxy({} as PrismaClient, {
+export const prisma = new Proxy({} as PrismaClientInstance, {
   get(_target, prop, receiver) {
     const client = getPrismaClient()
     return Reflect.get(client, prop, receiver)

@@ -195,6 +195,32 @@ import discoverContent from '@/data/homeDiscoverContent.json'
 
 const emit = defineEmits(['open-work-detail'])
 
+// 解析类似 9:16、2/3、1x1 的比例字符串，转换成布局可用的宽高比。
+const parseAspectRatioSize = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return null
+
+  const matched = text.match(/^(\d+(?:\.\d+)?)\s*[:/xX]\s*(\d+(?:\.\d+)?)$/)
+  if (!matched) return null
+
+  const width = Number(matched[1])
+  const height = Number(matched[2])
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return null
+  }
+
+  return { w: width, h: height }
+}
+
+// 优先使用后端返回的真实宽高；没有时再退回到比例标签。
+const resolveLayoutSize = ({ width, height, aspectRatio }) => {
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return { w: width, h: height }
+  }
+
+  return parseAspectRatioSize(aspectRatio)
+}
+
 const buildFeedItemFromAsset = (item) => ({
   id: item.id,
   src: buildAssetUrl(item.previewUrl || item.fileUrl),
@@ -206,6 +232,11 @@ const buildFeedItemFromAsset = (item) => ({
     avatarSrc: buildAssetUrl(item.owner?.avatarSrc || ''),
   },
   favoriteCount: item.favoriteCount || 0,
+  layoutSize: resolveLayoutSize({
+    width: item.width,
+    height: item.height,
+    aspectRatio: item.aspectRatio,
+  }),
   detail: {
     createDate: item.createdAt,
     aiGeneratedText: '内容由 AI 生成',
@@ -227,6 +258,9 @@ const buildFallbackFeedItems = () => (
       avatarSrc: '',
     },
     favoriteCount: item.favoriteCount || 0,
+    layoutSize: resolveLayoutSize({
+      aspectRatio: item.detail?.aspectRatioLabel,
+    }),
     detail: item.detail,
   }))
 )
@@ -241,7 +275,7 @@ function emitOpenWorkDetail(payload) {
   emit('open-work-detail', payload)
 }
 
-/** Fisher–Yates：返回新数组，不打乱入参 */
+// 使用 Fisher–Yates 打乱数组顺序，返回新数组，不修改原始数据。
 function shuffleArray(arr) {
   const a = arr.slice()
   for (let i = a.length - 1; i > 0; i--) {
@@ -262,10 +296,15 @@ const feedItems = ref(
   shuffleArray(buildFallbackFeedItems()),
 )
 
-/** 每张图 natural 尺寸；null 表示未加载，布局按 1:1 占位 */
+/** 每张图 natural 尺寸；未拿到真实尺寸时回退到接口/配置提供的比例提示 */
 const feedNaturalSizes = ref(
   /** @type {Array<{ w: number; h: number } | null>} */
   ([]),
+)
+
+// 瀑布流布局优先使用真实尺寸，失败或未加载时再回退到数据自带的比例提示。
+const feedDisplaySizes = computed(() =>
+  feedItems.value.map((item, index) => feedNaturalSizes.value[index] || item.layoutSize || null),
 )
 
 watch(
@@ -286,8 +325,11 @@ function onFeedImgLoad(ev, index) {
 
 function onFeedImgError(index) {
   if (feedNaturalSizes.value[index]) return
+  const fallbackSize = feedItems.value[index]?.layoutSize
+  if (!fallbackSize) return
+  // 图片请求失败时，保留接口或配置里已有的比例，避免退化成 1:1 方图。
   const next = feedNaturalSizes.value.slice()
-  next[index] = { w: 1, h: 1 }
+  next[index] = fallbackSize
   feedNaturalSizes.value = next
 }
 
@@ -334,10 +376,12 @@ const loadDiscoverFeedItems = async () => {
       return
     }
 
-    feedItems.value = buildFallbackFeedItems()
+    // 接口返回空数据时，仍保持首页图片的随机展示效果。
+    feedItems.value = shuffleArray(buildFallbackFeedItems())
   } catch (error) {
     console.warn('读取首页瀑布流失败，继续使用本地 JSON 数据。', error)
-    feedItems.value = buildFallbackFeedItems()
+    // 接口失败回退本地数据时，同样保持随机顺序，避免被固定顺序覆盖。
+    feedItems.value = shuffleArray(buildFallbackFeedItems())
   }
 }
 
@@ -380,7 +424,7 @@ onBeforeUnmount(() => {
 const masonryMetrics = computed(() => computeMasonryMetrics(trackWidth.value))
 
 const feedLayouts = computed(() =>
-  buildFeedLayoutsFromSizes(feedNaturalSizes.value, masonryMetrics.value),
+  buildFeedLayoutsFromSizes(feedDisplaySizes.value, masonryMetrics.value),
 )
 
 const scrollHeight = computed(() =>

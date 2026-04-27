@@ -8,7 +8,7 @@
     "dev": "npm run dev:all",
     "dev:all": "concurrently --kill-others \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "vite",
-    "dev:server": "tsx watch --env-file=.env.development server/index.ts",
+    "dev:server": "npm run prisma:generate && tsx watch --env-file=.env.development server/index.ts",
     "build": "npm run build:client",
     "preview": "vite preview",
     "start": "node scripts/start-production.mjs",
@@ -22,7 +22,8 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "build:client": "vue-tsc --noEmit && vite build",
     "build:service": "node scripts/build-server-service.mjs",
-    "docker:build": "docker build -t canana-vue:latest ."
+    "docker:build": "docker build -t canana-vue:latest .",
+    "postinstall": "prisma generate"
   },
   "engines": {
     "node": ">=20.19.0",

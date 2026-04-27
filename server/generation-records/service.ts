@@ -108,6 +108,11 @@ const isLocalManagedAssetUrl = (value?: string | null) => {
   return String(value || '').trim().startsWith('/uploads/')
 }
 
+// 统一输出生成记录上传链路日志，便于线上排查资源落盘与入库问题。
+const logGenerationRecord = (stage: string, detail: Record<string, unknown>) => {
+  console.log('[generation-records]', stage, JSON.stringify(detail))
+}
+
 // 从 Data URL 中解析 MIME 类型与二进制内容。
 const parseDataUrl = (value: string) => {
   const matched = String(value || '').trim().match(/^data:([^;,]+);base64,(.+)$/i)
@@ -123,13 +128,27 @@ const parseDataUrl = (value: string) => {
 
 // 下载远程资源，转换为可上传的缓冲区。
 const downloadRemoteAsset = async (url: string) => {
+  logGenerationRecord('download_remote_asset:start', {
+    url,
+  })
+
   const response = await fetch(url)
 
   if (!response.ok) {
+    logGenerationRecord('download_remote_asset:error', {
+      url,
+      status: response.status,
+    })
     throw new Error(`下载远程资源失败：${response.status}`)
   }
 
   const arrayBuffer = await response.arrayBuffer()
+
+  logGenerationRecord('download_remote_asset:success', {
+    url,
+    mimeType: String(response.headers.get('content-type') || '').trim() || undefined,
+    size: arrayBuffer.byteLength,
+  })
 
   return {
     mimeType: String(response.headers.get('content-type') || '').trim() || undefined,
@@ -142,7 +161,19 @@ const materializeOutputAsset = async (
   output: GenerationOutputPayload,
   index: number,
 ) => {
+  logGenerationRecord('materialize_output_asset:start', {
+    index,
+    outputType: output.outputType,
+    hasUrl: Boolean(output.url),
+    urlPreview: String(output.url || '').slice(0, 160),
+  })
+
   if (!isDisplayableAssetOutput(output.outputType) || !output.url) {
+    logGenerationRecord('materialize_output_asset:skip', {
+      index,
+      reason: 'not_displayable_or_missing_url',
+      outputType: output.outputType,
+    })
     return output
   }
 
@@ -150,11 +181,23 @@ const materializeOutputAsset = async (
 
   // 已经是当前服务本地托管地址时，直接复用，避免重复上传。
   if (isLocalManagedAssetUrl(rawUrl)) {
+    logGenerationRecord('materialize_output_asset:skip', {
+      index,
+      reason: 'already_local_managed_asset',
+      outputType: output.outputType,
+      urlPreview: rawUrl.slice(0, 160),
+    })
     return output
   }
 
   // 只处理 base64 Data URL 与远程 URL，其他形式先按原样保留。
   if (!isDataUrl(rawUrl) && !isRemoteHttpUrl(rawUrl)) {
+    logGenerationRecord('materialize_output_asset:skip', {
+      index,
+      reason: 'unsupported_url_shape',
+      outputType: output.outputType,
+      urlPreview: rawUrl.slice(0, 160),
+    })
     return output
   }
 
@@ -167,6 +210,18 @@ const materializeOutputAsset = async (
     mimeType: output.mimeType || sourceAsset.mimeType,
     filename: `generation-output-${index + 1}`,
     category: `generated/${output.outputType}`,
+  })
+
+  logGenerationRecord('materialize_output_asset:uploaded', {
+    index,
+    outputType: output.outputType,
+    originalUrlPreview: rawUrl.slice(0, 160),
+    savedUrl: savedAsset.publicUrl,
+    storageType: savedAsset.storageType,
+    storageCode: savedAsset.storageCode,
+    relativePath: savedAsset.relativePath,
+    mimeType: output.mimeType || sourceAsset.mimeType || savedAsset.mimeType,
+    size: sourceAsset.buffer.byteLength,
   })
 
   return {
@@ -187,7 +242,22 @@ const materializeOutputAsset = async (
 const normalizeOutputs = async (payload: GenerationRecordPayload) => {
   const outputs = collectOutputs(payload)
 
-  return Promise.all(outputs.map((output, index) => materializeOutputAsset(output, index)))
+  logGenerationRecord('normalize_outputs:start', {
+    type: payload.type,
+    outputCount: outputs.length,
+    imageCount: Array.isArray(payload.images) ? payload.images.length : 0,
+    explicitOutputCount: Array.isArray(payload.outputs) ? payload.outputs.length : 0,
+  })
+
+  const normalizedOutputs = await Promise.all(outputs.map((output, index) => materializeOutputAsset(output, index)))
+
+  logGenerationRecord('normalize_outputs:success', {
+    type: payload.type,
+    outputCount: normalizedOutputs.length,
+    outputTypes: normalizedOutputs.map(output => output.outputType),
+  })
+
+  return normalizedOutputs
 }
 
 // 根据生成输出重建资源层数据，供首页与资产页统一查询。
@@ -207,6 +277,12 @@ const syncAssetItemsForRecord = async (
     durationSeconds?: number | null
   }>,
 ) => {
+  logGenerationRecord('sync_asset_items:start', {
+    generationRecordId,
+    currentUserId,
+    outputRecordCount: outputRecords.length,
+  })
+
   await tx.assetItem.deleteMany({
     where: { generationRecordId },
   })
@@ -215,7 +291,13 @@ const syncAssetItemsForRecord = async (
     isDisplayableAssetOutput(output.outputType) && output.url
   ))
 
-  if (!assetOutputs.length) return
+  if (!assetOutputs.length) {
+    logGenerationRecord('sync_asset_items:skip', {
+      generationRecordId,
+      reason: 'no_displayable_outputs',
+    })
+    return
+  }
 
   await tx.assetItem.createMany({
     data: assetOutputs.map((output) => ({
@@ -250,6 +332,13 @@ const syncAssetItemsForRecord = async (
       publishedAt: null,
     })),
   })
+
+  logGenerationRecord('sync_asset_items:success', {
+    generationRecordId,
+    currentUserId,
+    assetCount: assetOutputs.length,
+    assetTypes: assetOutputs.map(output => output.outputType),
+  })
 }
 
 // 将前端 agentRun 结构转成数据库可持久化的数据
@@ -257,8 +346,14 @@ const toAgentRunCreateInput = (generationRecordId: string, payload: GenerationRe
   const agentRun = payload.agentRun as any
   if (!agentRun || typeof agentRun !== 'object') return null
 
-  const steps = Array.isArray(agentRun.steps) ? agentRun.steps : []
-  const processSections = Array.isArray(agentRun.processSections) ? agentRun.processSections : []
+  // 线上历史数据或跨版本前端上报时，步骤数组里可能混入 null，需要先过滤。
+  const steps = Array.isArray(agentRun.steps)
+    ? agentRun.steps.filter((step: any) => step && typeof step === 'object')
+    : []
+  // 过程分组同样做容错，避免 section.key / section.kind 在脏数据下直接报错。
+  const processSections = Array.isArray(agentRun.processSections)
+    ? agentRun.processSections.filter((section: any) => section && typeof section === 'object')
+    : []
 
   return {
     generationRecordId,
@@ -287,8 +382,8 @@ const toAgentRunCreateInput = (generationRecordId: string, payload: GenerationRe
       sectionKey: String(section.key || `section-${index + 1}`),
       kind: mapAgentProcessSectionKind(section.kind),
       label: String(section.label || `分组 ${index + 1}`),
-      paragraphsJson: Array.isArray(section.paragraphs) ? section.paragraphs : [],
-      taskItemsJson: Array.isArray(section.taskItems) ? section.taskItems : [],
+      paragraphsJson: Array.isArray(section.paragraphs) ? section.paragraphs.filter((paragraph: any) => paragraph != null) : [],
+      taskItemsJson: Array.isArray(section.taskItems) ? section.taskItems.filter((item: any) => item && typeof item === 'object') : [],
       sortOrder: index,
     })),
   }
@@ -477,6 +572,13 @@ export const createGenerationRecord = async (payload: GenerationRecordPayload, c
     throw new Error('提示词不能为空')
   }
 
+  logGenerationRecord('create_generation_record:start', {
+    currentUserId,
+    type: payload.type,
+    done: Boolean(payload.done),
+    hasAgentRun: Boolean(payload.agentRun),
+  })
+
   const outputs = await normalizeOutputs(payload)
 
   const created = await prisma.$transaction(async (tx) => {
@@ -601,11 +703,25 @@ export const createGenerationRecord = async (payload: GenerationRecordPayload, c
     include: buildRecordInclude(),
   })
 
+  logGenerationRecord('create_generation_record:success', {
+    currentUserId,
+    generationRecordId: created.id,
+    outputCount: outputs.length,
+  })
+
   return serializeGenerationRecord(record)
 }
 
 // 更新已有生成记录，采用“主记录更新 + 子表重建”的方式保持结构简单
 export const updateGenerationRecord = async (id: string, payload: GenerationRecordPayload, currentUserId: string) => {
+  logGenerationRecord('update_generation_record:start', {
+    currentUserId,
+    generationRecordId: id,
+    type: payload.type,
+    done: Boolean(payload.done),
+    hasAgentRun: Boolean(payload.agentRun),
+  })
+
   const outputs = await normalizeOutputs(payload)
 
   await prisma.$transaction(async (tx) => {
@@ -781,6 +897,12 @@ export const updateGenerationRecord = async (id: string, payload: GenerationReco
   const record = await prisma.generationRecord.findUniqueOrThrow({
     where: { id },
     include: buildRecordInclude(),
+  })
+
+  logGenerationRecord('update_generation_record:success', {
+    currentUserId,
+    generationRecordId: id,
+    outputCount: outputs.length,
   })
 
   return serializeGenerationRecord(record)

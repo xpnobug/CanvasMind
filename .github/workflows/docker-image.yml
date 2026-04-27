@@ -46,10 +46,8 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest
             type=raw,value=v${{ steps.package-version.outputs.version }},enable=${{ steps.package-version.outputs.version != '' }}
-            type=ref,event=tag
-            type=sha,prefix=sha-
 
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6

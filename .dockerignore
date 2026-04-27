@@ -1,0 +1,28 @@
+# Git 与本地编辑器缓存不参与镜像构建。
+.git
+.gitignore
+.DS_Store
+.idea
+.vscode
+
+# 本地依赖与构建产物使用容器内重新安装/构建。
+node_modules
+dist
+dist-service
+
+# 本地上传与日志文件不应进入镜像上下文。
+uploads
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker 与部署临时产物无需再次打包。
+deploy.tar.gz
+frontend-dist.tar.gz
+server-service.tar.gz
+
+# 文档与临时分析文件不参与生产镜像构建。
+docs
+memory

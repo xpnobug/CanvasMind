@@ -1,4 +1,4 @@
-name: 部署到服务器
+name: 前端静态资源部署
 
 on:
   push:
@@ -11,11 +11,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    name: 构建并部署
+    name: 构建前端并部署 dist
     env:
       VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      PROVIDER_CONFIG_SECRET: ${{ secrets.PROVIDER_CONFIG_SECRET }}
 
     steps:
       - name: 检出代码
@@ -24,74 +22,38 @@ jobs:
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 校验前端环境变量
+        run: |
+          if [ -z "${VITE_API_BASE_URL}" ]; then
+            echo "缺少 GitHub Actions 密钥 VITE_API_BASE_URL"
+            exit 1
+          fi
 
       - name: 安装依赖
         run: npm install --include=dev
 
-      - name: 生成生产环境配置
-        run: |
-          if [ -z "${VITE_API_BASE_URL}" ]; then
-            echo "缺少 GitHub Actions 配置 VITE_API_BASE_URL（Variables 或 Secrets）"
-            exit 1
-          fi
-
-          if [ -z "${DATABASE_URL}" ]; then
-            echo "缺少 GitHub Actions 密钥 DATABASE_URL"
-            exit 1
-          fi
-
-          if [ -z "${PROVIDER_CONFIG_SECRET}" ]; then
-            echo "缺少 GitHub Actions 密钥 PROVIDER_CONFIG_SECRET"
-            exit 1
-          fi
-
-          SERVER_PORT="5409"
-          VITE_PROVIDER_DEFAULT_BASE_URL="https://api.chatfire.site/v1"
-          PROVIDER_DEFAULT_BASE_URL="${VITE_PROVIDER_DEFAULT_BASE_URL}"
-          UPLOADS_DIR="uploads"
-          CORS_ALLOWED_ORIGINS=$(node -e "const value = process.argv[1] || ''; try { console.log(new URL(value).origin) } catch { process.exit(1) }" "${VITE_API_BASE_URL}")
-
-          cat <<EOF > .env.production
-          # 由 GitHub Actions 在部署时生成，请勿在仓库中提交真实生产配置
-          VITE_API_BASE_URL=${VITE_API_BASE_URL}
-          VITE_PROVIDER_DEFAULT_BASE_URL=${VITE_PROVIDER_DEFAULT_BASE_URL}
-          SERVER_PORT=${SERVER_PORT}
-          CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
-          DATABASE_URL=${DATABASE_URL}
-          PROVIDER_CONFIG_SECRET=${PROVIDER_CONFIG_SECRET}
-          PROVIDER_DEFAULT_BASE_URL=${PROVIDER_DEFAULT_BASE_URL}
-          STATIC_DIST_DIR=dist
-          UPLOADS_DIR=${UPLOADS_DIR}
-          EOF
-
-      - name: 构建项目
+      - name: 构建前端静态资源
         env:
           NODE_ENV: production
-        run: npm run build
+        run: npm run build:client
 
-      - name: 创建部署包
-        run: |
-          tar -czf deploy.tar.gz \
-            dist \
-            server \
-            prisma \
-            scripts \
-            package.json \
-            package-lock.json \
-            .env.production
+      - name: 打包 dist 目录
+        run: tar -czf frontend-dist.tar.gz -C dist .
 
-      - name: 通过 SSH 上传文件到服务器
+      - name: 上传 dist 部署包到服务器
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
-          source: "deploy.tar.gz"
+          source: "frontend-dist.tar.gz"
           target: "/tmp/"
 
-      - name: 执行部署脚本
+      - name: 在服务器发布 dist 目录
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -100,53 +62,31 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
             DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
-            APP_LOG_PATH="${DEPLOY_DIR}/app.log"
-            APP_PID_PATH="${DEPLOY_DIR}/app.pid"
+            DIST_DIR="${DEPLOY_DIR}/dist"
 
-            if [ -d "$DEPLOY_DIR" ]; then
-              echo "正在创建备份..."
-              BACKUP_DIR="${DEPLOY_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
-              cp -r "$DEPLOY_DIR" "$BACKUP_DIR"
+            if [ -d "$DIST_DIR" ]; then
+              echo "正在备份当前 dist..."
+              BACKUP_DIR="${DEPLOY_DIR}/dist_backup_$(date +%Y%m%d_%H%M%S)"
+              cp -r "$DIST_DIR" "$BACKUP_DIR"
               echo "备份已创建: $BACKUP_DIR"
             fi
 
-            mkdir -p "$DEPLOY_DIR"
+            echo "正在发布新的 dist..."
+            rm -rf "$DIST_DIR"
+            mkdir -p "$DIST_DIR"
+            tar -xzf /tmp/frontend-dist.tar.gz -C "$DIST_DIR"
+            rm -f /tmp/frontend-dist.tar.gz
 
-            echo "正在部署新版本..."
-            rm -rf "$DEPLOY_DIR/dist" "$DEPLOY_DIR/server" "$DEPLOY_DIR/prisma" "$DEPLOY_DIR/scripts"
-            tar -xzf /tmp/deploy.tar.gz -C "$DEPLOY_DIR"
+            chown -R www-data:www-data "$DIST_DIR"
+            chmod -R 755 "$DIST_DIR"
 
-            rm -f /tmp/deploy.tar.gz
-
-            cd "$DEPLOY_DIR"
-
-            echo "正在安装生产依赖..."
-            npm install
-
-            if [ -f "$APP_PID_PATH" ]; then
-              OLD_PID=$(cat "$APP_PID_PATH")
-              if kill -0 "$OLD_PID" 2>/dev/null; then
-                echo "正在停止旧进程: $OLD_PID"
-                kill "$OLD_PID"
-                sleep 3
-              fi
-              rm -f "$APP_PID_PATH"
-            fi
-
-            echo "正在启动新版本..."
-            nohup npm run start > "$APP_LOG_PATH" 2>&1 &
-            echo $! > "$APP_PID_PATH"
-
-            chown -R www-data:www-data "$DEPLOY_DIR"
-            chmod -R 755 "$DEPLOY_DIR"
-
-            echo "部署完成！"
+            echo "dist 发布完成！"
 
       - name: 发送部署通知
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ 部署成功！"
+            echo "✅ 前端 dist 部署成功！"
           else
-            echo "❌ 部署失败！"
+            echo "❌ 前端 dist 部署失败！"
           fi

@@ -29,8 +29,10 @@ jobs:
 
       - name: 读取 package.json 版本号
         id: package-version
+        shell: bash
         run: |
-          echo "version=$(node -e 'process.stdout.write(require(\"./package.json\").version)')" >> "$GITHUB_OUTPUT"
+          VERSION=$(node -e "process.stdout.write(require('./package.json').version)")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: 登录 Docker Hub
         uses: docker/login-action@v3
@@ -45,7 +47,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-            type=raw,value=v${{ steps.package-version.outputs.version }}
+            type=raw,value=v${{ steps.package-version.outputs.version }},enable=${{ steps.package-version.outputs.version != "" }}
             type=ref,event=tag
             type=sha,prefix=sha-
 

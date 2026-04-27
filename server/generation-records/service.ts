@@ -113,6 +113,16 @@ const logGenerationRecord = (stage: string, detail: Record<string, unknown>) => 
   console.log('[generation-records]', stage, JSON.stringify(detail))
 }
 
+// 统一输出生成记录服务层异常日志，补充具体失败阶段与堆栈。
+const logGenerationRecordError = (stage: string, error: unknown, detail: Record<string, unknown>) => {
+  const err = error as { message?: string; stack?: string }
+  console.error('[generation-records][service-error]', stage, JSON.stringify({
+    ...detail,
+    errorMessage: err?.message || '未知异常',
+    errorStack: err?.stack || null,
+  }))
+}
+
 // 从 Data URL 中解析 MIME 类型与二进制内容。
 const parseDataUrl = (value: string) => {
   const matched = String(value || '').trim().match(/^data:([^;,]+);base64,(.+)$/i)
@@ -579,129 +589,178 @@ export const createGenerationRecord = async (payload: GenerationRecordPayload, c
     hasAgentRun: Boolean(payload.agentRun),
   })
 
-  const outputs = await normalizeOutputs(payload)
-
-  const created = await prisma.$transaction(async (tx) => {
-    const createdRecord = await tx.generationRecord.create({
-      data: {
-        userId: currentUserId,
-        type: mapGenerationType(payload.type),
-        status: mapGenerationStatus(payload),
-        prompt: String(payload.prompt || '').trim(),
-        content: String(payload.content || '').trim() || null,
-        errorMessage: String(payload.error || '').trim() || null,
-        modelLabel: String(payload.model || '').trim() || null,
-        modelKey: String(payload.modelKey || '').trim() || null,
-        ratio: String(payload.ratio || '').trim() || null,
-        resolution: String(payload.resolution || '').trim() || null,
-        durationLabel: String(payload.duration || '').trim() || null,
-        feature: String(payload.feature || '').trim() || null,
-        skill: String(payload.skill || '').trim() || 'general',
-        agentTaskId: String(payload.agentTaskId || '').trim() || null,
-        startedAt: new Date(),
-        finishedAt: payload.done ? new Date() : null,
-      },
+  let outputs: GenerationOutputPayload[] = []
+  try {
+    outputs = await normalizeOutputs(payload)
+  } catch (error) {
+    logGenerationRecordError('create_generation_record:normalize_outputs', error, {
+      currentUserId,
+      type: payload.type,
+      imageCount: Array.isArray(payload.images) ? payload.images.length : 0,
+      outputCount: Array.isArray(payload.outputs) ? payload.outputs.length : 0,
     })
+    throw error
+  }
 
-    const createdOutputs: Array<{
-      id: string
-      outputType: GenerationOutputPayload['outputType']
-      url?: string | null
-      textContent?: string | null
-      mimeType?: string | null
-      width?: number | null
-      height?: number | null
-      durationSeconds?: number | null
-    }> = []
-
-    for (const [index, output] of outputs.entries()) {
-      const createdOutput = await tx.generationOutput.create({
+  let created: { id: string }
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      const createdRecord = await tx.generationRecord.create({
         data: {
-          generationRecordId: createdRecord.id,
-          outputType: mapOutputType(output.outputType),
-          url: output.url || null,
-          textContent: output.textContent || null,
-          mimeType: output.mimeType || null,
-          width: output.width || null,
-          height: output.height || null,
-          durationSeconds: output.durationSeconds || null,
-          sortOrder: Number(output.sortOrder ?? index) || index,
-          metaJson: (output.metaJson as any) || undefined,
-        },
-      })
-
-      createdOutputs.push({
-        id: createdOutput.id,
-        outputType: output.outputType,
-        url: createdOutput.url,
-        textContent: createdOutput.textContent,
-        mimeType: createdOutput.mimeType,
-        width: createdOutput.width,
-        height: createdOutput.height,
-        durationSeconds: createdOutput.durationSeconds,
-      })
-    }
-
-    await syncAssetItemsForRecord(tx, createdRecord.id, currentUserId, payload, createdOutputs)
-
-    const agentRun = toAgentRunCreateInput(createdRecord.id, payload)
-    if (agentRun) {
-      const createdAgentRun = await tx.agentRun.create({
-        data: {
-          generationRecordId: createdRecord.id,
           userId: currentUserId,
-          query: agentRun.query,
-          skill: agentRun.skill,
-          status: agentRun.status as any,
-          agentName: agentRun.agentName,
-          agentAvatarUrl: agentRun.agentAvatarUrl,
-          indicatorStatus: agentRun.indicatorStatus as any,
-          indicatorTitle: agentRun.indicatorTitle,
-          indicatorDescription: agentRun.indicatorDescription,
-          resultTitle: agentRun.resultTitle,
-          resultSummary: agentRun.resultSummary,
-          expectedImageCount: agentRun.expectedImageCount,
-          outputVisible: agentRun.outputVisible,
-          errorMessage: agentRun.errorMessage,
-          stopReason: agentRun.stopReason,
+          type: mapGenerationType(payload.type),
+          status: mapGenerationStatus(payload),
+          prompt: String(payload.prompt || '').trim(),
+          content: String(payload.content || '').trim() || null,
+          errorMessage: String(payload.error || '').trim() || null,
+          modelLabel: String(payload.model || '').trim() || null,
+          modelKey: String(payload.modelKey || '').trim() || null,
+          ratio: String(payload.ratio || '').trim() || null,
+          resolution: String(payload.resolution || '').trim() || null,
+          durationLabel: String(payload.duration || '').trim() || null,
+          feature: String(payload.feature || '').trim() || null,
+          skill: String(payload.skill || '').trim() || 'general',
+          agentTaskId: String(payload.agentTaskId || '').trim() || null,
+          startedAt: new Date(),
+          finishedAt: payload.done ? new Date() : null,
         },
       })
 
-      if (agentRun.steps.length) {
-        await tx.agentRunStep.createMany({
-          data: agentRun.steps.map((step) => ({
-            agentRunId: createdAgentRun.id,
-            stepKey: step.stepKey,
-            title: step.title,
-            status: step.status,
-            description: step.description,
-            sortOrder: step.sortOrder,
-          })),
+      const createdOutputs: Array<{
+        id: string
+        outputType: GenerationOutputPayload['outputType']
+        url?: string | null
+        textContent?: string | null
+        mimeType?: string | null
+        width?: number | null
+        height?: number | null
+        durationSeconds?: number | null
+      }> = []
+
+      for (const [index, output] of outputs.entries()) {
+        const createdOutput = await tx.generationOutput.create({
+          data: {
+            generationRecordId: createdRecord.id,
+            outputType: mapOutputType(output.outputType),
+            url: output.url || null,
+            textContent: output.textContent || null,
+            mimeType: output.mimeType || null,
+            width: output.width || null,
+            height: output.height || null,
+            durationSeconds: output.durationSeconds || null,
+            sortOrder: Number(output.sortOrder ?? index) || index,
+            metaJson: (output.metaJson as any) || undefined,
+          },
+        })
+
+        createdOutputs.push({
+          id: createdOutput.id,
+          outputType: output.outputType,
+          url: createdOutput.url,
+          textContent: createdOutput.textContent,
+          mimeType: createdOutput.mimeType,
+          width: createdOutput.width,
+          height: createdOutput.height,
+          durationSeconds: createdOutput.durationSeconds,
         })
       }
 
-      if (agentRun.processSections.length) {
-        await tx.agentProcessSection.createMany({
-          data: agentRun.processSections.map((section) => ({
-            agentRunId: createdAgentRun.id,
-            sectionKey: section.sectionKey,
-            kind: section.kind,
-            label: section.label,
-            paragraphsJson: section.paragraphsJson,
-            taskItemsJson: section.taskItemsJson,
-            sortOrder: section.sortOrder,
-          })),
+      try {
+        await syncAssetItemsForRecord(tx, createdRecord.id, currentUserId, payload, createdOutputs)
+      } catch (error) {
+        logGenerationRecordError('create_generation_record:sync_asset_items', error, {
+          currentUserId,
+          generationRecordId: createdRecord.id,
+          outputCount: createdOutputs.length,
         })
+        throw error
       }
-    }
 
-    return createdRecord
-  })
+      const agentRun = toAgentRunCreateInput(createdRecord.id, payload)
+      if (agentRun) {
+        try {
+          const createdAgentRun = await tx.agentRun.create({
+            data: {
+              generationRecordId: createdRecord.id,
+              userId: currentUserId,
+              query: agentRun.query,
+              skill: agentRun.skill,
+              status: agentRun.status as any,
+              agentName: agentRun.agentName,
+              agentAvatarUrl: agentRun.agentAvatarUrl,
+              indicatorStatus: agentRun.indicatorStatus as any,
+              indicatorTitle: agentRun.indicatorTitle,
+              indicatorDescription: agentRun.indicatorDescription,
+              resultTitle: agentRun.resultTitle,
+              resultSummary: agentRun.resultSummary,
+              expectedImageCount: agentRun.expectedImageCount,
+              outputVisible: agentRun.outputVisible,
+              errorMessage: agentRun.errorMessage,
+              stopReason: agentRun.stopReason,
+            },
+          })
 
-  const record = await prisma.generationRecord.findUniqueOrThrow({
-    where: { id: created.id },
-    include: buildRecordInclude(),
-  })
+          if (agentRun.steps.length) {
+            await tx.agentRunStep.createMany({
+              data: agentRun.steps.map((step) => ({
+                agentRunId: createdAgentRun.id,
+                stepKey: step.stepKey,
+                title: step.title,
+                status: step.status,
+                description: step.description,
+                sortOrder: step.sortOrder,
+              })),
+            })
+          }
+
+          if (agentRun.processSections.length) {
+            await tx.agentProcessSection.createMany({
+              data: agentRun.processSections.map((section) => ({
+                agentRunId: createdAgentRun.id,
+                sectionKey: section.sectionKey,
+                kind: section.kind,
+                label: section.label,
+                paragraphsJson: section.paragraphsJson,
+                taskItemsJson: section.taskItemsJson,
+                sortOrder: section.sortOrder,
+              })),
+            })
+          }
+        } catch (error) {
+          logGenerationRecordError('create_generation_record:agent_run', error, {
+            currentUserId,
+            generationRecordId: createdRecord.id,
+            stepCount: agentRun.steps.length,
+            processSectionCount: agentRun.processSections.length,
+          })
+          throw error
+        }
+      }
+
+      return createdRecord
+    })
+  } catch (error) {
+    logGenerationRecordError('create_generation_record:transaction', error, {
+      currentUserId,
+      type: payload.type,
+      outputCount: outputs.length,
+    })
+    throw error
+  }
+
+  let record: any
+  try {
+    record = await prisma.generationRecord.findUniqueOrThrow({
+      where: { id: created.id },
+      include: buildRecordInclude(),
+    })
+  } catch (error) {
+    logGenerationRecordError('create_generation_record:reload_record', error, {
+      currentUserId,
+      generationRecordId: created.id,
+    })
+    throw error
+  }
 
   logGenerationRecord('create_generation_record:success', {
     currentUserId,
@@ -722,182 +781,242 @@ export const updateGenerationRecord = async (id: string, payload: GenerationReco
     hasAgentRun: Boolean(payload.agentRun),
   })
 
-  const outputs = await normalizeOutputs(payload)
-
-  await prisma.$transaction(async (tx) => {
-    const existingRecord = await tx.generationRecord.findUnique({
-      where: { id },
-      select: { id: true, userId: true },
+  let outputs: GenerationOutputPayload[] = []
+  try {
+    outputs = await normalizeOutputs(payload)
+  } catch (error) {
+    logGenerationRecordError('update_generation_record:normalize_outputs', error, {
+      currentUserId,
+      generationRecordId: id,
+      type: payload.type,
+      imageCount: Array.isArray(payload.images) ? payload.images.length : 0,
+      outputCount: Array.isArray(payload.outputs) ? payload.outputs.length : 0,
     })
+    throw error
+  }
 
-    if (!existingRecord) {
-      throw new Error('生成记录不存在')
-    }
+  try {
+    await prisma.$transaction(async (tx) => {
+      const existingRecord = await tx.generationRecord.findUnique({
+        where: { id },
+        select: { id: true, userId: true },
+      })
 
-    if (existingRecord.userId !== currentUserId) {
-      throw new Error('无权修改当前生成记录')
-    }
+      if (!existingRecord) {
+        throw new Error('生成记录不存在')
+      }
 
-    await tx.generationRecord.update({
-      where: { id },
-      data: {
-        type: mapGenerationType(payload.type),
-        status: mapGenerationStatus(payload),
-        prompt: String(payload.prompt || '').trim(),
-        content: String(payload.content || '').trim() || null,
-        errorMessage: String(payload.error || '').trim() || null,
-        modelLabel: String(payload.model || '').trim() || null,
-        modelKey: String(payload.modelKey || '').trim() || null,
-        ratio: String(payload.ratio || '').trim() || null,
-        resolution: String(payload.resolution || '').trim() || null,
-        durationLabel: String(payload.duration || '').trim() || null,
-        feature: String(payload.feature || '').trim() || null,
-        skill: String(payload.skill || '').trim() || 'general',
-        agentTaskId: String(payload.agentTaskId || '').trim() || null,
-        finishedAt: payload.done ? new Date() : null,
-      },
-    })
+      if (existingRecord.userId !== currentUserId) {
+        throw new Error('无权修改当前生成记录')
+      }
 
-    await tx.generationOutput.deleteMany({
-      where: { generationRecordId: id },
-    })
-
-    const createdOutputs: Array<{
-      id: string
-      outputType: GenerationOutputPayload['outputType']
-      url?: string | null
-      textContent?: string | null
-      mimeType?: string | null
-      width?: number | null
-      height?: number | null
-      durationSeconds?: number | null
-    }> = []
-
-    for (const [index, output] of outputs.entries()) {
-      const createdOutput = await tx.generationOutput.create({
+      await tx.generationRecord.update({
+        where: { id },
         data: {
-          generationRecordId: id,
-          outputType: mapOutputType(output.outputType),
-          url: output.url || null,
-          textContent: output.textContent || null,
-          mimeType: output.mimeType || null,
-          width: output.width || null,
-          height: output.height || null,
-          durationSeconds: output.durationSeconds || null,
-          sortOrder: Number(output.sortOrder ?? index) || index,
-          metaJson: (output.metaJson as any) || undefined,
+          type: mapGenerationType(payload.type),
+          status: mapGenerationStatus(payload),
+          prompt: String(payload.prompt || '').trim(),
+          content: String(payload.content || '').trim() || null,
+          errorMessage: String(payload.error || '').trim() || null,
+          modelLabel: String(payload.model || '').trim() || null,
+          modelKey: String(payload.modelKey || '').trim() || null,
+          ratio: String(payload.ratio || '').trim() || null,
+          resolution: String(payload.resolution || '').trim() || null,
+          durationLabel: String(payload.duration || '').trim() || null,
+          feature: String(payload.feature || '').trim() || null,
+          skill: String(payload.skill || '').trim() || 'general',
+          agentTaskId: String(payload.agentTaskId || '').trim() || null,
+          finishedAt: payload.done ? new Date() : null,
         },
       })
 
-      createdOutputs.push({
-        id: createdOutput.id,
-        outputType: output.outputType,
-        url: createdOutput.url,
-        textContent: createdOutput.textContent,
-        mimeType: createdOutput.mimeType,
-        width: createdOutput.width,
-        height: createdOutput.height,
-        durationSeconds: createdOutput.durationSeconds,
+      await tx.generationOutput.deleteMany({
+        where: { generationRecordId: id },
       })
-    }
 
-    await syncAssetItemsForRecord(tx, id, currentUserId, payload, createdOutputs)
+      const createdOutputs: Array<{
+        id: string
+        outputType: GenerationOutputPayload['outputType']
+        url?: string | null
+        textContent?: string | null
+        mimeType?: string | null
+        width?: number | null
+        height?: number | null
+        durationSeconds?: number | null
+      }> = []
 
-    const existingAgentRun = await tx.agentRun.findUnique({
-      where: { generationRecordId: id },
-    })
-
-    const agentRun = toAgentRunCreateInput(id, payload)
-    if (!agentRun) {
-      if (existingAgentRun) {
-        await tx.agentRun.delete({
-          where: { id: existingAgentRun.id },
-        })
-      }
-      return
-    }
-
-    const savedAgentRun = existingAgentRun
-      ? await tx.agentRun.update({
-          where: { id: existingAgentRun.id },
-          data: {
-            userId: currentUserId,
-            query: agentRun.query,
-            skill: agentRun.skill,
-            status: agentRun.status as any,
-            agentName: agentRun.agentName,
-            agentAvatarUrl: agentRun.agentAvatarUrl,
-            indicatorStatus: agentRun.indicatorStatus as any,
-            indicatorTitle: agentRun.indicatorTitle,
-            indicatorDescription: agentRun.indicatorDescription,
-            resultTitle: agentRun.resultTitle,
-            resultSummary: agentRun.resultSummary,
-            expectedImageCount: agentRun.expectedImageCount,
-            outputVisible: agentRun.outputVisible,
-            errorMessage: agentRun.errorMessage,
-            stopReason: agentRun.stopReason,
-          },
-        })
-      : await tx.agentRun.create({
+      for (const [index, output] of outputs.entries()) {
+        const createdOutput = await tx.generationOutput.create({
           data: {
             generationRecordId: id,
-            userId: currentUserId,
-            query: agentRun.query,
-            skill: agentRun.skill,
-            status: agentRun.status as any,
-            agentName: agentRun.agentName,
-            agentAvatarUrl: agentRun.agentAvatarUrl,
-            indicatorStatus: agentRun.indicatorStatus as any,
-            indicatorTitle: agentRun.indicatorTitle,
-            indicatorDescription: agentRun.indicatorDescription,
-            resultTitle: agentRun.resultTitle,
-            resultSummary: agentRun.resultSummary,
-            expectedImageCount: agentRun.expectedImageCount,
-            outputVisible: agentRun.outputVisible,
-            errorMessage: agentRun.errorMessage,
-            stopReason: agentRun.stopReason,
+            outputType: mapOutputType(output.outputType),
+            url: output.url || null,
+            textContent: output.textContent || null,
+            mimeType: output.mimeType || null,
+            width: output.width || null,
+            height: output.height || null,
+            durationSeconds: output.durationSeconds || null,
+            sortOrder: Number(output.sortOrder ?? index) || index,
+            metaJson: (output.metaJson as any) || undefined,
           },
         })
 
-    await tx.agentRunStep.deleteMany({
-      where: { agentRunId: savedAgentRun.id },
-    })
-    await tx.agentProcessSection.deleteMany({
-      where: { agentRunId: savedAgentRun.id },
-    })
+        createdOutputs.push({
+          id: createdOutput.id,
+          outputType: output.outputType,
+          url: createdOutput.url,
+          textContent: createdOutput.textContent,
+          mimeType: createdOutput.mimeType,
+          width: createdOutput.width,
+          height: createdOutput.height,
+          durationSeconds: createdOutput.durationSeconds,
+        })
+      }
 
-    if (agentRun.steps.length) {
-      await tx.agentRunStep.createMany({
-        data: agentRun.steps.map((step) => ({
-          agentRunId: savedAgentRun.id,
-          stepKey: step.stepKey,
-          title: step.title,
-          status: step.status,
-          description: step.description,
-          sortOrder: step.sortOrder,
-        })),
+      try {
+        await syncAssetItemsForRecord(tx, id, currentUserId, payload, createdOutputs)
+      } catch (error) {
+        logGenerationRecordError('update_generation_record:sync_asset_items', error, {
+          currentUserId,
+          generationRecordId: id,
+          outputCount: createdOutputs.length,
+        })
+        throw error
+      }
+
+      const existingAgentRun = await tx.agentRun.findUnique({
+        where: { generationRecordId: id },
       })
-    }
 
-    if (agentRun.processSections.length) {
-      await tx.agentProcessSection.createMany({
-        data: agentRun.processSections.map((section) => ({
-          agentRunId: savedAgentRun.id,
-          sectionKey: section.sectionKey,
-          kind: section.kind,
-          label: section.label,
-          paragraphsJson: section.paragraphsJson,
-          taskItemsJson: section.taskItemsJson,
-          sortOrder: section.sortOrder,
-        })),
-      })
-    }
-  })
+      const agentRun = toAgentRunCreateInput(id, payload)
+      if (!agentRun) {
+        if (existingAgentRun) {
+          try {
+            await tx.agentRun.delete({
+              where: { id: existingAgentRun.id },
+            })
+          } catch (error) {
+            logGenerationRecordError('update_generation_record:delete_agent_run', error, {
+              currentUserId,
+              generationRecordId: id,
+              existingAgentRunId: existingAgentRun.id,
+            })
+            throw error
+          }
+        }
+        return
+      }
 
-  const record = await prisma.generationRecord.findUniqueOrThrow({
-    where: { id },
-    include: buildRecordInclude(),
-  })
+      try {
+        const savedAgentRun = existingAgentRun
+          ? await tx.agentRun.update({
+              where: { id: existingAgentRun.id },
+              data: {
+                userId: currentUserId,
+                query: agentRun.query,
+                skill: agentRun.skill,
+                status: agentRun.status as any,
+                agentName: agentRun.agentName,
+                agentAvatarUrl: agentRun.agentAvatarUrl,
+                indicatorStatus: agentRun.indicatorStatus as any,
+                indicatorTitle: agentRun.indicatorTitle,
+                indicatorDescription: agentRun.indicatorDescription,
+                resultTitle: agentRun.resultTitle,
+                resultSummary: agentRun.resultSummary,
+                expectedImageCount: agentRun.expectedImageCount,
+                outputVisible: agentRun.outputVisible,
+                errorMessage: agentRun.errorMessage,
+                stopReason: agentRun.stopReason,
+              },
+            })
+          : await tx.agentRun.create({
+              data: {
+                generationRecordId: id,
+                userId: currentUserId,
+                query: agentRun.query,
+                skill: agentRun.skill,
+                status: agentRun.status as any,
+                agentName: agentRun.agentName,
+                agentAvatarUrl: agentRun.agentAvatarUrl,
+                indicatorStatus: agentRun.indicatorStatus as any,
+                indicatorTitle: agentRun.indicatorTitle,
+                indicatorDescription: agentRun.indicatorDescription,
+                resultTitle: agentRun.resultTitle,
+                resultSummary: agentRun.resultSummary,
+                expectedImageCount: agentRun.expectedImageCount,
+                outputVisible: agentRun.outputVisible,
+                errorMessage: agentRun.errorMessage,
+                stopReason: agentRun.stopReason,
+              },
+            })
+
+        await tx.agentRunStep.deleteMany({
+          where: { agentRunId: savedAgentRun.id },
+        })
+        await tx.agentProcessSection.deleteMany({
+          where: { agentRunId: savedAgentRun.id },
+        })
+
+        if (agentRun.steps.length) {
+          await tx.agentRunStep.createMany({
+            data: agentRun.steps.map((step) => ({
+              agentRunId: savedAgentRun.id,
+              stepKey: step.stepKey,
+              title: step.title,
+              status: step.status,
+              description: step.description,
+              sortOrder: step.sortOrder,
+            })),
+          })
+        }
+
+        if (agentRun.processSections.length) {
+          await tx.agentProcessSection.createMany({
+            data: agentRun.processSections.map((section) => ({
+              agentRunId: savedAgentRun.id,
+              sectionKey: section.sectionKey,
+              kind: section.kind,
+              label: section.label,
+              paragraphsJson: section.paragraphsJson,
+              taskItemsJson: section.taskItemsJson,
+              sortOrder: section.sortOrder,
+            })),
+          })
+        }
+      } catch (error) {
+        logGenerationRecordError('update_generation_record:agent_run', error, {
+          currentUserId,
+          generationRecordId: id,
+          hasExistingAgentRun: Boolean(existingAgentRun),
+          stepCount: agentRun.steps.length,
+          processSectionCount: agentRun.processSections.length,
+        })
+        throw error
+      }
+    })
+  } catch (error) {
+    logGenerationRecordError('update_generation_record:transaction', error, {
+      currentUserId,
+      generationRecordId: id,
+      type: payload.type,
+      outputCount: outputs.length,
+    })
+    throw error
+  }
+
+  let record: any
+  try {
+    record = await prisma.generationRecord.findUniqueOrThrow({
+      where: { id },
+      include: buildRecordInclude(),
+    })
+  } catch (error) {
+    logGenerationRecordError('update_generation_record:reload_record', error, {
+      currentUserId,
+      generationRecordId: id,
+    })
+    throw error
+  }
 
   logGenerationRecord('update_generation_record:success', {
     currentUserId,

@@ -12,7 +12,10 @@ COPY prisma ./prisma
 COPY prisma.config.ts ./
 
 # 安装构建阶段所需依赖。
+# Prisma 7 在 postinstall 的 prisma generate 阶段会读取 DATABASE_URL，
+# 这里提供一个仅用于生成客户端的占位值，避免镜像构建期因缺少真实数据库配置而失败。
 RUN --mount=type=cache,target=/root/.npm \
+  DATABASE_URL='mysql://root:placeholder@127.0.0.1:3306/canana_mind' \
   npm install --include=dev --no-fund --no-audit
 # ==================== Stage 2: 构建产物 ====================
 FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS builder

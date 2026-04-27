@@ -1,5 +1,23 @@
+declare global {
+  interface Window {
+    __CANANA_RUNTIME_CONFIG__?: {
+      VITE_API_BASE_URL?: string
+      VITE_PROVIDER_DEFAULT_BASE_URL?: string
+    }
+  }
+}
+
+const readRuntimeApiBaseUrl = () => {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  return String(window.__CANANA_RUNTIME_CONFIG__?.VITE_API_BASE_URL || '').trim()
+}
+
 // 统一的前端后端接口基址。
-export const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+export const API_BASE_URL = readRuntimeApiBaseUrl().replace(/\/+$/, '')
+  || String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
 
 // 将相对接口路径拼成可请求的完整地址。
 export const buildApiUrl = (path: string) => {

@@ -64,6 +64,24 @@ const readAllowedOrigins = () => {
   return rawOrigins.length ? rawOrigins : DEFAULT_CORS_ALLOWED_ORIGINS
 }
 
+// 读取前端运行时公开配置。
+const readRuntimeClientConfig = () => ({
+  VITE_API_BASE_URL: String(process.env.VITE_API_BASE_URL || '').trim(),
+  VITE_PROVIDER_DEFAULT_BASE_URL: String(process.env.VITE_PROVIDER_DEFAULT_BASE_URL || 'https://api.chatfire.site/v1').trim(),
+})
+
+// 将运行时配置脚本注入到首页 HTML 中。
+const injectRuntimeClientConfig = (html: string) => {
+  const runtimeConfigScript = `<script>window.__CANANA_RUNTIME_CONFIG__=${JSON.stringify(readRuntimeClientConfig())}</script>`
+
+  // 优先注入到 head 尾部，保证主脚本执行前即可读取。
+  if (html.includes('</head>')) {
+    return html.replace('</head>', `${runtimeConfigScript}</head>`)
+  }
+
+  return `${runtimeConfigScript}${html}`
+}
+
 // 判断当前路径是否命中 AI 网关。
 const isAiGatewayPath = (requestPath: string) => {
   // 复用现有路径常量统一判断。
@@ -195,9 +213,13 @@ const handleStaticRequest = async (req: any, res: any, requestPath: string) => {
   // 优先返回精确命中的静态文件。
   if (await isFileExists(candidateFilePath)) {
     const fileBuffer = await fs.readFile(candidateFilePath)
+    const contentType = getContentTypeByFilePath(candidateFilePath)
+    const responseBody = contentType.startsWith('text/html')
+      ? injectRuntimeClientConfig(fileBuffer.toString('utf8'))
+      : fileBuffer
     res.statusCode = 200
-    res.setHeader('Content-Type', getContentTypeByFilePath(candidateFilePath))
-    res.end(fileBuffer)
+    res.setHeader('Content-Type', contentType)
+    res.end(responseBody)
     return true
   }
 
@@ -207,7 +229,7 @@ const handleStaticRequest = async (req: any, res: any, requestPath: string) => {
     const fileBuffer = await fs.readFile(indexFilePath)
     res.statusCode = 200
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.end(fileBuffer)
+    res.end(injectRuntimeClientConfig(fileBuffer.toString('utf8')))
     return true
   }
 

@@ -731,9 +731,9 @@ const previewSystemSettings = computed(() => ({
   },
   globalThemeSettings: {
     brandColors: {
-      primary: '#6f35ff',
-      primaryHover: '#5b28e6',
-      primaryActive: '#4c20c4',
+      primary: '#55b8cc',
+      primaryHover: '#3fa3b8',
+      primaryActive: '#2f8ea3',
       secondary: '#00c2d6',
       accent: '#ff7a59',
       success: '#18b566',

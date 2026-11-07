@@ -1,5 +1,5 @@
 import { buildApiUrl } from './http'
-import { readApiData } from './response'
+import { readApiData, type ApiMessageOptions } from './response'
 
 export interface SystemSiteInfoConfig {
   siteName: string
@@ -542,6 +542,11 @@ export const createDefaultGenerationProgressSettings = (): SystemGenerationProgr
   ],
 })
 
+/**
+ * 默认品牌配色取用户导出 theme-config 主色 #55b8cc；
+ * hover/active 加深，secondary/accent 保留区分色（导出稿整组刷成同色是误填）。
+ * 默认深色壳，避免浅色预览字色被冲白。
+ */
 export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsConfig => ({
   modePolicy: {
     allowUserToggle: true,
@@ -552,8 +557,8 @@ export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsCon
     dark: {
       backgrounds: {
         page: '#0f0f12',
-        surface: '#15161a',
-        sideMenu: '#111218',
+        surface: '#0f0f12',
+        sideMenu: '#0f0f12',
       },
     },
     light: {
@@ -565,9 +570,9 @@ export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsCon
     },
   },
   brandColors: {
-    primary: '#6f35ff',
-    primaryHover: '#5b28e6',
-    primaryActive: '#4c20c4',
+    primary: '#55b8cc',
+    primaryHover: '#3fa3b8',
+    primaryActive: '#2f8ea3',
     secondary: '#00c2d6',
     accent: '#ff7a59',
     success: '#18b566',
@@ -575,7 +580,7 @@ export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsCon
     danger: '#f04438',
   },
   gradients: {
-    primaryGradient: 'linear-gradient(135deg, #6f35ff 0%, #ff7a59 100%)',
+    primaryGradient: 'linear-gradient(135deg, #55b8cc 0%, #2fe3ff 100%)',
     bannerGlow: '#2FE3FF',
   },
   surfaces: {
@@ -679,23 +684,6 @@ export const createDefaultHomeSideMenuSettings = (): SystemHomeSideMenuSettingsC
       sortOrder: 30,
     },
     {
-      key: 'canvas',
-      title: '画布',
-      section: 'center',
-      groupKey: 'group-center-main',
-      iconSource: 'default',
-      iconType: 'system',
-      icon: 'canvas',
-      inactiveIconUrl: '',
-      activeIconUrl: '',
-      visible: true,
-      badgeText: '',
-      badgeTone: 'default',
-      actionType: 'route',
-      actionValue: '/canvas',
-      sortOrder: 40,
-    },
-    {
       key: 'workflow',
       title: '工作流',
       section: 'center',
@@ -710,41 +698,7 @@ export const createDefaultHomeSideMenuSettings = (): SystemHomeSideMenuSettingsC
       badgeTone: 'default',
       actionType: 'route',
       actionValue: '/agentic-assets-canvas',
-      sortOrder: 50,
-    },
-    {
-      key: 'account',
-      title: '账号',
-      section: 'center',
-      groupKey: 'group-center-main',
-      iconSource: 'default',
-      iconType: 'system',
-      icon: 'account',
-      inactiveIconUrl: '',
-      activeIconUrl: '',
-      visible: true,
-      badgeText: '',
-      badgeTone: 'default',
-      actionType: 'route',
-      actionValue: '/account',
-      sortOrder: 60,
-    },
-    {
-      key: 'publish',
-      title: '发布',
-      section: 'center',
-      groupKey: 'group-center-main',
-      iconSource: 'default',
-      iconType: 'system',
-      icon: 'publish',
-      inactiveIconUrl: '',
-      activeIconUrl: '',
-      visible: true,
-      badgeText: '',
-      badgeTone: 'default',
-      actionType: 'route',
-      actionValue: '/publish',
-      sortOrder: 70,
+      sortOrder: 40,
     },
     {
       key: 'marketing',
@@ -1257,10 +1211,15 @@ const normalizeGlobalThemeSettings = (value?: SystemGlobalThemeSettingsConfig | 
   }
 }
 
+/** 前台侧栏不再展示的入口；旧库若仍存这些 key，normalize 时直接丢掉 */
+const REMOVED_HOME_SIDE_MENU_ITEM_KEYS = new Set(['canvas', 'account', 'publish'])
+
 const normalizeHomeSideMenuSettings = (value?: SystemHomeSideMenuSettingsConfig | null): SystemHomeSideMenuSettingsConfig => {
   const defaults = createDefaultHomeSideMenuSettings()
   const incomingGroups = Array.isArray(value?.groups) ? value!.groups : []
-  const incomingItems = Array.isArray(value?.items) ? value!.items : []
+  const incomingItems = Array.isArray(value?.items)
+    ? value!.items.filter(item => !REMOVED_HOME_SIDE_MENU_ITEM_KEYS.has(item.key))
+    : []
 
   const normalizedGroups = defaults.groups.map(defaultGroup => {
     const matchedGroup = incomingGroups.find(group => group.key === defaultGroup.key)
@@ -1451,6 +1410,7 @@ export const saveAdminSystemConfig = async (payload: SystemConfigPayload): Promi
 const saveAdminSystemConfigSection = async (
   path: string,
   payload: Partial<SystemConfigPayload>,
+  messageOptions: ApiMessageOptions = {},
 ): Promise<SystemConfigPayload> => {
   const response = await fetch(buildApiUrl(path), {
     method: 'PUT',
@@ -1461,9 +1421,11 @@ const saveAdminSystemConfigSection = async (
     body: JSON.stringify(payload),
   })
 
+  // 批量保存外观时需关闭分区成功 toast，由外层统一提示
   return normalizeSystemConfigPayload(await readApiData<SystemConfigPayload>(response, {
-    showSuccessMessage: true,
-    showErrorMessage: true,
+    showSuccessMessage: messageOptions.showSuccessMessage ?? true,
+    showErrorMessage: messageOptions.showErrorMessage ?? true,
+    ...messageOptions,
   }))
 }
 
@@ -1477,22 +1439,28 @@ export const saveAdminPolicySettings = (payload: Pick<SystemConfigPayload, 'poli
 
 export const saveAdminLoginSettings = (
   payload: Pick<SystemConfigPayload, 'loginSettings' | 'generationProgressSettings'>,
+  messageOptions?: ApiMessageOptions,
 ): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_LOGIN_API_PATH, payload)
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_LOGIN_API_PATH, payload, messageOptions)
 }
 
-export const saveAdminThemeSettings = (payload: Pick<SystemConfigPayload, 'globalThemeSettings'>): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_THEME_API_PATH, payload)
+export const saveAdminThemeSettings = (
+  payload: Pick<SystemConfigPayload, 'globalThemeSettings'>,
+  messageOptions?: ApiMessageOptions,
+): Promise<SystemConfigPayload> => {
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_THEME_API_PATH, payload, messageOptions)
 }
 
 export const saveAdminHomeLayoutSettings = (
   payload: Pick<SystemConfigPayload, 'homeSideMenuSettings' | 'homeLayoutSettings'>,
+  messageOptions?: ApiMessageOptions,
 ): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_HOME_LAYOUT_API_PATH, payload)
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_HOME_LAYOUT_API_PATH, payload, messageOptions)
 }
 
 export const saveAdminConversationSettings = (
   payload: Pick<SystemConfigPayload, 'conversationSettings' | 'generationProgressSettings'>,
+  messageOptions?: ApiMessageOptions,
 ): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_CONVERSATION_API_PATH, payload)
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_CONVERSATION_API_PATH, payload, messageOptions)
 }

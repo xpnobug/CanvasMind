@@ -61,9 +61,7 @@ const DEFAULT_HOME_SIDE_MENU_ITEMS = [
   { key: 'home', title: '灵感', section: 'center', iconSource: 'default', iconType: 'system', icon: 'home', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/', sortOrder: 10 },
   { key: 'generate', title: '生成', section: 'center', iconSource: 'default', iconType: 'system', icon: 'generate', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'primary', actionType: 'route', actionValue: '/generate', sortOrder: 20 },
   { key: 'asset', title: '资产', section: 'center', iconSource: 'default', iconType: 'system', icon: 'asset', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/asset', sortOrder: 30 },
-  { key: 'workflow', title: '工作流', section: 'center', iconSource: 'default', iconType: 'system', icon: 'workflow', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/workflow', sortOrder: 40 },
-  { key: 'account', title: '账号', section: 'center', iconSource: 'default', iconType: 'system', icon: 'account', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/account', sortOrder: 50 },
-  { key: 'publish', title: '发布', section: 'center', iconSource: 'default', iconType: 'system', icon: 'publish', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/publish', sortOrder: 60 },
+  { key: 'workflow', title: '工作流', section: 'center', iconSource: 'default', iconType: 'system', icon: 'workflow', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/agentic-assets-canvas', sortOrder: 40 },
   { key: 'marketing', title: '福利', section: 'bottom', iconSource: 'default', iconType: 'system', icon: 'marketing', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'dialog', actionValue: 'marketing', sortOrder: 10 },
   { key: 'account-entry', title: '登录', section: 'bottom', iconSource: 'default', iconType: 'system', icon: 'account', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'dialog', actionValue: 'login', sortOrder: 20 },
   { key: 'notification', title: '通知', section: 'bottom', iconSource: 'default', iconType: 'system', icon: 'notification', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'none', actionValue: '', sortOrder: 30 },
@@ -243,6 +241,7 @@ const createDefaultSystemConfig = () => ({
       deleteCascadeRecords: true,
     },
   },
+  // 默认品牌配色：主色 #55b8cc（导出稿），默认深色壳
   globalThemeSettings: {
     modePolicy: {
       allowUserToggle: true,
@@ -253,8 +252,8 @@ const createDefaultSystemConfig = () => ({
       dark: {
         backgrounds: {
           page: '#0f0f12',
-          surface: '#15161a',
-          sideMenu: '#111218',
+          surface: '#0f0f12',
+          sideMenu: '#0f0f12',
         },
       },
       light: {
@@ -266,9 +265,9 @@ const createDefaultSystemConfig = () => ({
       },
     },
     brandColors: {
-      primary: '#6f35ff',
-      primaryHover: '#5b28e6',
-      primaryActive: '#4c20c4',
+      primary: '#55b8cc',
+      primaryHover: '#3fa3b8',
+      primaryActive: '#2f8ea3',
       secondary: '#00c2d6',
       accent: '#ff7a59',
       success: '#18b566',
@@ -276,7 +275,7 @@ const createDefaultSystemConfig = () => ({
       danger: '#f04438',
     },
     gradients: {
-      primaryGradient: 'linear-gradient(135deg, #6f35ff 0%, #ff7a59 100%)',
+      primaryGradient: 'linear-gradient(135deg, #55b8cc 0%, #2fe3ff 100%)',
       bannerGlow: '#2FE3FF',
     },
     surfaces: {
@@ -380,6 +379,9 @@ const normalizeHexColor = (value: unknown, fallback: string) => {
   return fallback
 }
 
+/** 侧栏已下线入口；读写配置时剔除，避免旧库残留继续露出 */
+const REMOVED_HOME_SIDE_MENU_ITEM_KEYS = new Set(['canvas', 'account', 'publish'])
+
 const normalizeSideMenuItems = (value: unknown, fallback: Array<Record<string, any>>) => {
   if (!Array.isArray(value)) {
     return fallback.map(item => ({ ...item }))
@@ -389,7 +391,7 @@ const normalizeSideMenuItems = (value: unknown, fallback: Array<Record<string, a
     .map((item, index) => {
       const nextItem = readPlainObject(item)
       const key = String(nextItem.key || '').trim()
-      if (!key) {
+      if (!key || REMOVED_HOME_SIDE_MENU_ITEM_KEYS.has(key)) {
         return null
       }
 

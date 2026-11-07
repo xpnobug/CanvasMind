@@ -86,7 +86,26 @@ const dismissed = ref(false)
 const nowMs = ref(Date.now())
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
-const storageKey = computed(() => `${DISMISSED_KEY_PREFIX}${props.config.bannerId || 'default'}`)
+/**
+ * 关闭态按「横幅身份 + 文案指纹」隔离。
+ * 后台改文案 / 重新开启后应用新 key，避免一次关闭后永久不再展示。
+ */
+const storageKey = computed(() => {
+  const id = String(props.config.bannerId || 'default').trim() || 'default'
+  const fingerprint = [
+    props.config.contentText,
+    props.config.tagText,
+    props.config.ctaText,
+    props.config.tagMode,
+    props.config.countdownEndAt,
+  ].map(part => String(part || '').trim()).join('|')
+  let hash = 0
+  for (let i = 0; i < fingerprint.length; i += 1) {
+    hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i)
+    hash |= 0
+  }
+  return `${DISMISSED_KEY_PREFIX}${id}:${hash.toString(36)}`
+})
 const isActionable = computed(() => {
   if (props.config.actionType === 'dialog') {
     return !!String(props.config.actionValue || '').trim()
@@ -95,13 +114,11 @@ const isActionable = computed(() => {
     && !!String(props.config.actionValue || '').trim()
 })
 const shouldRender = computed(() => {
-  // 与 Pro 一致：必须有主文案；后台预览可放宽，避免编辑态空白块看不到壳
-  const hasContent = !!String(props.config.contentText || '').trim()
-    || (props.previewReadonly && (
-      !!String(props.config.tagText || '').trim()
-      || props.config.tagMode === 'countdown'
-      || props.config.ctaEnabled === true
-    ))
+  // 与 Pro 一致：必须有主文案（预览层用 \u00A0 占位时 trim 后仍为空，故对预览放宽空白字符）
+  const raw = String(props.config.contentText || '')
+  const hasContent = props.previewReadonly
+    ? !!raw
+    : !!raw.trim()
   return props.config.enabled
     && hasContent
     && (!dismissed.value || props.previewReadonly)

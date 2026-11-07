@@ -170,6 +170,9 @@ export const useAdminAppearanceSettingsStore = () => {
     }
   }
 
+  // 一次保存会并行写 theme / layout / conversation 三个分区；关掉分区 toast，只留 saveAndNotify 一条
+  const silentSaveOptions = { showSuccessMessage: false } as const
+
   const save = async () => {
     if (!canManageSystemAppearanceSettings()) {
       throw new Error('当前账号没有系统设置权限')
@@ -178,17 +181,16 @@ export const useAdminAppearanceSettingsStore = () => {
     saving.value = true
     try {
       const payload = clonePayload(draft.value)
-      // 公开版 section API 尚无静默成功开关；外层再给统一成功提示
       const [themeResult, layoutResult, conversationResult] = await Promise.all([
-        saveAdminThemeSettings({ globalThemeSettings: payload.globalThemeSettings }),
+        saveAdminThemeSettings({ globalThemeSettings: payload.globalThemeSettings }, silentSaveOptions),
         saveAdminHomeLayoutSettings({
           homeSideMenuSettings: payload.homeSideMenuSettings,
           homeLayoutSettings: payload.homeLayoutSettings,
-        }),
+        }, silentSaveOptions),
         saveAdminConversationSettings({
           conversationSettings: payload.conversationSettings,
           generationProgressSettings: payload.generationProgressSettings,
-        }),
+        }, silentSaveOptions),
       ])
       assignDraftFromConfig({
         ...payload,

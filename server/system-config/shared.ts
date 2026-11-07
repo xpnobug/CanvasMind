@@ -72,6 +72,17 @@ export interface SystemConversationEntryWorkbenchPayload {
   suffixText?: string
   showModeSelectorInTitle?: boolean
   showSubmitButton?: boolean
+  headerBackgroundEnabled?: boolean
+  headerBackgroundImageUrl?: string
+  headerBackgroundImageUrlLight?: string
+  headerBackgroundGlowColor?: string
+  headerBackgroundGlowColorLight?: string
+  headerBackgroundGlowOpacity?: number
+  headerBackgroundGlowOpacityLight?: number
+  headerBackgroundGlowEnabled?: boolean
+  headerBackgroundStarEnabled?: boolean
+  headerBackgroundStarColor?: string
+  headerBackgroundStarColorLight?: string
 }
 
 export interface SystemConversationEntryInputPayload {
@@ -222,6 +233,32 @@ export interface SystemHomeLayoutHeaderPayload {
   showBanner?: boolean
 }
 
+/** 首页顶通横幅（壳层；默认关闭） */
+export interface SystemHomeTopBannerPayload {
+  enabled?: boolean
+  bannerId?: string
+  height?: number
+  tagMode?: 'static' | 'countdown' | string
+  tagText?: string
+  tagTextColor?: string
+  tagBackgroundColor?: string
+  countdownEndAt?: string
+  showTagIcon?: boolean
+  contentText?: string
+  contentTextColor?: string
+  ctaEnabled?: boolean
+  ctaText?: string
+  ctaTextColor?: string
+  ctaBorderColor?: string
+  ctaBackgroundColor?: string
+  actionType?: 'route' | 'url' | 'dialog' | 'none' | string
+  actionValue?: string
+  gradientStart?: string
+  gradientEnd?: string
+  backgroundImageUrl?: string
+  showClose?: boolean
+}
+
 export interface SystemHomeBannerItemPayload {
   key?: string
   title?: string
@@ -246,6 +283,7 @@ export interface SystemHomeBannerSettingsPayload {
 
 export interface SystemHomeLayoutSettingsPayload {
   header?: SystemHomeLayoutHeaderPayload
+  topBanner?: SystemHomeTopBannerPayload
   banner?: SystemHomeBannerSettingsPayload
 }
 

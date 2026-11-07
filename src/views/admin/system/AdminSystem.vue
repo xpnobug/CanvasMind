@@ -158,6 +158,7 @@ import {
   createDefaultHomeLayoutSettings,
   createDefaultHomeSideMenuSettings,
   getAdminSystemConfig,
+  normalizeHomeTopBannerSettings,
   saveAdminHomeLayoutSettings,
   saveAdminPolicySettings,
   saveAdminSiteInfoSettings,
@@ -321,7 +322,26 @@ const applySystemForm = (value: SystemConfigPayload) => {
   systemForm.conversationSettings = JSON.parse(JSON.stringify(value.conversationSettings || createDefaultConversationSettings()))
   systemForm.globalThemeSettings = JSON.parse(JSON.stringify(value.globalThemeSettings || createDefaultGlobalThemeSettings()))
   systemForm.homeSideMenuSettings = JSON.parse(JSON.stringify(value.homeSideMenuSettings || createDefaultHomeSideMenuSettings()))
-  systemForm.homeLayoutSettings = JSON.parse(JSON.stringify(value.homeLayoutSettings || createDefaultHomeLayoutSettings()))
+  {
+    const layoutDefaults = createDefaultHomeLayoutSettings()
+    const layout = JSON.parse(JSON.stringify(value.homeLayoutSettings || layoutDefaults)) as typeof layoutDefaults
+    systemForm.homeLayoutSettings = {
+      ...layoutDefaults,
+      ...layout,
+      header: {
+        ...layoutDefaults.header,
+        ...(layout.header || {}),
+      },
+      topBanner: normalizeHomeTopBannerSettings(layout.topBanner),
+      banner: {
+        ...layoutDefaults.banner,
+        ...(layout.banner || {}),
+        items: Array.isArray(layout.banner?.items) && layout.banner.items.length
+          ? layout.banner.items
+          : layoutDefaults.banner.items.map(item => ({ ...item })),
+      },
+    }
+  }
 }
 
 const loadPageData = async () => {

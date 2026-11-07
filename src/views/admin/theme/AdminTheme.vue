@@ -1,5 +1,9 @@
 <template>
-  <AdminPageContainer title="主题配置" description="" hide-intro>
+  <AdminPageContainer
+    title="主题配置"
+    description="预览并编辑首页布局；品牌色 / 背景 / 圆角请点顶栏「外观设置」。"
+    hide-intro
+  >
     <div class="admin-theme-page">
       <div v-if="loading" class="admin-empty admin-theme-loading">正在加载主题配置...</div>
 
@@ -9,14 +13,14 @@
             :preview-theme-class="previewThemeClass"
             :loading="loading"
             :saving="saving"
-            @reset="resetThemeSettings"
-            @save="handleSave"
+            @export="themeExportDialogVisible = true"
+            @import="themeImportDialogVisible = true"
+            @open-settings="openAppearanceSettings"
+            @save="handleSaveAppearance"
+            @reset="appearanceStore.resetThemeDefaults"
           />
 
-          <div
-            class="admin-theme-shell__body"
-            :class="{ 'is-config-collapsed': configPanelCollapsed }"
-          >
+          <div class="admin-theme-shell__body">
             <AdminThemeWorkbenchPreview
               :system-form="systemForm"
               :preview-theme-class="previewThemeClass"
@@ -35,61 +39,14 @@
               :preview-secondary-banners="previewSecondaryBanners"
               :toggle-menu-visibility="toggleMenuItemVisible"
               :apply-menu-reorder="handlePreviewMenuReorder"
-              :active-theme-section-id="activeThemeSectionId"
-              :active-theme-field-id="activeThemeFieldId"
+              :active-theme-section-id="null"
+              :active-theme-field-id="null"
               @menu-action="handlePreviewMenuAction"
               @menu-reorder="handlePreviewMenuReorder"
               @content-block-action="handleWorkbenchContentAction"
               @banner-item-action="handleBannerItemAction"
               @banner-item-reorder="handleBannerItemReorder"
-              @theme-section-select="handleThemeSectionSelect"
             />
-
-            <AdminThemeConfigRail
-              :collapsed="configPanelCollapsed"
-              :active-tab="activeConfigTab"
-              :tabs="configTabs"
-              @toggle="configPanelCollapsed = !configPanelCollapsed"
-              @update:active-tab="activeConfigTab = $event"
-            >
-              <template #theme>
-                <AdminThemeThemePanel
-                  :system-form="systemForm"
-                  :section-ids="sectionIds"
-                  :section-summaries="sectionSummaries"
-                  :action-color-fields="actionColorFields"
-                  :accent-color-fields="accentColorFields"
-                  :status-color-fields="statusColorFields"
-                  :active-preview-section="activeThemeSectionId"
-                  :active-preview-field="activeThemeFieldId"
-                  @scroll-to-section="scrollToSection"
-                  @preview-focus-change="activeThemeSectionId = $event"
-                  @preview-field-change="activeThemeFieldId = $event"
-                />
-              </template>
-
-              <template #layout>
-                <AdminThemeLayoutPanel
-                  :form="systemForm"
-                  :home-banner-preset-options="HOME_BANNER_PRESET_OPTIONS"
-                  :home-side-menu-base-status="homeSideMenuBaseStatus"
-                  :home-side-menu-items-status="homeSideMenuItemsStatus"
-                  :home-banner-status="homeBannerStatus"
-                  :on-submit="handleSave"
-                  :scroll-to-layout-section="scrollToLayoutSection"
-                  :get-menu-section-label="getMenuSectionLabel"
-                  :move-home-side-menu-item="moveHomeSideMenuItem"
-                  :trigger-menu-icon-upload="triggerMenuIconUpload"
-                  :handle-menu-icon-file-change="handleMenuIconFileChange"
-                  :clear-menu-icon="clearMenuIcon"
-                  :append-home-banner-item="appendHomeBannerItem"
-                  :move-home-banner-item="moveHomeBannerItem"
-                  :remove-home-banner-item="removeHomeBannerItem"
-                  :active-layout-section="activeLayoutSection"
-                  :external-action="externalLayoutAction"
-                />
-              </template>
-            </AdminThemeConfigRail>
           </div>
         </section>
       </template>
@@ -119,6 +76,13 @@
       @submit="submitWorkbenchContentDialog"
     />
 
+    <AdminThemeTopBannerDialog
+      :visible="topBannerDialogVisible"
+      :draft="editingTopBannerDraft"
+      @close="closeTopBannerDialog"
+      @submit="submitTopBannerDialog"
+    />
+
     <AdminThemeBannerItemDialog
       :visible="bannerItemDialogVisible"
       :draft="editingBannerItemDraft"
@@ -126,193 +90,180 @@
       @close="closeBannerItemDialog"
       @submit="submitBannerItemDialog"
     />
+
+    <AdminThemeExportDialog
+      v-model:visible="themeExportDialogVisible"
+      :source="themeTransferSource"
+    />
+
+    <AdminThemeImportDialog
+      v-model:visible="themeImportDialogVisible"
+      :source="themeTransferSource"
+      :apply-import="applyThemeImport"
+    />
   </AdminPageContainer>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, reactive, ref } from 'vue'
+defineOptions({ name: 'AdminTheme' })
+
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
-import AdminThemeConfigRail from '@/views/admin/theme/components/AdminThemeConfigRail.vue'
 import AdminThemeWorkbenchPreview from '@/views/admin/theme/components/AdminThemeWorkbenchPreview.vue'
 import AdminThemeWorkbenchTopbar from '@/views/admin/theme/components/AdminThemeWorkbenchTopbar.vue'
-// Tab 切换显示的 Panel：未激活时不下载
-const AdminThemeThemePanel = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeThemePanel.vue'))
-const AdminThemeLayoutPanel = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeLayoutPanel.vue'))
-// 弹窗：v-model 控制显隐，初始不可见，改为异步组件零成本
-const AdminThemeBannerItemDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeBannerItemDialog.vue'))
-const AdminThemeDeleteMenuItemDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeDeleteMenuItemDialog.vue'))
-const AdminThemeMenuItemDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeMenuItemDialog.vue'))
-const AdminThemeWorkbenchContentDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeWorkbenchContentDialog.vue'))
 import type { ThemeBannerItemDialogDraft } from '@/views/admin/theme/components/AdminThemeBannerItemDialog.vue'
+import type { ThemeTopBannerDialogDraft } from '@/views/admin/theme/components/AdminThemeTopBannerDialog.vue'
 import type { WorkbenchContentDialogDraft } from '@/views/admin/theme/components/AdminThemeWorkbenchContentDialog.vue'
+import type { WorkbenchContentBlockKey } from '@/views/admin/theme/components/AdminThemeWorkbenchPreview.vue'
+import type { WorkbenchMenuActionKey } from '@/views/admin/theme/components/AdminThemeWorkbenchItemActions.vue'
 import { useAdminThemeMenuEditor } from '@/views/admin/theme/useAdminThemeMenuEditor'
 import { HOME_BANNER_PRESET_OPTIONS, useAdminLayoutConfig } from '@/views/admin/system/useAdminLayoutConfig'
-import {
-  createDefaultConversationSettings,
-  createDefaultGenerationProgressSettings,
-  createDefaultGlobalThemeSettings,
-  createDefaultHomeLayoutSettings,
-  createDefaultHomeSideMenuSettings,
-  getAdminSystemConfig,
-  saveAdminHomeLayoutSettings,
-  saveAdminThemeSettings,
-  type SystemConfigPayload,
-} from '@/api/system-config'
-import { useSystemSettingsStore } from '@/stores/system-settings'
+import { normalizeHomeTopBannerSettings } from '@/api/system-config'
+import { useAdminAppearanceSettingsStore } from '@/stores/admin-appearance-settings'
 import { useThemePreferenceStore } from '@/stores/theme-preference'
-import type { WorkbenchMenuActionKey } from '@/views/admin/theme/components/AdminThemeWorkbenchItemActions.vue'
-import type { WorkbenchContentBlockKey } from '@/views/admin/theme/components/AdminThemeFrontHomeHeaderPreview.vue'
+import type { ThemeConfigTransferSource } from '@/views/admin/theme/theme-config-transfer'
+import './components/admin-theme-ops-dialog.css'
 
-const loading = ref(false)
-const saving = ref(false)
-const configPanelCollapsed = ref(false)
-const activeConfigTab = ref<'theme' | 'layout'>('theme')
-const activeThemeSectionId = ref<string | null>(null)
-const activeThemeFieldId = ref<string | null>(null)
-const activeLayoutSection = ref<'layout-side-menu' | 'layout-home-banner'>('layout-side-menu')
-const workbenchContentDialogVisible = ref(false)
-const editingWorkbenchContentDraft = ref<WorkbenchContentDialogDraft | null>(null)
-const bannerItemDialogVisible = ref(false)
-const editingBannerItemDraft = ref<ThemeBannerItemDialogDraft | null>(null)
-const externalLayoutAction = ref<
-  | { type: 'edit-menu-item', menuKey: string, stamp: number }
-  | { type: 'add-menu-item', stamp: number }
-  | { type: 'edit-banner-item', bannerKey: string, stamp: number }
-  | { type: 'add-banner-item', stamp: number }
-  | null
->(null)
-const { applyPublicSystemSettings } = useSystemSettingsStore()
+const AdminThemeBannerItemDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeBannerItemDialog.vue'))
+const AdminThemeDeleteMenuItemDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeDeleteMenuItemDialog.vue'))
+const AdminThemeExportDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeExportDialog.vue'))
+const AdminThemeImportDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeImportDialog.vue'))
+const AdminThemeMenuItemDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeMenuItemDialog.vue'))
+const AdminThemeTopBannerDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeTopBannerDialog.vue'))
+const AdminThemeWorkbenchContentDialog = defineAsyncComponent(() => import('@/views/admin/theme/components/AdminThemeWorkbenchContentDialog.vue'))
+
+const appearanceStore = useAdminAppearanceSettingsStore()
+const systemForm = appearanceStore.draft
+const loading = appearanceStore.loading
+const saving = appearanceStore.saving
 const themeStore = useThemePreferenceStore()
 
-const configTabs = [
-  { key: 'theme', label: '主题配置' },
-  { key: 'layout', label: '布局配置' },
-] as const
+// 进入主题页时兜底补齐 topBanner，避免旧草稿缺字段导致预览首屏崩溃
+appearanceStore.ensureHomeLayoutNormalized()
 
-const sectionIds = {
-  banner: 'theme-section-banner',
-  background: 'theme-section-background',
-  action: 'theme-section-action',
-  status: 'theme-section-status',
-  surface: 'theme-section-surface',
-  mode: 'theme-section-mode',
-} as const
+const themeExportDialogVisible = ref(false)
+const themeImportDialogVisible = ref(false)
+const workbenchContentDialogVisible = ref(false)
+const editingWorkbenchContentDraft = ref<WorkbenchContentDialogDraft | null>(null)
+const topBannerDialogVisible = ref(false)
+const editingTopBannerDraft = ref<ThemeTopBannerDialogDraft | null>(null)
+const bannerItemDialogVisible = ref(false)
+const editingBannerItemDraft = ref<ThemeBannerItemDialogDraft | null>(null)
 
-const sectionSummaries = [
-  { key: sectionIds.banner, title: '首页 Banner', desc: '控制前台首页首屏气质', areas: ['首页首屏', 'Banner 卡片'] },
-  { key: sectionIds.background, title: '页面背景', desc: '控制页面底色、输入面板与侧栏底色', areas: ['首页大背景', '输入面板', '左侧导航'] },
-  { key: sectionIds.action, title: '按钮与交互', desc: '控制主按钮、次按钮和标签', areas: ['首页 CTA', '创作按钮', '工作流操作'] },
-  { key: sectionIds.status, title: '状态反馈', desc: '控制成功、处理中和失败状态', areas: ['成功反馈', '处理中', '失败提醒'] },
-  { key: sectionIds.surface, title: '页面骨架', desc: '控制内容宽度与卡片圆角', areas: ['首页内容区', '创作卡片'] },
-  { key: sectionIds.mode, title: '主题模式', desc: '控制前台深浅主题策略', areas: ['全局主题', '用户切换'] },
-] as const
+const themeTransferSource = computed<ThemeConfigTransferSource>(() => ({
+  globalThemeSettings: systemForm.value.globalThemeSettings,
+  homeSideMenuSettings: systemForm.value.homeSideMenuSettings,
+  homeLayoutSettings: systemForm.value.homeLayoutSettings,
+  conversationSettings: systemForm.value.conversationSettings,
+  generationProgressSettings: systemForm.value.generationProgressSettings,
+}))
 
-const actionColorFields = [
-  { key: 'primary', label: '主按钮默认色', placeholder: '#6f35ff' },
-  { key: 'primaryHover', label: '主按钮悬浮色', placeholder: '#5b28e6' },
-  { key: 'primaryActive', label: '主按钮按下色', placeholder: '#4c20c4' },
-] as const
-
-const accentColorFields = [
-  { key: 'secondary', label: '辅助色', placeholder: '#00c2d6' },
-  { key: 'accent', label: '强调色', placeholder: '#ff7a59' },
-] as const
-
-const statusColorFields = [
-  { key: 'success', label: '成功色', placeholder: '#18b566' },
-  { key: 'warning', label: '警告色', placeholder: '#ffb020' },
-  { key: 'danger', label: '错误色', placeholder: '#f04438' },
-] as const
-
-const createDefaultSystemForm = (): SystemConfigPayload => ({
-  siteInfo: {
-    siteName: 'Canana',
-    siteDescription: '',
-    siteLogoUrl: '',
-    siteIconUrl: '',
-    icpText: '',
-    icpLink: '',
-    copyrightText: '',
-  },
-  policySettings: {
-    agreementRequired: true,
-    agreementTextPrefix: '已阅读并同意',
-    userAgreementTitle: '用户服务协议',
-    userAgreementUrl: '',
-    userAgreementContent: '',
-    privacyPolicyTitle: '隐私政策',
-    privacyPolicyUrl: '',
-    privacyPolicyContent: '',
-    aiNoticeTitle: 'AI功能使用须知',
-    aiNoticeUrl: '',
-    aiNoticeContent: '',
-  },
-  loginSettings: {
-    welcomeTitle: '欢迎登录',
-    welcomeSubtitle: '',
-  },
-  generationProgressSettings: createDefaultGenerationProgressSettings(),
-  conversationSettings: createDefaultConversationSettings(),
-  globalThemeSettings: createDefaultGlobalThemeSettings(),
-  homeSideMenuSettings: createDefaultHomeSideMenuSettings(),
-  homeLayoutSettings: createDefaultHomeLayoutSettings(),
-})
-
-const cloneSystemForm = (payload: SystemConfigPayload): SystemConfigPayload => JSON.parse(JSON.stringify(payload))
-
-const systemForm = reactive<SystemConfigPayload>(createDefaultSystemForm())
-
-const assignSystemForm = (payload?: SystemConfigPayload | null) => {
-  Object.assign(systemForm, cloneSystemForm(payload || createDefaultSystemForm()))
+const applyThemeImport = async (next: ThemeConfigTransferSource) => {
+  appearanceStore.applyThemeImportSections(next)
+  try {
+    await appearanceStore.save()
+  } catch {
+    ElMessage.error('保存失败，请稍后重试')
+    throw new Error('save failed')
+  }
 }
 
+const previewThemeClass = computed<'is-dark' | 'is-light'>(() => {
+  const mode = systemForm.value.globalThemeSettings.modePolicy.defaultMode
+  if (mode === 'dark') {
+    return 'is-dark'
+  }
+  if (mode === 'system') {
+    return themeStore.currentTheme.value === 'dark' ? 'is-dark' : 'is-light'
+  }
+  return 'is-light'
+})
+
+const previewResolvedBackgrounds = computed(() => {
+  return previewThemeClass.value === 'is-light'
+    ? systemForm.value.globalThemeSettings.themes.light.backgrounds
+    : systemForm.value.globalThemeSettings.themes.dark.backgrounds
+})
+
+const previewThemeVars = computed(() => {
+  const theme = systemForm.value.globalThemeSettings
+  const backgrounds = previewResolvedBackgrounds.value
+  const isLight = previewThemeClass.value === 'is-light'
+
+  return {
+    '--bg-body': backgrounds.page,
+    '--bg-surface': backgrounds.surface,
+    '--bg-float': backgrounds.surface,
+    '--bg-muted': isLight ? '#f1f2f3' : '#1c1e22',
+    '--theme-page-background': backgrounds.page,
+    '--theme-surface-background': backgrounds.surface,
+    '--theme-side-menu-background': backgrounds.sideMenu,
+    '--brand-main-default': theme.brandColors.primary,
+    '--brand-main-hover': theme.brandColors.primaryHover,
+    '--brand-main-pressed': theme.brandColors.primaryActive,
+    '--brand-secondary-default': theme.brandColors.secondary,
+    '--brand-accent-default': theme.brandColors.accent,
+    '--brand-success-default': theme.brandColors.success,
+    '--brand-warning-default': theme.brandColors.warning,
+    '--brand-danger-default': theme.brandColors.danger,
+    '--theme-banner-glow': theme.gradients.bannerGlow,
+  }
+})
+
 const previewBannerCardStyle = computed(() => ({
-  background: systemForm.globalThemeSettings.gradients.primaryGradient,
-  borderRadius: `${systemForm.globalThemeSettings.surfaces.cardRadius}px`,
+  background: systemForm.value.globalThemeSettings.gradients.primaryGradient,
+  borderRadius: `${systemForm.value.globalThemeSettings.surfaces.cardRadius}px`,
 }))
 
 const previewBannerGlowStyle = computed(() => ({
-  background: systemForm.globalThemeSettings.gradients.bannerGlow,
+  background: systemForm.value.globalThemeSettings.gradients.bannerGlow,
 }))
 
 const previewSurfaceFrameStyle = computed(() => ({
-  maxWidth: `${Math.min(systemForm.globalThemeSettings.surfaces.contentMaxWidth, 560)}px`,
+  maxWidth: `${Math.min(systemForm.value.globalThemeSettings.surfaces.contentMaxWidth, 560)}px`,
 }))
 
 const previewSurfaceCardStyle = computed(() => ({
-  borderRadius: `${systemForm.globalThemeSettings.surfaces.cardRadius}px`,
+  borderRadius: `${systemForm.value.globalThemeSettings.surfaces.cardRadius}px`,
 }))
 
 const previewSidebarWidth = computed(() => {
-  if (systemForm.homeSideMenuSettings.layoutMode === 'top') {
+  if (systemForm.value.homeSideMenuSettings.layoutMode === 'top') {
     return 560
   }
-  const collapsedWidth = Math.max(systemForm.homeSideMenuSettings.collapsedWidth, 0)
-  const horizontalPadding = 16
-  return Math.min(Math.max(collapsedWidth + horizontalPadding, 92), 120)
+  const collapsedWidth = Math.max(systemForm.value.homeSideMenuSettings.collapsedWidth, 0)
+  return Math.min(Math.max(collapsedWidth + 16, 92), 120)
 })
 
 const previewSidebarStyle = computed(() => ({
-  width: systemForm.homeSideMenuSettings.layoutMode === 'top' ? '100%' : `${previewSidebarWidth.value}px`,
-  height: systemForm.homeSideMenuSettings.layoutMode === 'top' ? '112px' : '100%',
+  width: systemForm.value.homeSideMenuSettings.layoutMode === 'top' ? '100%' : `${previewSidebarWidth.value}px`,
+  height: systemForm.value.homeSideMenuSettings.layoutMode === 'top' ? '112px' : '100%',
 }))
 
 const previewFrontstageBodyStyle = computed(() => {
-  if (systemForm.homeSideMenuSettings.layoutMode === 'top') {
+  if (systemForm.value.homeSideMenuSettings.layoutMode === 'top') {
     return {
       gridTemplateColumns: 'minmax(0, 1fr)',
-      gridTemplateRows: systemForm.homeSideMenuSettings.enabled ? '128px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+      gridTemplateRows: systemForm.value.homeSideMenuSettings.enabled ? '128px minmax(0, 1fr)' : 'minmax(0, 1fr)',
     }
   }
   return {
-    gridTemplateColumns: systemForm.homeSideMenuSettings.enabled
+    gridTemplateColumns: systemForm.value.homeSideMenuSettings.enabled
       ? `${previewSidebarWidth.value}px minmax(0, 1fr)`
       : 'minmax(0, 1fr)',
   }
 })
 
+const {
+  normalizedMenuGroups,
+  reorderMenuItemWithinGroup,
+  handleMenuIconFileChange,
+  clearMenuIcon,
+} = useAdminLayoutConfig(systemForm.value)
+
 const previewSortedMenuItems = computed(() => {
-  return [...systemForm.homeSideMenuSettings.items]
+  return [...systemForm.value.homeSideMenuSettings.items]
     .sort((current, next) => current.sortOrder - next.sortOrder)
 })
 
@@ -341,7 +292,7 @@ const previewActiveMenuKey = computed(() => {
 })
 
 const previewVisibleBanners = computed(() => {
-  return [...systemForm.homeLayoutSettings.banner.items]
+  return [...systemForm.value.homeLayoutSettings.banner.items]
     .filter(item => item.visible)
     .sort((current, next) => current.sortOrder - next.sortOrder)
 })
@@ -349,78 +300,33 @@ const previewVisibleBanners = computed(() => {
 const previewPrimaryBanner = computed(() => previewVisibleBanners.value[0] || null)
 const previewSecondaryBanners = computed(() => previewVisibleBanners.value.slice(1, 4))
 
-const previewThemeClass = computed(() => {
-  return themeStore.currentTheme.value === 'light' ? 'is-light' : 'is-dark'
+const {
+  menuItemDialogVisible,
+  editingMenuItemDraft,
+  deleteMenuItemDialogVisible,
+  deleteMenuItemLabel,
+  openMenuItemDialog,
+  closeMenuItemDialog,
+  submitMenuItemDialog,
+  triggerEditingMenuIconUpload,
+  handleEditingMenuIconFileChange,
+  clearEditingMenuIcon,
+  toggleMenuItemVisible,
+  requestRemoveMenuItem,
+  closeDeleteMenuItemDialog,
+  confirmRemoveMenuItem,
+} = useAdminThemeMenuEditor({
+  getItems: () => systemForm.value.homeSideMenuSettings.items,
+  handleMenuIconFileChange,
+  clearMenuIcon,
 })
 
-const previewResolvedBackgrounds = computed(() => {
-  return themeStore.currentTheme.value === 'light'
-    ? systemForm.globalThemeSettings.themes.light.backgrounds
-    : systemForm.globalThemeSettings.themes.dark.backgrounds
-})
-
-const previewThemeVars = computed(() => {
-  const theme = systemForm.globalThemeSettings
-  const backgrounds = previewResolvedBackgrounds.value
-  const isLight = themeStore.currentTheme.value === 'light'
-
-  return {
-    '--bg-body': backgrounds.page,
-    '--bg-surface': backgrounds.surface,
-    '--bg-float': backgrounds.surface,
-    '--bg-muted': isLight ? '#f1f2f3' : '#1c1e22',
-    '--theme-page-background': backgrounds.page,
-    '--theme-surface-background': backgrounds.surface,
-    '--theme-side-menu-background': backgrounds.sideMenu,
-    '--bg-dropdown-menu': isLight ? '#ffffff' : '#1c1e22',
-    '--canvas-bg': isLight ? '#f1f2f3' : backgrounds.page,
-    '--canvas-sidebar-bg': isLight ? backgrounds.sideMenu : backgrounds.page,
-    '--text-primary': isLight ? '#0f1419' : '#f5fbff',
-    '--text-secondary': isLight ? '#536471' : '#e0f5ff99',
-    '--text-tertiary': isLight ? '#72808a' : '#e0f5ff7a',
-    '--text-placeholder': isLight ? '#536471a3' : '#e0f5ff59',
-    '--text-disabled': isLight ? '#5364715c' : '#e0f5ff33',
-    '--text-link': '#3686ad',
-    '--stroke-primary': isLight ? '#00000012' : '#ccddff1a',
-    '--stroke-secondary': isLight ? '#0000000d' : '#ccddff0f',
-    '--stroke-tertiary': isLight ? '#00000008' : '#ccddff14',
-    '--line-divider': isLight ? 'rgba(15, 20, 25, 0.12)' : 'rgba(224, 245, 255, 0.16)',
-    '--bg-block-primary-default': isLight ? '#0000000d' : '#ccddff14',
-    '--bg-block-primary-hover': isLight ? '#00000012' : '#ccddff1f',
-    '--bg-block-primary-pressed': isLight ? '#0000001a' : '#ccddff29',
-    '--bg-block-secondary-default': isLight ? '#00000008' : '#ccddff0a',
-    '--bg-block-secondary-hover': isLight ? '#0000000d' : '#ccddff14',
-    '--bg-block-secondary-pressed': isLight ? '#00000012' : '#ccddff1f',
-    '--component-input-bg': isLight ? '#ffffffeb' : '#202127b8',
-    '--component-input-bg-tab': isLight ? '#0000000d' : '#0000004d',
-    '--component-secondary-button-bg-default': isLight ? '#0000000d' : '#ccddff14',
-    '--component-secondary-button-bg-hover': isLight ? '#00000012' : '#ccddff1f',
-    '--component-secondary-button-bg-pressed': isLight ? '#0000001a' : '#ccddff29',
-    '--component-secondary-button-text-default': isLight ? '#0f1419' : '#f5fbff',
-    '--component-secondary-button-text-disabled': isLight ? '#a5acb8' : '#e0f5ff33',
-    '--brand-main-default': theme.brandColors.primary,
-    '--brand-main-hover': theme.brandColors.primaryHover,
-    '--brand-main-pressed': theme.brandColors.primaryActive,
-    '--brand-secondary-default': theme.brandColors.secondary,
-    '--brand-accent-default': theme.brandColors.accent,
-    '--brand-success-default': theme.brandColors.success,
-    '--brand-warning-default': theme.brandColors.warning,
-    '--brand-danger-default': theme.brandColors.danger,
-    '--theme-banner-glow': theme.gradients.bannerGlow,
-  }
-})
-
-const scrollToSection = async (id: string) => {
-  activeConfigTab.value = 'theme'
-  configPanelCollapsed.value = false
-  activeThemeSectionId.value = id
-  await nextTick()
-  const el = document.getElementById(id)
-  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const openAppearanceSettings = () => {
+  void appearanceStore.openDrawer()
 }
 
-const handleThemeSectionSelect = (sectionId: string) => {
-  void scrollToSection(sectionId)
+const handleSaveAppearance = () => {
+  void appearanceStore.saveAndNotify()
 }
 
 const handlePreviewMenuAction = ({ action, menuKey }: { action: WorkbenchMenuActionKey, menuKey: string }) => {
@@ -428,12 +334,10 @@ const handlePreviewMenuAction = ({ action, menuKey }: { action: WorkbenchMenuAct
     openMenuItemDialog(menuKey)
     return
   }
-
   if (action === 'visible') {
     toggleMenuItemVisible(menuKey)
     return
   }
-
   if (action === 'delete') {
     requestRemoveMenuItem(menuKey)
   }
@@ -444,7 +348,7 @@ const handlePreviewMenuReorder = ({ sourceMenuKey, targetMenuKey, position }: {
   targetMenuKey: string
   position: 'before' | 'after'
 }) => {
-  const items = systemForm.homeSideMenuSettings.items
+  const items = systemForm.value.homeSideMenuSettings.items
   const sourceItem = items.find(item => item.key === sourceMenuKey)
   const targetItem = items.find(item => item.key === targetMenuKey)
   if (!sourceItem || !targetItem) return
@@ -453,28 +357,31 @@ const handlePreviewMenuReorder = ({ sourceMenuKey, targetMenuKey, position }: {
   reorderMenuItemWithinGroup(sourceItem.groupKey, sourceMenuKey, targetMenuKey, position)
 }
 
-const createWorkbenchContentDraft = (blockKey: WorkbenchContentBlockKey): WorkbenchContentDialogDraft => {
-  const workbench = systemForm.conversationSettings.entryDisplay.workbench
-  const input = systemForm.conversationSettings.entryDisplay.input
-  const header = systemForm.homeLayoutSettings.header
-  const draftMap: Record<WorkbenchContentBlockKey, string> = {
+const createWorkbenchContentDraft = (blockKey: Exclude<WorkbenchContentBlockKey, 'top-banner'>): WorkbenchContentDialogDraft => {
+  const workbench = systemForm.value.conversationSettings.entryDisplay.workbench
+  const input = systemForm.value.conversationSettings.entryDisplay.input
+  const header = systemForm.value.homeLayoutSettings.header
+  const draftMap: Record<Exclude<WorkbenchContentBlockKey, 'top-banner'>, string> = {
+    'header-background': '创作区背景',
     title: '标题块',
     generator: '创作面板块',
     'task-indicator': '任务状态块',
     banner: 'Banner 块',
   }
 
+  const enabledByBlock: Record<Exclude<WorkbenchContentBlockKey, 'top-banner'>, boolean> = {
+    'header-background': workbench.headerBackgroundEnabled !== false,
+    title: workbench.titleEnabled !== false,
+    generator: workbench.generatorEnabled !== false,
+    'task-indicator': workbench.taskIndicatorEnabled !== false,
+    banner: workbench.bannerEnabled !== false,
+  }
+
   return {
     blockKey,
     label: draftMap[blockKey],
     settings: {
-      enabled: blockKey === 'title'
-        ? workbench.titleEnabled !== false
-        : blockKey === 'generator'
-          ? workbench.generatorEnabled !== false
-          : blockKey === 'task-indicator'
-            ? workbench.taskIndicatorEnabled !== false
-            : workbench.bannerEnabled !== false,
+      enabled: enabledByBlock[blockKey],
       showSiteName: workbench.showSiteName !== false,
       prefixText: String(workbench.prefixText || ''),
       suffixText: String(workbench.suffixText || ''),
@@ -482,11 +389,21 @@ const createWorkbenchContentDraft = (blockKey: WorkbenchContentBlockKey): Workbe
       showSubmitButton: workbench.showSubmitButton !== false,
       showSiteDescription: header.showSiteDescription !== false,
       placeholder: String(input.placeholder || ''),
+      headerBackgroundImageUrl: String(workbench.headerBackgroundImageUrl || ''),
+      headerBackgroundImageUrlLight: String(workbench.headerBackgroundImageUrlLight || ''),
+      headerBackgroundGlowColor: String(workbench.headerBackgroundGlowColor || ''),
+      headerBackgroundGlowColorLight: String(workbench.headerBackgroundGlowColorLight || ''),
+      headerBackgroundGlowOpacity: Number(workbench.headerBackgroundGlowOpacity),
+      headerBackgroundGlowOpacityLight: Number(workbench.headerBackgroundGlowOpacityLight),
+      headerBackgroundGlowEnabled: workbench.headerBackgroundGlowEnabled !== false,
+      headerBackgroundStarEnabled: workbench.headerBackgroundStarEnabled !== false,
+      headerBackgroundStarColor: String(workbench.headerBackgroundStarColor || ''),
+      headerBackgroundStarColorLight: String(workbench.headerBackgroundStarColorLight || ''),
     },
   }
 }
 
-const openWorkbenchContentDialog = (blockKey: WorkbenchContentBlockKey) => {
+const openWorkbenchContentDialog = (blockKey: Exclude<WorkbenchContentBlockKey, 'top-banner'>) => {
   editingWorkbenchContentDraft.value = createWorkbenchContentDraft(blockKey)
   workbenchContentDialogVisible.value = true
 }
@@ -500,8 +417,22 @@ const submitWorkbenchContentDialog = () => {
   const draft = editingWorkbenchContentDraft.value
   if (!draft) return
 
-  const workbench = systemForm.conversationSettings.entryDisplay.workbench
-  const header = systemForm.homeLayoutSettings.header
+  const workbench = systemForm.value.conversationSettings.entryDisplay.workbench
+  const header = systemForm.value.homeLayoutSettings.header
+
+  if (draft.blockKey === 'header-background') {
+    workbench.headerBackgroundEnabled = draft.settings.enabled
+    workbench.headerBackgroundImageUrl = String(draft.settings.headerBackgroundImageUrl || '').trim()
+    workbench.headerBackgroundImageUrlLight = String(draft.settings.headerBackgroundImageUrlLight || '').trim()
+    workbench.headerBackgroundGlowColor = String(draft.settings.headerBackgroundGlowColor || '').trim()
+    workbench.headerBackgroundGlowColorLight = String(draft.settings.headerBackgroundGlowColorLight || '').trim()
+    workbench.headerBackgroundGlowOpacity = Number(draft.settings.headerBackgroundGlowOpacity)
+    workbench.headerBackgroundGlowOpacityLight = Number(draft.settings.headerBackgroundGlowOpacityLight)
+    workbench.headerBackgroundGlowEnabled = draft.settings.headerBackgroundGlowEnabled !== false
+    workbench.headerBackgroundStarEnabled = draft.settings.headerBackgroundStarEnabled !== false
+    workbench.headerBackgroundStarColor = String(draft.settings.headerBackgroundStarColor || '').trim()
+    workbench.headerBackgroundStarColorLight = String(draft.settings.headerBackgroundStarColorLight || '').trim()
+  }
 
   if (draft.blockKey === 'title') {
     Object.assign(workbench, {
@@ -518,7 +449,7 @@ const submitWorkbenchContentDialog = () => {
       generatorEnabled: draft.settings.enabled,
       showSubmitButton: draft.settings.showSubmitButton,
     })
-    Object.assign(systemForm.conversationSettings.entryDisplay.input, {
+    Object.assign(systemForm.value.conversationSettings.entryDisplay.input, {
       placeholder: draft.settings.placeholder,
     })
     header.showSiteDescription = draft.settings.showSiteDescription
@@ -538,8 +469,26 @@ const submitWorkbenchContentDialog = () => {
 }
 
 const toggleWorkbenchContentVisibility = (blockKey: WorkbenchContentBlockKey) => {
-  const workbench = systemForm.conversationSettings.entryDisplay.workbench
-  const header = systemForm.homeLayoutSettings.header
+  const workbench = systemForm.value.conversationSettings.entryDisplay.workbench
+  const header = systemForm.value.homeLayoutSettings.header
+  const topBanner = systemForm.value.homeLayoutSettings.topBanner
+
+  if (blockKey === 'top-banner') {
+    // 旧配置可能缺 topBanner，先补默认再翻转开关；开启时若无主文案则写入占位，否则前台不渲染
+    const next = normalizeHomeTopBannerSettings(topBanner)
+    const enabling = next.enabled !== true
+    next.enabled = enabling
+    if (enabling && !String(next.contentText || '').trim()) {
+      next.contentText = String(next.tagText || '').trim() || '活动进行中，点击了解详情'
+    }
+    systemForm.value.homeLayoutSettings.topBanner = next
+    return
+  }
+
+  if (blockKey === 'header-background') {
+    workbench.headerBackgroundEnabled = workbench.headerBackgroundEnabled === false
+    return
+  }
 
   if (blockKey === 'title') {
     workbench.titleEnabled = !(workbench.titleEnabled !== false)
@@ -563,7 +512,44 @@ const toggleWorkbenchContentVisibility = (blockKey: WorkbenchContentBlockKey) =>
   header.showBanner = nextVisible
 }
 
+const openTopBannerDialog = () => {
+  editingTopBannerDraft.value = normalizeHomeTopBannerSettings(systemForm.value.homeLayoutSettings.topBanner)
+  topBannerDialogVisible.value = true
+}
+
+const closeTopBannerDialog = () => {
+  topBannerDialogVisible.value = false
+  editingTopBannerDraft.value = null
+}
+
+const submitTopBannerDialog = async () => {
+  if (!editingTopBannerDraft.value) {
+    closeTopBannerDialog()
+    return
+  }
+
+  const next = normalizeHomeTopBannerSettings(editingTopBannerDraft.value)
+  // 开启却无主文案时前台不展示；保存前补占位，避免「后台开了、前台空白」
+  if (next.enabled && !String(next.contentText || '').trim()) {
+    next.contentText = String(next.tagText || '').trim() || '活动进行中，点击了解详情'
+  }
+  systemForm.value.homeLayoutSettings.topBanner = next
+  closeTopBannerDialog()
+  await appearanceStore.saveAndNotify()
+}
+
 const handleWorkbenchContentAction = ({ action, blockKey }: { action: WorkbenchMenuActionKey, blockKey: WorkbenchContentBlockKey }) => {
+  if (blockKey === 'top-banner') {
+    if (action === 'edit') {
+      openTopBannerDialog()
+      return
+    }
+    if (action === 'visible') {
+      toggleWorkbenchContentVisibility(blockKey)
+    }
+    return
+  }
+
   if (action === 'edit') {
     openWorkbenchContentDialog(blockKey)
     return
@@ -575,29 +561,17 @@ const handleWorkbenchContentAction = ({ action, blockKey }: { action: WorkbenchM
 }
 
 const normalizeBannerSortOrder = () => {
-  systemForm.homeLayoutSettings.banner.items = systemForm.homeLayoutSettings.banner.items.map((item, index) => ({
+  systemForm.value.homeLayoutSettings.banner.items = systemForm.value.homeLayoutSettings.banner.items.map((item, index) => ({
     ...item,
     sortOrder: (index + 1) * 10,
   }))
 }
 
-const createBannerItemDraft = (bannerKey: string): ThemeBannerItemDialogDraft | null => {
-  const items = systemForm.homeLayoutSettings.banner.items
-  const index = items.findIndex(item => item.key === bannerKey)
-  if (index < 0) {
-    return null
-  }
-
-  return {
-    ...items[index],
-    index,
-  }
-}
-
 const openBannerItemDialog = (bannerKey: string) => {
-  const draft = createBannerItemDraft(bannerKey)
-  if (!draft) return
-  editingBannerItemDraft.value = draft
+  const items = systemForm.value.homeLayoutSettings.banner.items
+  const index = items.findIndex(item => item.key === bannerKey)
+  if (index < 0) return
+  editingBannerItemDraft.value = { ...items[index], index }
   bannerItemDialogVisible.value = true
 }
 
@@ -610,13 +584,13 @@ const submitBannerItemDialog = () => {
   const draft = editingBannerItemDraft.value
   if (!draft) return
 
-  const currentItem = systemForm.homeLayoutSettings.banner.items[draft.index]
+  const currentItem = systemForm.value.homeLayoutSettings.banner.items[draft.index]
   if (!currentItem) {
     closeBannerItemDialog()
     return
   }
 
-  systemForm.homeLayoutSettings.banner.items.splice(draft.index, 1, {
+  systemForm.value.homeLayoutSettings.banner.items.splice(draft.index, 1, {
     ...currentItem,
     key: String(draft.key || currentItem.key).trim() || currentItem.key,
     title: String(draft.title || '').trim(),
@@ -638,13 +612,23 @@ const submitBannerItemDialog = () => {
 }
 
 const toggleBannerItemVisible = (bannerKey: string) => {
-  const item = systemForm.homeLayoutSettings.banner.items.find(current => current.key === bannerKey)
+  const item = systemForm.value.homeLayoutSettings.banner.items.find(current => current.key === bannerKey)
   if (!item) return
   item.visible = item.visible === false
 }
 
-const reorderBannerItem = (payload: { sourceBannerKey: string, targetBannerKey: string, position: 'before' | 'after' }) => {
-  const items = [...systemForm.homeLayoutSettings.banner.items]
+const handleBannerItemAction = ({ action, bannerKey }: { action: WorkbenchMenuActionKey, bannerKey: string }) => {
+  if (action === 'edit') {
+    openBannerItemDialog(bannerKey)
+    return
+  }
+  if (action === 'visible') {
+    toggleBannerItemVisible(bannerKey)
+  }
+}
+
+const handleBannerItemReorder = (payload: { sourceBannerKey: string, targetBannerKey: string, position: 'before' | 'after' }) => {
+  const items = [...systemForm.value.homeLayoutSettings.banner.items]
   const sourceIndex = items.findIndex(item => item.key === payload.sourceBannerKey)
   const targetIndex = items.findIndex(item => item.key === payload.targetBannerKey)
   if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) {
@@ -655,98 +639,12 @@ const reorderBannerItem = (payload: { sourceBannerKey: string, targetBannerKey: 
   const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
   const insertIndex = payload.position === 'after' ? adjustedTargetIndex + 1 : adjustedTargetIndex
   items.splice(insertIndex, 0, currentItem)
-  systemForm.homeLayoutSettings.banner.items = items
+  systemForm.value.homeLayoutSettings.banner.items = items
   normalizeBannerSortOrder()
 }
 
-const handleBannerItemAction = ({ action, bannerKey }: { action: WorkbenchMenuActionKey, bannerKey: string }) => {
-  if (action === 'edit') {
-    openBannerItemDialog(bannerKey)
-    return
-  }
-
-  if (action === 'visible') {
-    toggleBannerItemVisible(bannerKey)
-  }
-}
-
-const handleBannerItemReorder = (payload: { sourceBannerKey: string, targetBannerKey: string, position: 'before' | 'after' }) => {
-  reorderBannerItem(payload)
-}
-
-const {
-  homeSideMenuBaseStatus,
-  homeSideMenuItemsStatus,
-  homeBannerStatus,
-  normalizedMenuGroups,
-  getMenuSectionLabel,
-  scrollToLayoutSection,
-  moveHomeSideMenuItem,
-  reorderMenuItemWithinGroup,
-  triggerMenuIconUpload,
-  handleMenuIconFileChange,
-  clearMenuIcon,
-  appendHomeBannerItem,
-  moveHomeBannerItem,
-  removeHomeBannerItem,
-} = useAdminLayoutConfig(systemForm)
-
-const {
-  menuItemDialogVisible,
-  editingMenuItemDraft,
-  deleteMenuItemDialogVisible,
-  deleteMenuItemLabel,
-  openMenuItemDialog,
-  closeMenuItemDialog,
-  submitMenuItemDialog,
-  triggerEditingMenuIconUpload,
-  handleEditingMenuIconFileChange,
-  clearEditingMenuIcon,
-  toggleMenuItemVisible,
-  requestRemoveMenuItem,
-  closeDeleteMenuItemDialog,
-  confirmRemoveMenuItem,
-} = useAdminThemeMenuEditor({
-  getItems: () => systemForm.homeSideMenuSettings.items,
-  handleMenuIconFileChange,
-  clearMenuIcon,
-})
-
-const loadThemeSettings = async () => {
-  loading.value = true
-  try {
-    const result = await getAdminSystemConfig()
-    assignSystemForm(result || createDefaultSystemForm())
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleSave = async () => {
-  saving.value = true
-  try {
-    const payload = cloneSystemForm(systemForm)
-    const result = activeConfigTab.value === 'layout'
-      ? await saveAdminHomeLayoutSettings({
-        homeSideMenuSettings: payload.homeSideMenuSettings,
-        homeLayoutSettings: payload.homeLayoutSettings,
-      })
-      : await saveAdminThemeSettings({
-        globalThemeSettings: payload.globalThemeSettings,
-      })
-    assignSystemForm(result || systemForm)
-    applyPublicSystemSettings(result || systemForm)
-  } finally {
-    saving.value = false
-  }
-}
-
-const resetThemeSettings = () => {
-  systemForm.globalThemeSettings = createDefaultGlobalThemeSettings()
-}
-
 onMounted(() => {
-  void loadThemeSettings()
+  void appearanceStore.load(true)
 })
 </script>
 
@@ -775,19 +673,8 @@ onMounted(() => {
 
 .admin-theme-shell__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   height: 100%;
-  transition: grid-template-columns 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.admin-theme-shell__body.is-config-collapsed {
-  grid-template-columns: minmax(0, 1fr) 76px;
-}
-
-@media (max-width: 1280px) {
-  .admin-theme-shell__body {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

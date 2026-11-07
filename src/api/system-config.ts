@@ -72,6 +72,20 @@ export interface ConversationEntryDisplayConfig {
     suffixText: string
     showModeSelectorInTitle: boolean
     showSubmitButton: boolean
+    /** 创作区顶背景（蓝晕/星点/可选背景图）显隐 */
+    headerBackgroundEnabled: boolean
+    /** 暗色主题整页背景图 URL */
+    headerBackgroundImageUrl: string
+    /** 亮色主题整页背景图 URL；空则亮色不回退暗色图 */
+    headerBackgroundImageUrlLight: string
+    headerBackgroundGlowColor: string
+    headerBackgroundGlowColorLight: string
+    headerBackgroundGlowOpacity: number
+    headerBackgroundGlowOpacityLight: number
+    headerBackgroundGlowEnabled: boolean
+    headerBackgroundStarEnabled: boolean
+    headerBackgroundStarColor: string
+    headerBackgroundStarColorLight: string
   }
   input: {
     placeholder: string
@@ -243,6 +257,74 @@ export interface SystemHomeLayoutHeaderConfig {
   showBanner: boolean
 }
 
+/** 创作区顶背景默认值（对齐 Pro 壳层 SVG / CSS） */
+export const DEFAULT_HEADER_BACKGROUND_GLOW_COLOR = '#008EE5'
+export const DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY = 0.28
+export const DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY_LIGHT = 0.12
+export const DEFAULT_HEADER_BACKGROUND_STAR_COLOR = '#FFFFFF0A'
+export const DEFAULT_HEADER_BACKGROUND_STAR_COLOR_LIGHT = '#00000008'
+
+/** 钳制光晕透明度到 0–1 */
+export const clampHeaderBackgroundOpacity = (value: unknown, fallback: number): number => {
+  const raw = Number(value)
+  if (!Number.isFinite(raw)) {
+    return fallback
+  }
+  return Math.max(0, Math.min(1, Math.round(raw * 100) / 100))
+}
+
+/** 允许 #RGB / #RRGGBB / #RRGGBBAA；非法回退 */
+export const normalizeCssHexColor = (value: unknown, fallback: string): string => {
+  const raw = String(value ?? '').trim()
+  const fallbackColor = String(fallback || '').trim() || '#000000'
+  if (!raw) return fallbackColor
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) {
+    return raw.toUpperCase()
+  }
+  return fallbackColor
+}
+
+const normalizeOpaqueHexColor = (value: unknown, fallback: string): string => {
+  const normalized = normalizeCssHexColor(value, fallback)
+  // 顶栏横幅色值用 6 位；带 alpha 时截断，避免渐变异常
+  if (/^#[0-9A-F]{8}$/i.test(normalized)) {
+    return `#${normalized.slice(1, 7)}`
+  }
+  if (/^#[0-9A-F]{3}$/i.test(normalized)) {
+    const r = normalized[1]
+    const g = normalized[2]
+    const b = normalized[3]
+    return `#${r}${r}${g}${g}${b}${b}`
+  }
+  return normalized
+}
+
+/** 首页顶部横幅配置（壳层；默认关闭，后端无字段时前端 normalize 兜底） */
+export interface SystemHomeTopBannerConfig {
+  enabled: boolean
+  bannerId: string
+  height: number
+  tagMode: 'static' | 'countdown'
+  tagText: string
+  tagTextColor: string
+  tagBackgroundColor: string
+  countdownEndAt: string
+  showTagIcon: boolean
+  contentText: string
+  contentTextColor: string
+  ctaEnabled: boolean
+  ctaText: string
+  ctaTextColor: string
+  ctaBorderColor: string
+  ctaBackgroundColor: string
+  actionType: 'route' | 'url' | 'dialog' | 'none'
+  actionValue: string
+  gradientStart: string
+  gradientEnd: string
+  backgroundImageUrl: string
+  showClose: boolean
+}
+
 export interface SystemHomeBannerItemConfig {
   key: string
   title: string
@@ -262,9 +344,76 @@ export interface SystemHomeBannerItemConfig {
 
 export interface SystemHomeLayoutSettingsConfig {
   header: SystemHomeLayoutHeaderConfig
+  /** 顶栏横幅；公开包可能缺字段，读取时请走 normalizeHomeTopBannerSettings */
+  topBanner: SystemHomeTopBannerConfig
   banner: {
     enabled: boolean
     items: SystemHomeBannerItemConfig[]
+  }
+}
+
+/** 顶栏横幅默认关闭，保证壳层可渲染且无配置时不展示 */
+export const createDefaultHomeTopBannerSettings = (): SystemHomeTopBannerConfig => ({
+  enabled: false,
+  bannerId: 'home-top-banner-default',
+  height: 0,
+  tagMode: 'static',
+  tagText: '',
+  tagTextColor: '#FFFFFF',
+  tagBackgroundColor: '#F50095',
+  countdownEndAt: '',
+  showTagIcon: true,
+  contentText: '',
+  contentTextColor: '#000000',
+  ctaEnabled: false,
+  ctaText: '',
+  ctaTextColor: '#000000',
+  ctaBorderColor: '#000000',
+  ctaBackgroundColor: '',
+  actionType: 'none',
+  actionValue: '',
+  gradientStart: '#D5F5FF',
+  gradientEnd: '#D5F5FF',
+  backgroundImageUrl: '',
+  showClose: true,
+})
+
+export const normalizeHomeTopBannerSettings = (
+  value?: Partial<SystemHomeTopBannerConfig> | null,
+): SystemHomeTopBannerConfig => {
+  const defaults = createDefaultHomeTopBannerSettings()
+  const next = value || {}
+  const actionType = (
+    next.actionType === 'route'
+    || next.actionType === 'url'
+    || next.actionType === 'dialog'
+  ) ? next.actionType : 'none'
+
+  return {
+    enabled: next.enabled === true,
+    bannerId: String(next.bannerId ?? defaults.bannerId).trim() || defaults.bannerId,
+    height: Number.isFinite(Number(next.height))
+      ? Math.max(0, Math.min(96, Number(next.height)))
+      : defaults.height,
+    tagMode: next.tagMode === 'countdown' ? 'countdown' : 'static',
+    tagText: String(next.tagText ?? '').trim(),
+    tagTextColor: normalizeOpaqueHexColor(next.tagTextColor, defaults.tagTextColor),
+    tagBackgroundColor: normalizeOpaqueHexColor(next.tagBackgroundColor, defaults.tagBackgroundColor),
+    countdownEndAt: String(next.countdownEndAt ?? '').trim(),
+    showTagIcon: next.showTagIcon !== false,
+    contentText: String(next.contentText ?? '').trim(),
+    contentTextColor: normalizeOpaqueHexColor(next.contentTextColor, defaults.contentTextColor),
+    ctaEnabled: next.ctaEnabled === true,
+    ctaText: String(next.ctaText ?? '').trim(),
+    ctaTextColor: normalizeOpaqueHexColor(next.ctaTextColor, defaults.ctaTextColor),
+    ctaBorderColor: normalizeOpaqueHexColor(next.ctaBorderColor, defaults.ctaBorderColor),
+    ctaBackgroundColor: String(next.ctaBackgroundColor ?? '').trim(),
+    actionType,
+    actionValue: String(next.actionValue ?? '').trim(),
+    gradientStart: normalizeOpaqueHexColor(next.gradientStart, defaults.gradientStart),
+    gradientEnd: normalizeOpaqueHexColor(next.gradientEnd, defaults.gradientEnd),
+    backgroundImageUrl: String(next.backgroundImageUrl ?? '').trim(),
+    showClose: next.showClose !== false,
   }
 }
 
@@ -316,6 +465,17 @@ export const createDefaultConversationSettings = (): ConversationSettingsConfig 
       suffixText: '即刻造梦！',
       showModeSelectorInTitle: true,
       showSubmitButton: true,
+      headerBackgroundEnabled: true,
+      headerBackgroundImageUrl: '',
+      headerBackgroundImageUrlLight: '',
+      headerBackgroundGlowColor: DEFAULT_HEADER_BACKGROUND_GLOW_COLOR,
+      headerBackgroundGlowColorLight: DEFAULT_HEADER_BACKGROUND_GLOW_COLOR,
+      headerBackgroundGlowOpacity: DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY,
+      headerBackgroundGlowOpacityLight: DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY_LIGHT,
+      headerBackgroundGlowEnabled: true,
+      headerBackgroundStarEnabled: true,
+      headerBackgroundStarColor: DEFAULT_HEADER_BACKGROUND_STAR_COLOR,
+      headerBackgroundStarColorLight: DEFAULT_HEADER_BACKGROUND_STAR_COLOR_LIGHT,
     },
     input: {
       placeholder: '说说今天想做点什么',
@@ -697,6 +857,7 @@ export const createDefaultHomeLayoutSettings = (): SystemHomeLayoutSettingsConfi
     showTaskIndicator: true,
     showBanner: true,
   },
+  topBanner: createDefaultHomeTopBannerSettings(),
   banner: {
     enabled: true,
     items: [
@@ -1139,11 +1300,35 @@ const normalizeHomeSideMenuSettings = (value?: SystemHomeSideMenuSettingsConfig 
   }
 }
 
+/** 与 Pro 对齐：公开/后台包统一补齐 topBanner，避免前台读到半残布局 */
+export const normalizeHomeLayoutSettings = (
+  value?: SystemHomeLayoutSettingsConfig | null,
+): SystemHomeLayoutSettingsConfig => {
+  const defaults = createDefaultHomeLayoutSettings()
+  return {
+    ...defaults,
+    ...(value || {}),
+    header: {
+      ...defaults.header,
+      ...(value?.header || {}),
+    },
+    topBanner: normalizeHomeTopBannerSettings(value?.topBanner),
+    banner: {
+      ...defaults.banner,
+      ...(value?.banner || {}),
+      items: Array.isArray(value?.banner?.items) && value.banner.items.length
+        ? value.banner.items
+        : defaults.banner.items.map(item => ({ ...item })),
+    },
+  }
+}
+
 const normalizeSystemConfigPayload = (payload: SystemConfigPayload): SystemConfigPayload => {
   return {
     ...payload,
     globalThemeSettings: normalizeGlobalThemeSettings(payload.globalThemeSettings),
     homeSideMenuSettings: normalizeHomeSideMenuSettings(payload.homeSideMenuSettings),
+    homeLayoutSettings: normalizeHomeLayoutSettings(payload.homeLayoutSettings),
   }
 }
 

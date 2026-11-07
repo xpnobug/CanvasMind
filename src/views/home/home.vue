@@ -5,8 +5,8 @@
         <div class="scroll-content-DaYLnh scroll-content">
           <div class="home-content-shell">
             <div class="section-generator">
-              <!-- 首页头部 -->
-              <HomeHeader/>
+              <!-- 顶通已由 FrontstagePageShell 挂载，Header 内不再重复渲染 -->
+              <HomeHeader :render-top-banner="false" />
             </div>
 
             <!-- Tabs 区域 -->
@@ -276,16 +276,27 @@ watch(
 
 <style scoped>
 .home-content-shell {
-/*  width: min(100%, 1680px);
-  margin: 0 auto;*/
+  --home-shell-pad-inline-start: 10px;
+  --home-shell-pad-inline-end: 10px;
   box-sizing: border-box;
-  padding-inline: 10px;
+  padding-inline: var(--home-shell-pad-inline-start) var(--home-shell-pad-inline-end);
+}
+
+/* sticky Tabs 头突破 shell 左右 padding，避免毛玻璃两侧硬边 */
+.home-content-shell :deep(.section-tab-maWQnS .lv-tabs-header-nav) {
+  margin-inline:
+    calc(-1 * var(--home-shell-pad-inline-start))
+    calc(-1 * var(--home-shell-pad-inline-end));
+  padding-inline:
+    var(--home-shell-pad-inline-start)
+    var(--home-shell-pad-inline-end);
 }
 
 @media (min-width: 1280px) {
   .home-content-shell {
-    padding-inline: 10px;
+    --home-shell-pad-inline-start: 40px;
+    --home-shell-pad-inline-end: 44px;
+    padding: 0 var(--home-shell-pad-inline-end) 0 var(--home-shell-pad-inline-start);
   }
 }
-
 </style>

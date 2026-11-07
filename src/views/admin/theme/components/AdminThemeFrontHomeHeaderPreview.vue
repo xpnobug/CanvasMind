@@ -2,6 +2,33 @@
   <div class="section-generator admin-theme-front-home-preview">
     <div class="home-header admin-theme-front-home-preview__header">
       <div
+        class="admin-theme-front-home-preview__block admin-theme-front-home-preview__block--header-bg"
+        :class="{
+          'is-hidden-block': workbenchSettings.headerBackgroundEnabled === false,
+        }"
+      >
+        <HomeHeaderTopBackground
+          v-if="workbenchSettings.headerBackgroundEnabled !== false
+            && (workbenchSettings.headerBackgroundGlowEnabled !== false
+              || workbenchSettings.headerBackgroundStarEnabled !== false)"
+          :image-url="headerBackgroundImageUrl"
+          :glow-color="headerBackgroundGlowColor"
+          :glow-opacity="headerBackgroundGlowOpacity"
+          :glow-enabled="workbenchSettings.headerBackgroundGlowEnabled !== false"
+          :star-enabled="workbenchSettings.headerBackgroundStarEnabled !== false"
+          :star-color="headerBackgroundStarColor"
+        />
+        <!-- 常显入口：顶背景层本身 pointer-events 关闭，hover 浮层不易发现 -->
+        <div class="admin-theme-front-home-preview__header-bg-toolbar">
+          <span class="admin-theme-front-home-preview__header-bg-label">创作区背景</span>
+          <AdminThemeWorkbenchItemActions
+            :visible="workbenchSettings.headerBackgroundEnabled !== false"
+            :action-keys="['edit', 'visible']"
+            @action="handleBlockAction($event, 'header-background')"
+          />
+        </div>
+      </div>
+      <div
         v-if="showTitleBlock"
         class="admin-theme-front-home-preview__block admin-theme-front-home-preview__block--title"
         :class="{
@@ -179,12 +206,15 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import GenerateContentGenerator from '@/components/generate/ContentGenerator.vue'
 import HomeBanner from '@/components/home/components/HomeBanner.vue'
+import HomeHeaderTopBackground from '@/components/home/components/HomeHeaderTopBackground.vue'
 import TaskIndicator from '@/components/home/components/TaskIndicator.vue'
 import TypeSelector from '@/components/home/components/TypeSelector.vue'
 import AdminThemeWorkbenchItemActions, { type WorkbenchMenuActionKey } from './AdminThemeWorkbenchItemActions.vue'
 import type { SystemConfigPayload, SystemHomeBannerItemConfig } from '@/api/system-config'
+import '@/components/home/components/home-header-create-layout.css'
 
 export type WorkbenchContentBlockKey =
+  | 'header-background'
   | 'title'
   | 'generator'
   | 'task-indicator'
@@ -211,6 +241,33 @@ const emit = defineEmits<{
 }>()
 
 const workbenchSettings = computed(() => props.systemForm.conversationSettings.entryDisplay.workbench)
+
+const previewIsLight = computed(() => {
+  if (typeof document === 'undefined') return false
+  return document.documentElement.getAttribute('data-theme') === 'light'
+    || document.body.getAttribute('lv-theme') === 'light'
+})
+
+const headerBackgroundImageUrl = computed(() => (
+  previewIsLight.value
+    ? String(workbenchSettings.value.headerBackgroundImageUrlLight || '').trim()
+    : String(workbenchSettings.value.headerBackgroundImageUrl || '').trim()
+))
+const headerBackgroundGlowColor = computed(() => (
+  previewIsLight.value
+    ? workbenchSettings.value.headerBackgroundGlowColorLight
+    : workbenchSettings.value.headerBackgroundGlowColor
+))
+const headerBackgroundGlowOpacity = computed(() => (
+  previewIsLight.value
+    ? workbenchSettings.value.headerBackgroundGlowOpacityLight
+    : workbenchSettings.value.headerBackgroundGlowOpacity
+))
+const headerBackgroundStarColor = computed(() => (
+  previewIsLight.value
+    ? workbenchSettings.value.headerBackgroundStarColorLight
+    : workbenchSettings.value.headerBackgroundStarColor
+))
 
 const siteNamePrefix = computed(() => {
   const siteName = String(props.systemForm.siteInfo.siteName || '').trim()
@@ -455,6 +512,38 @@ onBeforeUnmount(() => {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+.admin-theme-front-home-preview__block--header-bg {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 120px;
+  width: 100%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.admin-theme-front-home-preview__header-bg-toolbar {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+  background: color-mix(in srgb, var(--bg-surface, #111) 88%, transparent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;
+}
+
+.admin-theme-front-home-preview__header-bg-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+  white-space: nowrap;
 }
 
 .admin-theme-front-home-preview__block--title {

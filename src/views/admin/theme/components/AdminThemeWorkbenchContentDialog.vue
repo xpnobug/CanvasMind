@@ -18,7 +18,112 @@
             </label>
           </div>
 
-          <template v-if="draft.blockKey === 'title'">
+          <template v-if="draft.blockKey === 'header-background'">
+            <div class="admin-form__field admin-form__field--full">
+              <div class="admin-theme-workbench-content-dialog__hint">
+                控制首页整页背景图与顶区光晕/星点。关闭后前台不铺图、不挂载 SVG；后台预览仍保留操作入口。
+              </div>
+            </div>
+            <div class="admin-form__field admin-form__field--full">
+              <div class="admin-theme-workbench-content-dialog__section-head">
+                <label class="admin-form__label">背景图</label>
+                <button class="admin-button admin-button--secondary admin-theme-workbench-content-dialog__reset" type="button" @click="resetHeaderBackgroundSettings">
+                  重置默认
+                </button>
+              </div>
+              <p class="admin-theme-workbench-content-dialog__desc">
+                暗/亮色分别配置；对应主题下为空则不铺整页图，仅保留顶区光晕与星点。
+              </p>
+            </div>
+            <div class="admin-form__field admin-form__field--full">
+              <label class="admin-form__label">暗色背景图 URL</label>
+              <input
+                v-model.trim="draft.settings.headerBackgroundImageUrl"
+                class="admin-input"
+                type="text"
+                placeholder="例如：https://…/home-background-new.png"
+              >
+            </div>
+            <div class="admin-form__field admin-form__field--full">
+              <label class="admin-form__label">亮色背景图 URL</label>
+              <input
+                v-model.trim="draft.settings.headerBackgroundImageUrlLight"
+                class="admin-input"
+                type="text"
+                placeholder="例如：https://…/home-background-light.png"
+              >
+            </div>
+
+            <div class="admin-form__field admin-form__field--full">
+              <div class="admin-theme-workbench-content-dialog__section-head">
+                <label class="admin-form__label">光晕</label>
+                <button class="admin-button admin-button--secondary admin-theme-workbench-content-dialog__reset" type="button" @click="resetHeaderBackgroundGlow">
+                  重置默认
+                </button>
+              </div>
+            </div>
+            <div class="admin-form__field admin-form__field--full">
+              <label class="admin-switch-row">
+                <input v-model="draft.settings.headerBackgroundGlowEnabled" type="checkbox">
+                <span>显示光晕</span>
+              </label>
+            </div>
+            <div class="admin-form__field">
+              <label class="admin-form__label">暗色光晕色</label>
+              <input v-model.trim="draft.settings.headerBackgroundGlowColor" class="admin-input" type="text" placeholder="#008EE5">
+            </div>
+            <div class="admin-form__field">
+              <label class="admin-form__label">暗色透明度</label>
+              <input
+                v-model.number="draft.settings.headerBackgroundGlowOpacity"
+                class="admin-input"
+                type="number"
+                min="0"
+                max="1"
+                step="0.02"
+              >
+            </div>
+            <div class="admin-form__field">
+              <label class="admin-form__label">亮色光晕色</label>
+              <input v-model.trim="draft.settings.headerBackgroundGlowColorLight" class="admin-input" type="text" placeholder="#008EE5">
+            </div>
+            <div class="admin-form__field">
+              <label class="admin-form__label">亮色透明度</label>
+              <input
+                v-model.number="draft.settings.headerBackgroundGlowOpacityLight"
+                class="admin-input"
+                type="number"
+                min="0"
+                max="1"
+                step="0.02"
+              >
+            </div>
+
+            <div class="admin-form__field admin-form__field--full">
+              <div class="admin-theme-workbench-content-dialog__section-head">
+                <label class="admin-form__label">星点</label>
+                <button class="admin-button admin-button--secondary admin-theme-workbench-content-dialog__reset" type="button" @click="resetHeaderBackgroundStars">
+                  重置默认
+                </button>
+              </div>
+            </div>
+            <div class="admin-form__field admin-form__field--full">
+              <label class="admin-switch-row">
+                <input v-model="draft.settings.headerBackgroundStarEnabled" type="checkbox">
+                <span>显示星点</span>
+              </label>
+            </div>
+            <div class="admin-form__field">
+              <label class="admin-form__label">暗色星点色</label>
+              <input v-model.trim="draft.settings.headerBackgroundStarColor" class="admin-input" type="text" placeholder="#FFFFFF0A">
+            </div>
+            <div class="admin-form__field">
+              <label class="admin-form__label">亮色星点色</label>
+              <input v-model.trim="draft.settings.headerBackgroundStarColorLight" class="admin-input" type="text" placeholder="#00000008">
+            </div>
+          </template>
+
+          <template v-else-if="draft.blockKey === 'title'">
             <div class="admin-form__field admin-form__field--full">
               <label class="admin-switch-row">
                 <input v-model="draft.settings.showSiteName" type="checkbox">
@@ -88,6 +193,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import {
+  DEFAULT_HEADER_BACKGROUND_GLOW_COLOR,
+  DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY,
+  DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY_LIGHT,
+  DEFAULT_HEADER_BACKGROUND_STAR_COLOR,
+  DEFAULT_HEADER_BACKGROUND_STAR_COLOR_LIGHT,
+} from '@/api/system-config'
 import type { WorkbenchContentBlockKey } from './AdminThemeFrontHomeHeaderPreview.vue'
 
 export interface WorkbenchContentDialogDraft {
@@ -102,6 +214,16 @@ export interface WorkbenchContentDialogDraft {
     showSubmitButton: boolean
     showSiteDescription: boolean
     placeholder: string
+    headerBackgroundImageUrl: string
+    headerBackgroundImageUrlLight: string
+    headerBackgroundGlowColor: string
+    headerBackgroundGlowColorLight: string
+    headerBackgroundGlowOpacity: number
+    headerBackgroundGlowOpacityLight: number
+    headerBackgroundGlowEnabled: boolean
+    headerBackgroundStarEnabled: boolean
+    headerBackgroundStarColor: string
+    headerBackgroundStarColorLight: string
   }
 }
 
@@ -122,6 +244,31 @@ const visibilityLabel = computed(() => {
 
   return `显示${props.draft.label}`
 })
+
+/** 重置暗/亮色整页背景图为空（现网默认无图） */
+const resetHeaderBackgroundSettings = () => {
+  if (!props.draft) return
+  props.draft.settings.headerBackgroundImageUrl = ''
+  props.draft.settings.headerBackgroundImageUrlLight = ''
+}
+
+/** 重置光晕显隐 / 色 / 透明度为现网写死值 */
+const resetHeaderBackgroundGlow = () => {
+  if (!props.draft) return
+  props.draft.settings.headerBackgroundGlowEnabled = true
+  props.draft.settings.headerBackgroundGlowColor = DEFAULT_HEADER_BACKGROUND_GLOW_COLOR
+  props.draft.settings.headerBackgroundGlowColorLight = DEFAULT_HEADER_BACKGROUND_GLOW_COLOR
+  props.draft.settings.headerBackgroundGlowOpacity = DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY
+  props.draft.settings.headerBackgroundGlowOpacityLight = DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY_LIGHT
+}
+
+/** 重置星点显隐与颜色为现网写死值 */
+const resetHeaderBackgroundStars = () => {
+  if (!props.draft) return
+  props.draft.settings.headerBackgroundStarEnabled = true
+  props.draft.settings.headerBackgroundStarColor = DEFAULT_HEADER_BACKGROUND_STAR_COLOR
+  props.draft.settings.headerBackgroundStarColorLight = DEFAULT_HEADER_BACKGROUND_STAR_COLOR_LIGHT
+}
 </script>
 
 <style scoped>
@@ -132,5 +279,26 @@ const visibilityLabel = computed(() => {
   color: var(--text-secondary, #64748b);
   font-size: 13px;
   line-height: 1.7;
+}
+
+.admin-theme-workbench-content-dialog__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-theme-workbench-content-dialog__desc {
+  margin: 6px 0 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-theme-workbench-content-dialog__reset {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 </style>

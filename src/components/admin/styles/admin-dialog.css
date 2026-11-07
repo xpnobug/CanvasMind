@@ -1,0 +1,205 @@
+.admin-dialog-mask {
+  position: fixed;
+  inset: 0;
+  /*
+   * App.vue ElConfigProvider :z-index="30000"，Drawer/Dialog 从此基数递增。
+   * 文件选择等 AdminDialog 必须更高，否则会从抽屉「钻」到左侧外面。
+   * 与后台团队调整弹层（50000）同级。
+   */
+  z-index: 50000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: rgba(10, 12, 18, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.admin-dialog-mask--inner {
+  z-index: 50100;
+  background: rgba(10, 12, 18, 0.24);
+}
+
+body > .admin-dialog-mask--inner ~ .admin-dialog-mask--inner {
+  z-index: 50200;
+}
+
+.admin-dialog {
+  width: min(960px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: var(--admin-radius-panel);
+  border: 1px solid var(--line-divider, #00000014);
+  background: var(--bg-surface);
+  box-shadow: 0 24px 80px rgba(15, 15, 18, 0.22);
+  /* 覆盖全局 `* { user-select: none }`，保证弹层内文案可手动选中复制 */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+.admin-dialog * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+.admin-dialog--provider {
+  width: min(840px, 100%);
+}
+
+.admin-dialog--manager {
+  width: min(1080px, 100%);
+}
+
+.admin-dialog--model-form {
+  width: min(760px, 100%);
+}
+
+.admin-dialog__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-dialog__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-dialog__desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.admin-dialog__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-dialog__close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-block-secondary-default);
+  color: var(--text-primary);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.admin-dialog__body {
+  padding: 24px;
+}
+
+.admin-dialog--provider-form {
+  width: min(920px, 100%);
+}
+
+.admin-dialog--model-manager {
+  width: min(48rem, 100%);
+}
+
+.admin-dialog--model-discover {
+  width: min(920px, 100%);
+}
+
+.admin-dialog.admin-console-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: min(860px, calc(100vh - 48px));
+  overflow: hidden;
+  border-radius: var(--admin-radius-panel);
+}
+
+.admin-dialog.admin-console-dialog--form {
+  width: min(640px, 100%);
+}
+
+.admin-dialog.admin-console-dialog--manager,
+.admin-dialog--model-manager.admin-console-dialog--manager {
+  width: min(48rem, 100%);
+}
+
+.admin-dialog.admin-console-dialog--manager.admin-secret-manager-dialog {
+  width: min(64rem, 100%);
+}
+
+.admin-dialog.admin-console-dialog .admin-dialog__header {
+  flex: 0 0 auto;
+  padding: 16px;
+  background: var(--bg-surface);
+  backdrop-filter: none;
+}
+
+.admin-dialog.admin-console-dialog .admin-dialog__title {
+  font-size: 18px;
+}
+
+.admin-dialog.admin-console-dialog .admin-dialog__desc {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.admin-dialog.admin-console-dialog .admin-dialog__close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--admin-radius-control);
+  font-size: 18px;
+}
+
+.admin-dialog.admin-console-dialog .admin-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.admin-dialog.admin-console-dialog .admin-console-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding-bottom: 16px;
+}
+
+.admin-dialog.admin-console-dialog .admin-console-dialog__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  padding: 16px;
+  border-radius: 0 0 var(--admin-radius-panel) var(--admin-radius-panel);
+  background: var(--bg-surface);
+}
+
+.admin-dialog.admin-console-dialog .admin-button,
+.admin-dialog.admin-console-dialog .admin-input,
+.admin-dialog.admin-console-dialog .admin-textarea,
+.admin-dialog.admin-console-dialog .admin-radio-item,
+.admin-dialog.admin-console-dialog .admin-check-item,
+.admin-dialog.admin-console-dialog .admin-icon-button {
+  border-radius: var(--admin-radius-control);
+}
+
+@media (max-width: 768px) {
+  .admin-dialog-mask {
+    padding: 12px;
+  }
+
+  .admin-dialog.admin-console-dialog {
+    max-height: calc(100vh - 24px);
+  }
+}

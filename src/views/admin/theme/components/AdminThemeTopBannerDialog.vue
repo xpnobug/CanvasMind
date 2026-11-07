@@ -54,14 +54,24 @@
           <div class="theme-ops-field">
             <label class="theme-ops-label">标签文字色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.tagTextColor" />
+              <ElColorPicker
+                v-model="draft.tagTextColor"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.tagTextColor" placeholder="#FFFFFF" />
             </div>
           </div>
           <div class="theme-ops-field">
             <label class="theme-ops-label">标签底色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.tagBackgroundColor" />
+              <ElColorPicker
+                v-model="draft.tagBackgroundColor"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.tagBackgroundColor" placeholder="#F50095" />
             </div>
           </div>
@@ -115,12 +125,17 @@
               :rows="2"
               placeholder="例如：💥 Seedance 2.5 即将上线，抢先锁定｜积分超市开张啦，首充最高翻倍！"
             />
-            <p class="theme-ops-hint">建议填写；若为空，只要有标签 / 倒计时 / CTA，前台仍会展示横幅</p>
+            <p class="theme-ops-hint">前台必须填写主文案才会展示；仅有标签 / 倒计时 / CTA 不够。后台预览在无文案时仍保留横幅壳便于编辑。</p>
           </div>
           <div class="theme-ops-field">
             <label class="theme-ops-label">内容文字色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.contentTextColor" />
+              <ElColorPicker
+                v-model="draft.contentTextColor"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.contentTextColor" placeholder="#000000" />
             </div>
           </div>
@@ -143,21 +158,36 @@
           <div class="theme-ops-field">
             <label class="theme-ops-label">按钮文字色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.ctaTextColor" />
+              <ElColorPicker
+                v-model="draft.ctaTextColor"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.ctaTextColor" placeholder="#000000" />
             </div>
           </div>
           <div class="theme-ops-field">
             <label class="theme-ops-label">按钮描边色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.ctaBorderColor" />
+              <ElColorPicker
+                v-model="draft.ctaBorderColor"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.ctaBorderColor" placeholder="#000000" />
             </div>
           </div>
           <div class="theme-ops-field">
             <label class="theme-ops-label">按钮底色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.ctaBackgroundColor" />
+              <ElColorPicker
+                v-model="draft.ctaBackgroundColor"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.ctaBackgroundColor" placeholder="留空透明" />
             </div>
           </div>
@@ -176,14 +206,24 @@
           <div class="theme-ops-field">
             <label class="theme-ops-label">渐变起始色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.gradientStart" />
+              <ElColorPicker
+                v-model="draft.gradientStart"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.gradientStart" placeholder="#D5F5FF" />
             </div>
           </div>
           <div class="theme-ops-field">
             <label class="theme-ops-label">渐变结束色</label>
             <div class="theme-ops-color">
-              <ElColorPicker v-model="draft.gradientEnd" />
+              <ElColorPicker
+                v-model="draft.gradientEnd"
+                teleported
+                :popper-options="{ strategy: 'fixed' }"
+                popper-class="admin-theme-ops-color-picker-popper"
+              />
               <ElInput v-model.trim="draft.gradientEnd" placeholder="#D5F5FF" />
             </div>
           </div>
@@ -193,7 +233,7 @@
               v-model.trim="draft.backgroundImageUrl"
               placeholder="图片 URL；未设置时使用上方渐变色"
             />
-            <p class="theme-ops-hint">公开版暂用 URL 输入；未设置时使用上方渐变色</p>
+            <p class="theme-ops-hint">支持 PNG / JPG / WebP URL；未设置时使用上方渐变色</p>
           </div>
         </div>
       </section>
@@ -321,7 +361,8 @@ const actionValuePlaceholder = computed(() => {
 </style>
 
 <style>
+/* 与 AdminDialog mask（50000）对齐，避免日期面板被遮罩盖住 */
 .admin-theme-top-banner-datepicker-popper {
-  z-index: 12000 !important;
+  z-index: 52000 !important;
 }
 </style>

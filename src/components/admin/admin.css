@@ -1345,89 +1345,7 @@ html[data-theme='dark'] .admin-empty {
   margin-top: 22px;
 }
 
-.admin-dialog-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  box-sizing: border-box;
-  background: rgba(10, 12, 18, 0.42);
-  backdrop-filter: blur(8px);
-}
-
-.admin-dialog-mask--inner {
-  z-index: 90;
-  background: rgba(10, 12, 18, 0.24);
-}
-
-.admin-dialog {
-  width: min(960px, 100%);
-  max-height: calc(100vh - 48px);
-  overflow: auto;
-  border-radius: 24px;
-  border: 1px solid var(--line-divider, #00000014);
-  background: var(--bg-surface);
-  box-shadow: 0 24px 80px rgba(15, 15, 18, 0.22);
-}
-
-.admin-dialog--provider {
-  width: min(840px, 100%);
-}
-
-.admin-dialog--manager {
-  width: min(1080px, 100%);
-}
-
-.admin-dialog--model-form {
-  width: min(760px, 100%);
-}
-
-.admin-dialog__header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px 24px;
-  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line-divider, #00000014);
-}
-
-.admin-dialog__title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.admin-dialog__desc {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--text-tertiary);
-}
-
-.admin-dialog__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.admin-dialog__close {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 12px;
-  background: var(--bg-block-secondary-default);
-  color: var(--text-primary);
-  font-size: 20px;
-  cursor: pointer;
-}
+/* 弹窗外壳样式已迁至 styles/admin-dialog.css，避免旧 z-index/圆角覆盖 Pro 对齐稿 */
 
 .admin-manager-toolbar {
   display: flex;
@@ -1518,10 +1436,6 @@ html[data-theme='dark'] .admin-empty {
 }
 
 @media (max-width: 768px) {
-  .admin-dialog-mask {
-    padding: 12px;
-  }
-
   .admin-manager-toolbar,
   .admin-provider-card__actions {
     flex-direction: column;
@@ -1774,22 +1688,6 @@ html[data-theme='dark'] .admin-empty {
 
 .admin-switch input:checked + .admin-switch__slider::after {
   transform: translateX(18px);
-}
-
-.admin-dialog__body {
-  padding: 24px;
-}
-
-.admin-dialog--provider-form {
-  width: min(920px, 100%);
-}
-
-.admin-dialog--model-manager {
-  width: min(1100px, 100%);
-}
-
-.admin-dialog--model-form {
-  width: min(760px, 100%);
 }
 
 .admin-model-toolbar {

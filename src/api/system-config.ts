@@ -1,5 +1,5 @@
 import { buildApiUrl } from './http'
-import { readApiData } from './response'
+import { readApiData, type ApiMessageOptions } from './response'
 
 export interface SystemSiteInfoConfig {
   siteName: string
@@ -1456,6 +1456,7 @@ export const saveAdminSystemConfig = async (payload: SystemConfigPayload): Promi
 const saveAdminSystemConfigSection = async (
   path: string,
   payload: Partial<SystemConfigPayload>,
+  messageOptions: ApiMessageOptions = {},
 ): Promise<SystemConfigPayload> => {
   const response = await fetch(buildApiUrl(path), {
     method: 'PUT',
@@ -1466,9 +1467,11 @@ const saveAdminSystemConfigSection = async (
     body: JSON.stringify(payload),
   })
 
+  // 批量保存外观时需关闭分区成功 toast，由外层统一提示
   return normalizeSystemConfigPayload(await readApiData<SystemConfigPayload>(response, {
-    showSuccessMessage: true,
-    showErrorMessage: true,
+    showSuccessMessage: messageOptions.showSuccessMessage ?? true,
+    showErrorMessage: messageOptions.showErrorMessage ?? true,
+    ...messageOptions,
   }))
 }
 
@@ -1482,22 +1485,28 @@ export const saveAdminPolicySettings = (payload: Pick<SystemConfigPayload, 'poli
 
 export const saveAdminLoginSettings = (
   payload: Pick<SystemConfigPayload, 'loginSettings' | 'generationProgressSettings'>,
+  messageOptions?: ApiMessageOptions,
 ): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_LOGIN_API_PATH, payload)
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_LOGIN_API_PATH, payload, messageOptions)
 }
 
-export const saveAdminThemeSettings = (payload: Pick<SystemConfigPayload, 'globalThemeSettings'>): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_THEME_API_PATH, payload)
+export const saveAdminThemeSettings = (
+  payload: Pick<SystemConfigPayload, 'globalThemeSettings'>,
+  messageOptions?: ApiMessageOptions,
+): Promise<SystemConfigPayload> => {
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_THEME_API_PATH, payload, messageOptions)
 }
 
 export const saveAdminHomeLayoutSettings = (
   payload: Pick<SystemConfigPayload, 'homeSideMenuSettings' | 'homeLayoutSettings'>,
+  messageOptions?: ApiMessageOptions,
 ): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_HOME_LAYOUT_API_PATH, payload)
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_HOME_LAYOUT_API_PATH, payload, messageOptions)
 }
 
 export const saveAdminConversationSettings = (
   payload: Pick<SystemConfigPayload, 'conversationSettings' | 'generationProgressSettings'>,
+  messageOptions?: ApiMessageOptions,
 ): Promise<SystemConfigPayload> => {
-  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_CONVERSATION_API_PATH, payload)
+  return saveAdminSystemConfigSection(SYSTEM_CONFIG_ADMIN_CONVERSATION_API_PATH, payload, messageOptions)
 }

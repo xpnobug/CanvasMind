@@ -1,12 +1,27 @@
 <template>
-  <aside class="admin-sidebar" :class="{ 'is-collapsed': isDesktopCollapsed, 'is-mobile-open': mobileSidebarOpen }">
+  <aside
+    id="admin-sidebar"
+    class="admin-sidebar"
+    :class="{ 'is-collapsed': isDesktopCollapsed, 'is-mobile-open': mobileSidebarOpen }"
+    aria-label="后台主导航"
+  >
     <div class="admin-sidebar__brand">
-      <h1 class="admin-sidebar__title">{{ isDesktopCollapsed ? '管' : 'Canana 管理台' }}</h1>
-      <div v-if="!isDesktopCollapsed" class="admin-sidebar__subtitle">cm</div>
+      <div class="admin-sidebar__brand-row">
+        <span v-if="isDesktopCollapsed" class="admin-sidebar__collapsed-mark" aria-hidden="true">
+          <i class="ri-admin-line" />
+        </span>
+        <h1 v-if="!isDesktopCollapsed" class="admin-sidebar__title">{{ adminBrandTitle }}</h1>
+      </div>
+      <div v-if="!isDesktopCollapsed" class="admin-sidebar__subtitle">管理台</div>
     </div>
 
-    <nav class="admin-sidebar__nav">
-      <div v-for="group in adminNavGroups" :key="group.title">
+    <nav
+      ref="navRef"
+      class="admin-sidebar__nav"
+      aria-label="后台功能菜单"
+      @scroll="rememberNavScroll"
+    >
+      <div v-for="group in navGroups" :key="group.title">
         <div v-if="!isDesktopCollapsed" class="admin-sidebar__group-title">{{ group.title }}</div>
         <RouterLink
           v-for="item in group.items"
@@ -14,10 +29,13 @@
           :to="item.path"
           class="admin-sidebar__link"
           :class="{ 'is-active': isActive(item.path) }"
-          :title="item.label"
-          @click="closeMobileSidebar"
+          :title="item.description || item.label"
+          @click="handleNavLinkClick"
         >
-          <span class="admin-sidebar__link-mark">{{ getShortLabel(item.label) }}</span>
+          <span class="admin-sidebar__link-mark" aria-hidden="true">
+            <i v-if="getAdminNavItemIcon(item)" :class="getAdminNavItemIcon(item)" />
+            <template v-else>{{ getShortLabel(item.label) }}</template>
+          </span>
           <span v-if="!isDesktopCollapsed" class="admin-sidebar__link-text">{{ item.label }}</span>
         </RouterLink>
       </div>
@@ -30,28 +48,68 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { adminNavGroups } from './admin-nav'
+import { useSystemSettingsStore } from '@/stores/system-settings'
+import { getAdminNavItemIcon } from './admin-nav'
+import { useAdminNav } from './useAdminNav'
 import { useAdminLayoutContext } from './useAdminLayout'
 
 const route = useRoute()
+const navRef = ref<HTMLElement | null>(null)
+const savedNavScrollTop = ref(0)
+const systemSettingsStore = useSystemSettingsStore()
 const { closeMobileSidebar, isDesktopCollapsed, mobileSidebarOpen } = useAdminLayoutContext()
+const { navGroups, navPaths } = useAdminNav()
 
-const navPaths = computed(() => {
-  return adminNavGroups
-    .flatMap(group => group.items.map(item => item.path))
-    .sort((left, right) => right.length - left.length)
+const siteName = computed(() => {
+  const name = String(systemSettingsStore.publicSystemSettings.value.siteInfo.siteName || '').trim()
+  return name || 'Canana'
 })
+const adminBrandTitle = computed(() => `${siteName.value} 管理台`)
+
+const rememberNavScroll = () => {
+  savedNavScrollTop.value = navRef.value?.scrollTop ?? 0
+}
+
+const restoreNavScroll = () => {
+  const top = savedNavScrollTop.value
+  if (!navRef.value || top <= 0) {
+    return
+  }
+
+  navRef.value.scrollTop = top
+}
+
+/** 路由切换后恢复侧栏滚动，避免点击底部菜单项后列表跳回顶部 */
+const scheduleRestoreNavScroll = () => {
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      restoreNavScroll()
+      requestAnimationFrame(restoreNavScroll)
+    })
+  })
+}
+
+const handleNavLinkClick = () => {
+  rememberNavScroll()
+  closeMobileSidebar()
+}
+
+watch(
+  () => route.path,
+  () => {
+    scheduleRestoreNavScroll()
+  },
+)
 
 const getActivePath = () => {
   const currentPath = String(route.path || '').trim()
-  return navPaths.value.find(path => currentPath === path || currentPath.startsWith(`${path}/`)) || ''
+  return navPaths.value.find((path) => currentPath === path || currentPath.startsWith(`${path}/`)) || ''
 }
 
 const isActive = (path: string) => getActivePath() === path
 
-// 侧栏折叠后仅保留一个短标签，保证导航仍可识别。
 const getShortLabel = (label: string) => {
   const normalizedLabel = String(label || '').trim()
   return normalizedLabel.slice(0, 1) || '•'

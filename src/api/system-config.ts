@@ -684,23 +684,6 @@ export const createDefaultHomeSideMenuSettings = (): SystemHomeSideMenuSettingsC
       sortOrder: 30,
     },
     {
-      key: 'canvas',
-      title: '画布',
-      section: 'center',
-      groupKey: 'group-center-main',
-      iconSource: 'default',
-      iconType: 'system',
-      icon: 'canvas',
-      inactiveIconUrl: '',
-      activeIconUrl: '',
-      visible: true,
-      badgeText: '',
-      badgeTone: 'default',
-      actionType: 'route',
-      actionValue: '/canvas',
-      sortOrder: 40,
-    },
-    {
       key: 'workflow',
       title: '工作流',
       section: 'center',
@@ -715,41 +698,7 @@ export const createDefaultHomeSideMenuSettings = (): SystemHomeSideMenuSettingsC
       badgeTone: 'default',
       actionType: 'route',
       actionValue: '/agentic-assets-canvas',
-      sortOrder: 50,
-    },
-    {
-      key: 'account',
-      title: '账号',
-      section: 'center',
-      groupKey: 'group-center-main',
-      iconSource: 'default',
-      iconType: 'system',
-      icon: 'account',
-      inactiveIconUrl: '',
-      activeIconUrl: '',
-      visible: true,
-      badgeText: '',
-      badgeTone: 'default',
-      actionType: 'route',
-      actionValue: '/account',
-      sortOrder: 60,
-    },
-    {
-      key: 'publish',
-      title: '发布',
-      section: 'center',
-      groupKey: 'group-center-main',
-      iconSource: 'default',
-      iconType: 'system',
-      icon: 'publish',
-      inactiveIconUrl: '',
-      activeIconUrl: '',
-      visible: true,
-      badgeText: '',
-      badgeTone: 'default',
-      actionType: 'route',
-      actionValue: '/publish',
-      sortOrder: 70,
+      sortOrder: 40,
     },
     {
       key: 'marketing',
@@ -1262,10 +1211,15 @@ const normalizeGlobalThemeSettings = (value?: SystemGlobalThemeSettingsConfig | 
   }
 }
 
+/** 前台侧栏不再展示的入口；旧库若仍存这些 key，normalize 时直接丢掉 */
+const REMOVED_HOME_SIDE_MENU_ITEM_KEYS = new Set(['canvas', 'account', 'publish'])
+
 const normalizeHomeSideMenuSettings = (value?: SystemHomeSideMenuSettingsConfig | null): SystemHomeSideMenuSettingsConfig => {
   const defaults = createDefaultHomeSideMenuSettings()
   const incomingGroups = Array.isArray(value?.groups) ? value!.groups : []
-  const incomingItems = Array.isArray(value?.items) ? value!.items : []
+  const incomingItems = Array.isArray(value?.items)
+    ? value!.items.filter(item => !REMOVED_HOME_SIDE_MENU_ITEM_KEYS.has(item.key))
+    : []
 
   const normalizedGroups = defaults.groups.map(defaultGroup => {
     const matchedGroup = incomingGroups.find(group => group.key === defaultGroup.key)

@@ -61,9 +61,7 @@ const DEFAULT_HOME_SIDE_MENU_ITEMS = [
   { key: 'home', title: '灵感', section: 'center', iconSource: 'default', iconType: 'system', icon: 'home', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/', sortOrder: 10 },
   { key: 'generate', title: '生成', section: 'center', iconSource: 'default', iconType: 'system', icon: 'generate', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'primary', actionType: 'route', actionValue: '/generate', sortOrder: 20 },
   { key: 'asset', title: '资产', section: 'center', iconSource: 'default', iconType: 'system', icon: 'asset', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/asset', sortOrder: 30 },
-  { key: 'workflow', title: '工作流', section: 'center', iconSource: 'default', iconType: 'system', icon: 'workflow', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/workflow', sortOrder: 40 },
-  { key: 'account', title: '账号', section: 'center', iconSource: 'default', iconType: 'system', icon: 'account', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/account', sortOrder: 50 },
-  { key: 'publish', title: '发布', section: 'center', iconSource: 'default', iconType: 'system', icon: 'publish', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/publish', sortOrder: 60 },
+  { key: 'workflow', title: '工作流', section: 'center', iconSource: 'default', iconType: 'system', icon: 'workflow', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'route', actionValue: '/agentic-assets-canvas', sortOrder: 40 },
   { key: 'marketing', title: '福利', section: 'bottom', iconSource: 'default', iconType: 'system', icon: 'marketing', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'dialog', actionValue: 'marketing', sortOrder: 10 },
   { key: 'account-entry', title: '登录', section: 'bottom', iconSource: 'default', iconType: 'system', icon: 'account', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'dialog', actionValue: 'login', sortOrder: 20 },
   { key: 'notification', title: '通知', section: 'bottom', iconSource: 'default', iconType: 'system', icon: 'notification', inactiveIconUrl: '', activeIconUrl: '', visible: true, badgeText: '', badgeTone: 'default', actionType: 'none', actionValue: '', sortOrder: 30 },
@@ -381,6 +379,9 @@ const normalizeHexColor = (value: unknown, fallback: string) => {
   return fallback
 }
 
+/** 侧栏已下线入口；读写配置时剔除，避免旧库残留继续露出 */
+const REMOVED_HOME_SIDE_MENU_ITEM_KEYS = new Set(['canvas', 'account', 'publish'])
+
 const normalizeSideMenuItems = (value: unknown, fallback: Array<Record<string, any>>) => {
   if (!Array.isArray(value)) {
     return fallback.map(item => ({ ...item }))
@@ -390,7 +391,7 @@ const normalizeSideMenuItems = (value: unknown, fallback: Array<Record<string, a
     .map((item, index) => {
       const nextItem = readPlainObject(item)
       const key = String(nextItem.key || '').trim()
-      if (!key) {
+      if (!key || REMOVED_HOME_SIDE_MENU_ITEM_KEYS.has(key)) {
         return null
       }
 

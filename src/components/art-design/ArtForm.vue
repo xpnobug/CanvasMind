@@ -185,7 +185,8 @@
 
   const emit = defineEmits<FormEmits>()
 
-  const modelValue = defineModel<Record<string, any>>({ default: {} })
+  // default 必须是工厂函数，否则 vue-tsc 无法匹配 defineModel 重载
+  const modelValue = defineModel<Record<string, any>>('modelValue', { default: () => ({}) })
 
   const rootProps = ['label', 'labelWidth', 'key', 'type', 'hidden', 'span', 'slots']
 
@@ -252,11 +253,9 @@
     // 重置表单字段(UI 层)
     formInstance.value?.resetFields()
 
-    // 清空所有表单项值(包含隐藏项)
-    Object.assign(
-      modelValue.value,
-      Object.fromEntries(props.items.map(({ key }) => [key, undefined]))
-    )
+    // 清空所有表单项值(包含隐藏项)；整对象替换，避免 Object.assign 对泛型 ModelRef 报错
+    const nextValues = Object.fromEntries(props.items.map(({ key }) => [key, undefined]))
+    modelValue.value = { ...modelValue.value, ...nextValues }
 
     // 触发 reset 事件
     emit('reset')

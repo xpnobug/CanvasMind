@@ -226,12 +226,16 @@ type BannerReorderPayload = {
   position: 'before' | 'after'
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   systemForm: SystemConfigPayload
   previewBannerItems: SystemHomeBannerItemConfig[]
+  /** 工作台画布明暗；优先于 body，避免后台浅色壳把深色预览背景图/文案配错 */
+  previewIsLight?: boolean
   activeThemeSectionId: string | null
   activeThemeFieldId: string | null
-}>()
+}>(), {
+  previewIsLight: undefined,
+})
 
 const emit = defineEmits<{
   'block-action': [payload: { action: WorkbenchMenuActionKey, blockKey: WorkbenchContentBlockKey }]
@@ -243,6 +247,9 @@ const emit = defineEmits<{
 const workbenchSettings = computed(() => props.systemForm.conversationSettings.entryDisplay.workbench)
 
 const previewIsLight = computed(() => {
+  if (typeof props.previewIsLight === 'boolean') {
+    return props.previewIsLight
+  }
   if (typeof document === 'undefined') return false
   return document.documentElement.getAttribute('data-theme') === 'light'
     || document.body.getAttribute('lv-theme') === 'light'

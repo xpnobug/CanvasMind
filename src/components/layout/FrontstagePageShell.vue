@@ -1,7 +1,10 @@
 <template>
   <div
     class="frontstage-page-shell"
-    :class="[`frontstage-page-shell--${layoutModeClass}`]"
+    :class="[
+      `frontstage-page-shell--${layoutModeClass}`,
+      { 'frontstage-page-shell--with-top-banner': showHomeTopBanner },
+    ]"
     :data-layout-mode="layoutModeClass"
   >
     <div id="csr-root">
@@ -111,10 +114,25 @@ const homeDesktopShellStyle = computed(() => {
   width: 100%;
   flex: 0 0 auto;
   position: relative;
-  z-index: 5;
+  z-index: 20;
 }
 
-/* 有顶通时主壳吃掉剩余高度，避免 100% + 横幅把顶通挤出视口 */
+/*
+ * 全局 styles.css 里 .container-moSF_y { height:100% } 会在 flex 列里与顶通抢高度，
+ * 有顶通时改为吃剩余空间，避免 overflow:hidden 把顶通裁掉。
+ */
+.frontstage-page-shell--with-top-banner :deep(.top-down-layer) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.frontstage-page-shell--with-top-banner :deep(.container-moSF_y) {
+  flex: 1 1 auto;
+  height: auto !important;
+  min-height: 0;
+}
+
 .frontstage-page-shell :deep(.container-moSF_y) {
   flex: 1 1 auto;
   min-height: 0;

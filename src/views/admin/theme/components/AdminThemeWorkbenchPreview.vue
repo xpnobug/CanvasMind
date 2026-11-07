@@ -1,10 +1,16 @@
 <template>
   <div class="admin-theme-canvas-wrap">
-    <div class="admin-theme-canvas" :class="previewThemeClass" :style="previewThemeVars">
+    <div
+      class="admin-theme-canvas"
+      :class="previewThemeClass"
+      :style="previewThemeVars"
+      :lv-theme="previewThemeClass === 'is-light' ? 'light' : 'dark'"
+      :data-theme="previewThemeClass === 'is-light' ? 'light' : 'dark'"
+    >
       <div class="admin-theme-canvas__viewport">
         <div
           class="admin-theme-frontstage__top-banner"
-          :class="{ 'is-hidden-block': !previewTopBannerSettings.enabled }"
+          :class="{ 'is-hidden-block': !systemForm.homeLayoutSettings.topBanner.enabled }"
         >
           <HomeTopBanner
             :config="previewTopBannerSettings"
@@ -13,7 +19,7 @@
           />
           <div class="admin-theme-frontstage__top-banner-actions">
             <AdminThemeWorkbenchItemActions
-              :visible="previewTopBannerSettings.enabled"
+              :visible="systemForm.homeLayoutSettings.topBanner.enabled"
               :action-keys="['edit', 'visible']"
               @action="$emit('contentBlockAction', { action: $event, blockKey: 'top-banner' })"
             />
@@ -82,6 +88,7 @@
                             <AdminThemeFrontHomeHeaderPreview
                               :system-form="systemForm"
                               :preview-banner-items="previewBannerItems"
+                              :preview-is-light="previewThemeClass === 'is-light'"
                               :active-theme-section-id="activeThemeSectionId"
                               :active-theme-field-id="activeThemeFieldId"
                               @block-action="$emit('contentBlockAction', $event)"
@@ -163,7 +170,14 @@ const previewBannerItems = computed(() => {
 })
 
 const previewTopBannerSettings = computed<SystemHomeTopBannerConfig>(() => {
-  return normalizeHomeTopBannerSettings(props.systemForm.homeLayoutSettings?.topBanner)
+  const normalized = normalizeHomeTopBannerSettings(props.systemForm.homeLayoutSettings?.topBanner)
+  return {
+    ...normalized,
+    // 预览区始终挂载横幅壳；真实 enabled 由外层 is-hidden-block / 操作钮反映
+    enabled: true,
+    // 未配置文案时用不可见空白占位，不注入默认运营文案
+    contentText: normalized.contentText || '\u00A0',
+  }
 })
 
 /**
@@ -235,11 +249,12 @@ const previewMainStyle = computed(() => {
 }
 
 .admin-theme-canvas.is-dark {
+  background: var(--theme-page-background, #0f0f12);
   color: #f8fafc;
 }
 
 .admin-theme-canvas.is-light {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--theme-page-background, #f8f9fa);
   color: #0f172a;
 }
 

@@ -17,7 +17,7 @@
             @import="themeImportDialogVisible = true"
             @open-settings="openAppearanceSettings"
             @save="handleSaveAppearance"
-            @reset="appearanceStore.resetThemeDefaults"
+            @reset="handleResetThemeDefaults"
           />
 
           <div class="admin-theme-shell__body">
@@ -169,15 +169,13 @@ const applyThemeImport = async (next: ThemeConfigTransferSource) => {
   }
 }
 
+/**
+ * 工作台预览跟「当前实际明暗」走，不跟 defaultMode。
+ * 否则后台已切浅色（body lv-theme=light → 输入框发白），
+ * 画布仍按 defaultMode=dark 铺黑底，看起来像「浅色主题还是黑的」。
+ */
 const previewThemeClass = computed<'is-dark' | 'is-light'>(() => {
-  const mode = systemForm.value.globalThemeSettings.modePolicy.defaultMode
-  if (mode === 'dark') {
-    return 'is-dark'
-  }
-  if (mode === 'system') {
-    return themeStore.currentTheme.value === 'dark' ? 'is-dark' : 'is-light'
-  }
-  return 'is-light'
+  return themeStore.currentTheme.value === 'light' ? 'is-light' : 'is-dark'
 })
 
 const previewResolvedBackgrounds = computed(() => {
@@ -190,6 +188,28 @@ const previewThemeVars = computed(() => {
   const theme = systemForm.value.globalThemeSettings
   const backgrounds = previewResolvedBackgrounds.value
   const isLight = previewThemeClass.value === 'is-light'
+  // 预览画布必须自带文字色：后台壳常是深色 token，浅色预览若不覆盖会「白字冲白」
+  const textTokens = isLight
+    ? {
+        '--text-primary': '#0f1419',
+        '--text-secondary': '#536471',
+        '--text-tertiary': '#72808a',
+        '--text-placeholder': '#536471a3',
+        '--text-disabled': '#5364715c',
+        '--stroke-primary': '#00000012',
+        '--stroke-secondary': '#0000000d',
+        '--inverse-text-primary': '#ffffffe5',
+      }
+    : {
+        '--text-primary': '#f5fbff',
+        '--text-secondary': '#e0f5ff99',
+        '--text-tertiary': '#e0f5ff7a',
+        '--text-placeholder': '#e0f5ff59',
+        '--text-disabled': '#e0f5ff33',
+        '--stroke-primary': '#ccddff1a',
+        '--stroke-secondary': '#ccddff0f',
+        '--inverse-text-primary': '#15161a',
+      }
 
   return {
     '--bg-body': backgrounds.page,
@@ -208,6 +228,7 @@ const previewThemeVars = computed(() => {
     '--brand-warning-default': theme.brandColors.warning,
     '--brand-danger-default': theme.brandColors.danger,
     '--theme-banner-glow': theme.gradients.bannerGlow,
+    ...textTokens,
   }
 })
 
@@ -327,6 +348,21 @@ const openAppearanceSettings = () => {
 
 const handleSaveAppearance = () => {
   void appearanceStore.saveAndNotify()
+}
+
+/** 恢复默认主题后立刻落库，避免预览已是紫主色、DB 仍留着误填青主色 */
+const handleResetThemeDefaults = async () => {
+  appearanceStore.resetThemeDefaults()
+  const mode = systemForm.value.globalThemeSettings.modePolicy.defaultMode
+  if (mode === 'light' || mode === 'dark') {
+    themeStore.setThemeMode(mode)
+  }
+  try {
+    await appearanceStore.save()
+    ElMessage.success('已恢复默认主题并保存')
+  } catch {
+    ElMessage.error('默认主题已恢复到预览，但保存失败，请手动点「保存」')
+  }
 }
 
 const handlePreviewMenuAction = ({ action, menuKey }: { action: WorkbenchMenuActionKey, menuKey: string }) => {
@@ -468,6 +504,23 @@ const submitWorkbenchContentDialog = () => {
   closeWorkbenchContentDialog()
 }
 
+/** 后台重新开启/保存顶通时清掉本机「已关闭」标记，避免前台仍被 localStorage 藏掉 */
+const clearHomeTopBannerDismissed = (bannerId?: string) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  const id = String(bannerId || 'default').trim() || 'default'
+  const prefix = `canana:home-top-banner:dismissed:${id}`
+  const keysToRemove: string[] = []
+  for (let i = 0; i < window.localStorage.length; i += 1) {
+    const key = window.localStorage.key(i)
+    if (key && (key === prefix || key.startsWith(`${prefix}:`))) {
+      keysToRemove.push(key)
+    }
+  }
+  keysToRemove.forEach(key => window.localStorage.removeItem(key))
+}
+
 const toggleWorkbenchContentVisibility = (blockKey: WorkbenchContentBlockKey) => {
   const workbench = systemForm.value.conversationSettings.entryDisplay.workbench
   const header = systemForm.value.homeLayoutSettings.header
@@ -480,6 +533,9 @@ const toggleWorkbenchContentVisibility = (blockKey: WorkbenchContentBlockKey) =>
     next.enabled = enabling
     if (enabling && !String(next.contentText || '').trim()) {
       next.contentText = String(next.tagText || '').trim() || '活动进行中，点击了解详情'
+    }
+    if (enabling) {
+      clearHomeTopBannerDismissed(next.bannerId)
     }
     systemForm.value.homeLayoutSettings.topBanner = next
     return
@@ -533,12 +589,15 @@ const submitTopBannerDialog = async () => {
   if (next.enabled && !String(next.contentText || '').trim()) {
     next.contentText = String(next.tagText || '').trim() || '活动进行中，点击了解详情'
   }
+  if (next.enabled) {
+    clearHomeTopBannerDismissed(next.bannerId)
+  }
   systemForm.value.homeLayoutSettings.topBanner = next
   closeTopBannerDialog()
   await appearanceStore.saveAndNotify()
 }
 
-const handleWorkbenchContentAction = ({ action, blockKey }: { action: WorkbenchMenuActionKey, blockKey: WorkbenchContentBlockKey }) => {
+const handleWorkbenchContentAction = async ({ action, blockKey }: { action: WorkbenchMenuActionKey, blockKey: WorkbenchContentBlockKey }) => {
   if (blockKey === 'top-banner') {
     if (action === 'edit') {
       openTopBannerDialog()
@@ -546,6 +605,8 @@ const handleWorkbenchContentAction = ({ action, blockKey }: { action: WorkbenchM
     }
     if (action === 'visible') {
       toggleWorkbenchContentVisibility(blockKey)
+      // 顶通开关直接影响前台壳层，立刻落库并刷新公开配置
+      await appearanceStore.saveAndNotify()
     }
     return
   }

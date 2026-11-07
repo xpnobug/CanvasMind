@@ -542,6 +542,11 @@ export const createDefaultGenerationProgressSettings = (): SystemGenerationProgr
   ],
 })
 
+/**
+ * 默认品牌配色取用户导出 theme-config 主色 #55b8cc；
+ * hover/active 加深，secondary/accent 保留区分色（导出稿整组刷成同色是误填）。
+ * 默认深色壳，避免浅色预览字色被冲白。
+ */
 export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsConfig => ({
   modePolicy: {
     allowUserToggle: true,
@@ -552,8 +557,8 @@ export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsCon
     dark: {
       backgrounds: {
         page: '#0f0f12',
-        surface: '#15161a',
-        sideMenu: '#111218',
+        surface: '#0f0f12',
+        sideMenu: '#0f0f12',
       },
     },
     light: {
@@ -565,9 +570,9 @@ export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsCon
     },
   },
   brandColors: {
-    primary: '#6f35ff',
-    primaryHover: '#5b28e6',
-    primaryActive: '#4c20c4',
+    primary: '#55b8cc',
+    primaryHover: '#3fa3b8',
+    primaryActive: '#2f8ea3',
     secondary: '#00c2d6',
     accent: '#ff7a59',
     success: '#18b566',
@@ -575,7 +580,7 @@ export const createDefaultGlobalThemeSettings = (): SystemGlobalThemeSettingsCon
     danger: '#f04438',
   },
   gradients: {
-    primaryGradient: 'linear-gradient(135deg, #6f35ff 0%, #ff7a59 100%)',
+    primaryGradient: 'linear-gradient(135deg, #55b8cc 0%, #2fe3ff 100%)',
     bannerGlow: '#2FE3FF',
   },
   surfaces: {

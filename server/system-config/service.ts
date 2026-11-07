@@ -243,6 +243,7 @@ const createDefaultSystemConfig = () => ({
       deleteCascadeRecords: true,
     },
   },
+  // 默认品牌配色：主色 #55b8cc（导出稿），默认深色壳
   globalThemeSettings: {
     modePolicy: {
       allowUserToggle: true,
@@ -253,8 +254,8 @@ const createDefaultSystemConfig = () => ({
       dark: {
         backgrounds: {
           page: '#0f0f12',
-          surface: '#15161a',
-          sideMenu: '#111218',
+          surface: '#0f0f12',
+          sideMenu: '#0f0f12',
         },
       },
       light: {
@@ -266,9 +267,9 @@ const createDefaultSystemConfig = () => ({
       },
     },
     brandColors: {
-      primary: '#6f35ff',
-      primaryHover: '#5b28e6',
-      primaryActive: '#4c20c4',
+      primary: '#55b8cc',
+      primaryHover: '#3fa3b8',
+      primaryActive: '#2f8ea3',
       secondary: '#00c2d6',
       accent: '#ff7a59',
       success: '#18b566',
@@ -276,7 +277,7 @@ const createDefaultSystemConfig = () => ({
       danger: '#f04438',
     },
     gradients: {
-      primaryGradient: 'linear-gradient(135deg, #6f35ff 0%, #ff7a59 100%)',
+      primaryGradient: 'linear-gradient(135deg, #55b8cc 0%, #2fe3ff 100%)',
       bannerGlow: '#2FE3FF',
     },
     surfaces: {

@@ -1236,7 +1236,7 @@ const loadPersistedGenerationSessions = async () => {
 
   try {
     isGenerationSessionsLoading.value = true
-    const sessions = await listGenerationSessionsRequest()
+    const sessions = await listGenerationSessionsRequest('generate')
     generationSessions.value = sessions
     syncCurrentSessionWithSessionList(sessions)
   } catch {
@@ -1254,7 +1254,7 @@ const handleCreateSession = async () => {
     return
   }
 
-  const createdSession = await createGenerationSessionRequest()
+  const createdSession = await createGenerationSessionRequest({ source: 'generate' })
   generationSessions.value = generationSessions.value
       .filter(session => session.id !== createdSession.id)
   generationSessions.value.push(createdSession)

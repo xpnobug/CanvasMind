@@ -1,8 +1,24 @@
 /**
  * 画布状态管理
- * 管理节点、边和画布状态
+ *
+ * 管理节点、边、视口、背景、助手会话等所有"画布项目级"状态，
+ * 并维护一份扩展过的撤销/重做历史栈：
+ *
+ *   - 快照单元覆盖 nodes / edges / viewport / backgroundMode / showImageInfo
+ *     / chatSessions / activeChatId（与 infinite-canvas 对齐）
+ *   - 通过 watch + 180ms 防抖自动入栈，所有 mutator 不必显式调用
+ *   - 拖拽期间通过 pauseHistory / resumeHistory 暂停入栈，
+ *     避免连续位置变化把历史撑满
+ *   - 最大 50 条；序列化比对避免无意义重复入栈
+ *   - canUndo / canRedo 暴露为 computed，模板里直接 :disabled="!canUndo"
+ *
+ * API 兼容性：addNode / addEdge / updateNode / updateEdge / removeNode / removeEdge /
+ *   duplicateNode / undo / redo / applyCanvasSnapshot / manualSaveHistory /
+ *   initHistory / initSampleData / updateViewport / clearCanvas 签名保持不变。
+ *   新增：pauseHistory / resumeHistory / canvasBackgroundMode / canvasShowImageInfo /
+ *   canvasChatSessions / canvasActiveChatId。
  */
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getDefaultChatModelKey, getDefaultImageModelKey, getDefaultVideoModelKey, getModelByName } from '@/config/models'
 import type { WorkflowCanvasPosition } from './workflow-orchestrator-types'
 
@@ -23,6 +39,8 @@ export interface WorkflowNodeDataBase {
 export interface WorkflowTextNodeData extends WorkflowNodeDataBase {
   content: string
   polishModel?: string
+  /** 文本字号，px。hover toolbar 通过 +/- 调节，默认 14 */
+  fontSize?: number
 }
 
 export interface WorkflowImageConfigNodeData extends WorkflowNodeDataBase {
@@ -43,6 +61,14 @@ export interface WorkflowImageNodeData extends WorkflowNodeDataBase {
   url: string
   base64?: string
   duration?: number
+  /** 批量生图组首标记（节点内自渲染叠卡） */
+  isBatchRoot?: boolean
+  /** 组内子图列表（包含主图副本） */
+  batchChildren?: Array<{ id: string; url: string }>
+  /** 当前显示为主图的子图 id（指向 batchChildren 中的某项） */
+  primaryImageId?: string
+  /** 是否展开为网格视图（false=叠卡折叠，true=网格展开） */
+  batchExpanded?: boolean
 }
 
 export interface WorkflowVideoNodeData extends WorkflowNodeDataBase {
@@ -108,15 +134,36 @@ export interface WorkflowCanvasEdge {
   data?: WorkflowEdgeData
 }
 
-export interface WorkflowCanvasStateSnapshot {
-  nodes: WorkflowCanvasNode[]
-  edges: WorkflowCanvasEdge[]
+/** 画布背景模式（dots / lines / blank） */
+export type WorkflowBackgroundMode = 'dots' | 'lines' | 'blank'
+
+/** 助手会话快照（详细消息结构在 P3 useChatSessions 中定义，此处先用 unknown 保留位） */
+export interface WorkflowAssistantSessionSnapshot {
+  id: string
+  title: string
+  messages: unknown[]
+  createdAt: number
+  updatedAt: number
 }
 
 export interface WorkflowCanvasViewportSnapshot {
   x: number
   y: number
   zoom: number
+}
+
+/**
+ * 画布快照单元（撤销/重做的最小颗粒）
+ * viewport / backgroundMode / showImageInfo / chatSessions / activeChatId 都纳入历史。
+ */
+export interface WorkflowCanvasStateSnapshot {
+  nodes: WorkflowCanvasNode[]
+  edges: WorkflowCanvasEdge[]
+  viewport?: WorkflowCanvasViewportSnapshot
+  backgroundMode?: WorkflowBackgroundMode
+  showImageInfo?: boolean
+  chatSessions?: WorkflowAssistantSessionSnapshot[]
+  activeChatId?: string | null
 }
 
 type WorkflowNodeUpdatePayload = Partial<WorkflowNodeData> & {
@@ -141,34 +188,57 @@ export interface WorkflowAddEdgeParams {
 let nodeId = 0
 const getNodeId = () => `node_${nodeId++}`
 
-// 节点和边
+// === 画布数据状态 ===
 export const nodes = ref<WorkflowCanvasNode[]>([])
 export const edges = ref<WorkflowCanvasEdge[]>([])
+export const canvasViewport = ref<WorkflowCanvasViewportSnapshot>({ x: 100, y: 50, zoom: 0.8 })
 
-// 视口状态
-export const canvasViewport = ref({ x: 100, y: 50, zoom: 0.8 })
+// 画布外观（迁移自 infinite-canvas，纳入历史快照）
+export const canvasBackgroundMode = ref<WorkflowBackgroundMode>('dots')
+export const canvasShowImageInfo = ref<boolean>(false)
 
-// 撤销/重做历史
+// 助手会话（P3 实现 useChatSessions 时会读写这两个字段，先建好位）
+export const canvasChatSessions = ref<WorkflowAssistantSessionSnapshot[]>([])
+export const canvasActiveChatId = ref<string | null>(null)
+
+// === 撤销/重做历史栈 ===
 const history = ref<WorkflowCanvasStateSnapshot[]>([])
 const historyIndex = ref(-1)
 const MAX_HISTORY = 50
+const HISTORY_DEBOUNCE_MS = 180
+
 let isRestoring = false
+let historyPaused = false
+let pendingHistoryTimer: ReturnType<typeof setTimeout> | null = null
+// 缓存上次入栈的序列化结果，跳过完全相同的"无意义入栈"
+let lastSerializedSnapshot = ''
 
 const cloneCanvasState = (state: WorkflowCanvasStateSnapshot): WorkflowCanvasStateSnapshot => {
   return JSON.parse(JSON.stringify(state)) as WorkflowCanvasStateSnapshot
 }
 
-/**
- * 保存当前状态到历史
- */
-const saveToHistory = () => {
-  if (isRestoring) return
+const captureSnapshot = (): WorkflowCanvasStateSnapshot => ({
+  nodes: nodes.value,
+  edges: edges.value,
+  viewport: { ...canvasViewport.value },
+  backgroundMode: canvasBackgroundMode.value,
+  showImageInfo: canvasShowImageInfo.value,
+  chatSessions: canvasChatSessions.value,
+  activeChatId: canvasActiveChatId.value,
+})
 
-  const state: WorkflowCanvasStateSnapshot = {
-    nodes: cloneCanvasState({ nodes: nodes.value, edges: [] }).nodes,
-    edges: cloneCanvasState({ nodes: [], edges: edges.value }).edges,
-  }
+const commitHistory = () => {
+  pendingHistoryTimer = null
+  if (isRestoring || historyPaused) return
 
+  const raw = captureSnapshot()
+  const serialized = JSON.stringify(raw)
+  if (serialized === lastSerializedSnapshot) return
+  lastSerializedSnapshot = serialized
+
+  const state = cloneCanvasState(raw)
+
+  // 用户在中段 undo 后再做新操作 → 截断 future
   if (historyIndex.value < history.value.length - 1) {
     history.value = history.value.slice(0, historyIndex.value + 1)
   }
@@ -176,11 +246,45 @@ const saveToHistory = () => {
   history.value.push(state)
 
   if (history.value.length > MAX_HISTORY) {
-    history.value.shift()
-  } else {
-    historyIndex.value++
+    history.value.splice(0, history.value.length - MAX_HISTORY)
+  }
+  historyIndex.value = history.value.length - 1
+}
+
+/** 入栈（带 180ms 防抖；拖拽期间被 pause 时跳过） */
+const saveToHistory = () => {
+  if (isRestoring || historyPaused) return
+  if (pendingHistoryTimer) clearTimeout(pendingHistoryTimer)
+  pendingHistoryTimer = setTimeout(commitHistory, HISTORY_DEBOUNCE_MS)
+}
+
+/**
+ * 暂停入栈（典型用法：节点拖拽 onNodeDragStart 时调用）
+ * 暂停期间所有变化都不会入栈；与 resumeHistory 配对使用。
+ */
+export const pauseHistory = () => {
+  historyPaused = true
+  if (pendingHistoryTimer) {
+    clearTimeout(pendingHistoryTimer)
+    pendingHistoryTimer = null
   }
 }
+
+/**
+ * 恢复入栈
+ * @param commitNow 默认 true，恢复时立即提交一次（典型：拖拽结束把最终位置作为 1 条历史）
+ */
+export const resumeHistory = (commitNow = true) => {
+  historyPaused = false
+  if (commitNow) commitHistory()
+}
+
+// 监听所有纳入快照的字段，自动防抖入栈（mutator 不必再显式调用 saveToHistory）
+watch(
+  [nodes, edges, canvasViewport, canvasBackgroundMode, canvasShowImageInfo, canvasChatSessions, canvasActiveChatId],
+  () => saveToHistory(),
+  { deep: true },
+)
 
 /**
  * 获取节点类型的默认数据
@@ -246,7 +350,7 @@ export const addNode = <T extends WorkflowNodeType>(
     } as WorkflowNodeDataMap[T],
   }
   nodes.value = [...nodes.value, nextNode]
-  saveToHistory()
+  // 入栈由全局 watch 防抖触发，无需显式调用
   return id
 }
 
@@ -264,13 +368,13 @@ export const updateNode = (id: string, patch: WorkflowNodeUpdatePayload) => {
       },
     } : node,
   )
+  // 拖拽位置变更也通过 watch 入栈（拖拽中由调用方 pauseHistory，结束 resumeHistory）
 }
 
 // 删除节点
 export const removeNode = (id: string) => {
   nodes.value = nodes.value.filter(node => node.id !== id)
   edges.value = edges.value.filter(edge => edge.source !== id && edge.target !== id)
-  saveToHistory()
 }
 
 // 复制节点
@@ -288,7 +392,6 @@ export const duplicateNode = (id: string) => {
     data: { ...source.data },
     zIndex: maxZ + 1
   }]
-  saveToHistory()
   return newId
 }
 
@@ -298,7 +401,6 @@ export const addEdge = (params: WorkflowAddEdgeParams) => {
     ...params,
   }
   edges.value = [...edges.value, nextEdge]
-  saveToHistory()
 }
 
 // 更新边数据
@@ -312,13 +414,11 @@ export const updateEdge = (id: string, patch: WorkflowEdgePatch) => {
       },
     } : edge,
   )
-  saveToHistory()
 }
 
 // 删除边
 export const removeEdge = (id: string) => {
   edges.value = edges.value.filter(edge => edge.id !== id)
-  saveToHistory()
 }
 
 // 清空画布
@@ -328,13 +428,13 @@ export const clearCanvas = () => {
   nodeId = 0
 }
 
-// 更新视口
-export const updateViewport = (viewport: typeof canvasViewport.value) => {
+// 更新视口（频繁触发，依赖防抖合并）
+export const updateViewport = (viewport: WorkflowCanvasViewportSnapshot) => {
   canvasViewport.value = viewport
 }
 
 // 撤销
-export const undo = () => {
+export const undo = (): boolean => {
   if (historyIndex.value <= 0) return false
   historyIndex.value--
   restoreState(history.value[historyIndex.value])
@@ -342,7 +442,7 @@ export const undo = () => {
 }
 
 // 重做
-export const redo = () => {
+export const redo = (): boolean => {
   if (historyIndex.value >= history.value.length - 1) return false
   historyIndex.value++
   restoreState(history.value[historyIndex.value])
@@ -354,6 +454,14 @@ const restoreState = (state: WorkflowCanvasStateSnapshot) => {
   const nextState = cloneCanvasState(state)
   nodes.value = nextState.nodes
   edges.value = nextState.edges
+  if (nextState.viewport) canvasViewport.value = { ...nextState.viewport }
+  if (nextState.backgroundMode !== undefined) canvasBackgroundMode.value = nextState.backgroundMode
+  if (nextState.showImageInfo !== undefined) canvasShowImageInfo.value = nextState.showImageInfo
+  if (nextState.chatSessions !== undefined) canvasChatSessions.value = nextState.chatSessions
+  if (nextState.activeChatId !== undefined) canvasActiveChatId.value = nextState.activeChatId
+  // 同步 lastSerialized，避免 restore 后 watch 把同一状态再入一次栈
+  lastSerializedSnapshot = JSON.stringify(captureSnapshot())
+  // 等 watch microtask 跑完再解锁
   setTimeout(() => { isRestoring = false }, 100)
 }
 
@@ -377,6 +485,7 @@ export const applyCanvasSnapshot = (
   viewportState?: WorkflowCanvasViewportSnapshot | null,
 ) => {
   const nextState = cloneCanvasState(state)
+  isRestoring = true
   nodes.value = nextState.nodes
   edges.value = nextState.edges
   syncNodeIdCounter(nextState.nodes)
@@ -387,14 +496,33 @@ export const applyCanvasSnapshot = (
       y: Number(viewportState.y || 0),
       zoom: Number(viewportState.zoom || 1) || 1,
     }
+  } else if (nextState.viewport) {
+    canvasViewport.value = { ...nextState.viewport }
   }
 
+  if (nextState.backgroundMode !== undefined) canvasBackgroundMode.value = nextState.backgroundMode
+  if (nextState.showImageInfo !== undefined) canvasShowImageInfo.value = nextState.showImageInfo
+  if (nextState.chatSessions !== undefined) canvasChatSessions.value = nextState.chatSessions
+  if (nextState.activeChatId !== undefined) canvasActiveChatId.value = nextState.activeChatId
+
+  setTimeout(() => { isRestoring = false }, 100)
   initHistory()
 }
 
-export const canUndo = () => historyIndex.value > 0
-export const canRedo = () => historyIndex.value < history.value.length - 1
-export const manualSaveHistory = () => saveToHistory()
+/** 撤销可用性（响应式 computed，模板用 :disabled="!canUndo"） */
+export const canUndo = computed(() => historyIndex.value > 0)
+/** 重做可用性（响应式 computed） */
+export const canRedo = computed(() => historyIndex.value < history.value.length - 1)
+
+/** 手动立即入栈（不防抖），用于显式提交场景 */
+export const manualSaveHistory = () => {
+  if (isRestoring || historyPaused) return
+  if (pendingHistoryTimer) {
+    clearTimeout(pendingHistoryTimer)
+    pendingHistoryTimer = null
+  }
+  commitHistory()
+}
 
 /**
  * 初始化画布（带示例数据）
@@ -415,12 +543,16 @@ export const initSampleData = () => {
 }
 
 /**
- * 初始化历史（页面加载时调用）
+ * 初始化历史（页面加载/重置时调用，把当前状态作为唯一基线）
  */
 export const initHistory = () => {
-  history.value = [{
-    nodes: cloneCanvasState({ nodes: nodes.value, edges: [] }).nodes,
-    edges: cloneCanvasState({ nodes: [], edges: edges.value }).edges,
-  }]
+  // 取消潜在的 pending 入栈
+  if (pendingHistoryTimer) {
+    clearTimeout(pendingHistoryTimer)
+    pendingHistoryTimer = null
+  }
+  const baseline = cloneCanvasState(captureSnapshot())
+  history.value = [baseline]
   historyIndex.value = 0
+  lastSerializedSnapshot = JSON.stringify(baseline)
 }

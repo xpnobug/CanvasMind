@@ -23,7 +23,7 @@
 <!--          <el-dropdown trigger="click" placement="bottom-end">-->
 <!--            <el-button plain size="small">-->
 <!--              简体中文-->
-<!--              <span class="ml-2 text-[10px] text-[var(&#45;&#45;text-tertiary)]">CN</span>-->
+<!--              <span class="ml-2 text-[10px] text-[var(--text-tertiary)]">CN</span>-->
 <!--            </el-button>-->
 <!--            <template #dropdown>-->
 <!--              <el-dropdown-menu>-->

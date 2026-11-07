@@ -1,7 +1,7 @@
 import { readJsonBody, sendJson } from '../ai-gateway/shared'
 
 export type AssetScope = 'feed' | 'mine' | 'all'
-export type AssetKind = 'image' | 'video'
+export type AssetKind = 'image' | 'video' | 'audio'
 export type AssetPublishState = 'all' | 'published' | 'pending' | 'draft'
 
 export interface AssetListQuery {
@@ -12,6 +12,8 @@ export interface AssetListQuery {
   pageSize: number
   publishState: AssetPublishState
   ownerKeyword: string
+  ids: string[]
+  includeEditorUploads: boolean
 }
 
 export interface AssetListResult<TItem = Record<string, unknown>> {
@@ -41,12 +43,22 @@ export const readAssetListQuery = (requestUrl: string) => {
     : rawScope === 'all'
       ? 'all'
       : 'feed'
-  const assetType = url.searchParams.get('assetType') === 'video' ? 'video' : 'image'
+  const rawAssetType = String(url.searchParams.get('assetType') || '').trim().toLowerCase()
+  const assetType: AssetKind = rawAssetType === 'video'
+    ? 'video'
+    : rawAssetType === 'audio'
+      ? 'audio'
+      : 'image'
   const rawTake = Number(url.searchParams.get('take') || 0)
   const rawPage = Number(url.searchParams.get('page') || 1)
   const rawPageSize = Number(url.searchParams.get('pageSize') || 0)
   const rawPublishState = String(url.searchParams.get('publishState') || '').trim().toLowerCase()
   const ownerKeyword = String(url.searchParams.get('ownerKeyword') || '').trim()
+  const rawIds = String(url.searchParams.get('ids') || '').trim()
+  const ids = rawIds
+    ? rawIds.split(',').map((id) => id.trim()).filter(Boolean).slice(0, 200)
+    : []
+  const includeEditorUploads = String(url.searchParams.get('includeEditorUploads') || '').toLowerCase() === 'true'
   const normalizedTake = Number.isFinite(rawTake) && rawTake > 0 ? Math.min(rawTake, 120) : 60
   const pageSize = Number.isFinite(rawPageSize) && rawPageSize > 0
     ? Math.min(rawPageSize, 120)
@@ -67,6 +79,8 @@ export const readAssetListQuery = (requestUrl: string) => {
     pageSize,
     publishState,
     ownerKeyword,
+    ids,
+    includeEditorUploads,
   } satisfies AssetListQuery
 }
 
@@ -96,4 +110,41 @@ export const readAssetActionBody = async (req: any) => {
         ? 'feed'
         : 'mine',
   } satisfies AssetActionPayload
+}
+
+export interface EditorUploadHeaders {
+  assetType: AssetKind
+  filename: string
+  mimeType: string
+  metadata: Record<string, unknown>
+}
+
+// 解析编辑器上传 raw binary 请求的 headers。
+export const readEditorUploadHeaders = (req: any): EditorUploadHeaders => {
+  const rawAssetType = String(req.headers['x-asset-type'] || '').trim().toLowerCase()
+  const assetType: AssetKind = rawAssetType === 'video'
+    ? 'video'
+    : rawAssetType === 'audio'
+      ? 'audio'
+      : 'image'
+
+  const filename = String(req.headers['x-upload-filename'] || '').trim() || 'untitled'
+  const mimeType = String(req.headers['content-type'] || 'application/octet-stream').trim()
+
+  // x-media-meta 是 base64 编码的 JSON,包含 width/height/durationSeconds/thumbnailUrl 等
+  const rawMeta = String(req.headers['x-media-meta'] || '').trim()
+  let metadata: Record<string, unknown> = {}
+  if (rawMeta) {
+    try {
+      const decoded = Buffer.from(rawMeta, 'base64').toString('utf-8')
+      const parsed = JSON.parse(decoded)
+      if (parsed && typeof parsed === 'object') {
+        metadata = parsed as Record<string, unknown>
+      }
+    } catch {
+      // 忽略解析错误,空对象作为兜底
+    }
+  }
+
+  return { assetType, filename, mimeType, metadata }
 }

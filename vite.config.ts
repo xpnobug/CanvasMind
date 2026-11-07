@@ -1,5 +1,6 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -61,9 +62,17 @@ const createMockAgentRawPlugin = () => ({
 })
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 与 canana-vue 一致：开发态 /uploads 同源代理到后端，避免跨域只能打开链接。
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiProxyTarget = String(env.VITE_API_BASE_URL || 'http://localhost:5409').replace(/\/+$/, '')
+
+  return {
   plugins: [
-    vue(),
+    // Vue 插件仅处理 .vue 文件，避免与 React JSX 互扰
+    vue({ include: [/\.vue$/] }),
+    // React 插件仅处理 .jsx/.tsx，承载 Cutia React UI（src-cutia/ 目录）
+    react({ include: /\.(jsx|tsx)$/ }),
     tailwindcss(),
     // Element Plus 按需引入：自动注入命名导入（ElMessage/ElMessageBox 等）的样式
     AutoImport({
@@ -92,8 +101,12 @@ export default defineConfig({
     host: '0.0.0.0',      // 允许外部访问
     open: true,           // 启动时自动打开浏览器
 
-    // 保留示例代理，便于接第三方接口调试。
+    // 开发环境：/uploads 走 API 同源代理；/api 不走代理（前端用 VITE_API_BASE_URL 直连后端）。
     proxy: {
+      '/uploads': {
+        target: apiProxyTarget,
+        changeOrigin: true,
+      },
       '/jimeng-api': {
         target: 'https://api.jimeng.jianying.com',
         changeOrigin: true,
@@ -122,6 +135,11 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@api': path.resolve(__dirname, 'src/api'),
       '@types': path.resolve(__dirname, 'src/types'),
+      // Cutia React 代码根别名（详见 docs/cutia-集成-目录结构设计.md）
+      '@cutia': path.resolve(__dirname, 'src-cutia'),
+      // Shim：拦截 Cutia 源码对 next.js 版 i18n 工具包的引用，指向本地 stub
+      // 详见 src-cutia/shims/i18next-toolkit/index.ts
+      '@i18next-toolkit/nextjs-approuter': path.resolve(__dirname, 'src-cutia/shims/i18next-toolkit/index.ts'),
     },
   },
 
@@ -144,6 +162,7 @@ export default defineConfig({
           if (!id.includes('node_modules')) {
             return
           }
+          // React 相关依赖统一进 vendor，避免 vendor/react-vendor 循环引用告警
           // Vue Flow 仅工作流页用到，单独成 chunk
           if (id.includes('@vue-flow')) {
             return 'vue-flow'
@@ -182,4 +201,5 @@ export default defineConfig({
     // 块大小警告限制（KB）
     chunkSizeWarningLimit: 500,
   },
+  }
 })

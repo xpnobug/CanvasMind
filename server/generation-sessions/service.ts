@@ -8,7 +8,16 @@ const NEW_GENERATION_SESSION_TITLE = '新对话'
 const MAX_GENERATION_SESSION_TITLE_LENGTH = 120
 const GENERATION_SESSIONS_LIST_SCOPE = 'generation-sessions-list'
 const GENERATION_SESSIONS_LIST_CACHE_PATTERN = redisKeys.cache(GENERATION_SESSIONS_LIST_SCOPE, '*')
-const buildGenerationSessionsListCacheKey = (currentUserId: string) => redisKeys.cache(GENERATION_SESSIONS_LIST_SCOPE, currentUserId)
+const DEFAULT_GENERATION_SESSION_SOURCE = 'generate'
+const MAX_GENERATION_SESSION_SOURCE_LENGTH = 64
+const normalizeGenerationSessionSource = (source?: string | null) => {
+  const normalized = String(source || '').trim().slice(0, MAX_GENERATION_SESSION_SOURCE_LENGTH)
+  return normalized || DEFAULT_GENERATION_SESSION_SOURCE
+}
+const buildGenerationSessionsListCacheKey = (currentUserId: string, source: string) =>
+  redisKeys.cache(GENERATION_SESSIONS_LIST_SCOPE, `${currentUserId}:${source}`)
+const buildGenerationSessionsListCachePatternForUser = (currentUserId: string) =>
+  redisKeys.cache(GENERATION_SESSIONS_LIST_SCOPE, `${currentUserId}:*`)
 
 const normalizeGenerationSessionTitle = (title?: string, fallback = NEW_GENERATION_SESSION_TITLE) => {
   const normalizedTitle = String(title || '').trim()
@@ -45,6 +54,7 @@ const buildGenerationSessionInclude = () => ({
 
 const serializeGenerationSession = (session: any) => ({
   id: session.id,
+  source: String(session.source || DEFAULT_GENERATION_SESSION_SOURCE),
   title: session.title,
   isDefault: Boolean(session.isDefault),
   sortOrder: Number(session.sortOrder || 0),
@@ -55,11 +65,13 @@ const serializeGenerationSession = (session: any) => ({
   updatedAt: session.updatedAt,
 })
 
-// 确保每个用户至少有一个默认会话。
-export const ensureDefaultGenerationSession = async (tx: any, currentUserId: string) => {
+// 确保每个用户在每个 source 入口下至少有一个默认会话。
+export const ensureDefaultGenerationSession = async (tx: any, currentUserId: string, source?: string | null) => {
+  const normalizedSource = normalizeGenerationSessionSource(source)
   const existingDefaultSession = await tx.generationSession.findFirst({
     where: {
       userId: currentUserId,
+      source: normalizedSource,
       isDefault: true,
     },
   })
@@ -71,6 +83,7 @@ export const ensureDefaultGenerationSession = async (tx: any, currentUserId: str
   return tx.generationSession.create({
     data: {
       userId: currentUserId,
+      source: normalizedSource,
       title: DEFAULT_GENERATION_SESSION_TITLE,
       isDefault: true,
       sortOrder: 0,
@@ -98,12 +111,18 @@ export const refreshGenerationSessionLastRecordAt = async (tx: any, sessionId: s
   })
 }
 
-// 校验并返回目标会话；未传会话时自动回退默认会话。
-export const resolveGenerationSessionForUser = async (tx: any, currentUserId: string, sessionId?: string | null) => {
+// 校验并返回目标会话；未传会话时按 source 回退到默认会话。
+export const resolveGenerationSessionForUser = async (
+  tx: any,
+  currentUserId: string,
+  sessionId?: string | null,
+  source?: string | null,
+) => {
   const normalizedSessionId = String(sessionId || '').trim()
+  const normalizedSource = normalizeGenerationSessionSource(source)
 
   if (!normalizedSessionId) {
-    return ensureDefaultGenerationSession(tx, currentUserId)
+    return ensureDefaultGenerationSession(tx, currentUserId, normalizedSource)
   }
 
   const existingSession = await tx.generationSession.findFirst({
@@ -120,19 +139,23 @@ export const resolveGenerationSessionForUser = async (tx: any, currentUserId: st
   return existingSession
 }
 
-// 获取当前用户的全部生成会话，若不存在则自动创建默认会话。
-export const listGenerationSessions = async (currentUserId: string) => {
+// 获取当前用户在指定 source 下的全部生成会话，若不存在则自动创建默认会话。
+export const listGenerationSessions = async (currentUserId: string, source?: string | null) => {
   const normalizedUserId = String(currentUserId || '').trim()
+  const normalizedSource = normalizeGenerationSessionSource(source)
   return getOrSetJsonCache({
-    key: buildGenerationSessionsListCacheKey(normalizedUserId),
+    key: buildGenerationSessionsListCacheKey(normalizedUserId, normalizedSource),
     ttlSeconds: 60,
     factory: async () => {
       await prisma.$transaction(async (tx) => {
-        await ensureDefaultGenerationSession(tx, normalizedUserId)
+        await ensureDefaultGenerationSession(tx, normalizedUserId, normalizedSource)
       })
 
       const sessions = await prisma.generationSession.findMany({
-        where: { userId: normalizedUserId },
+        where: {
+          userId: normalizedUserId,
+          source: normalizedSource,
+        },
         include: buildGenerationSessionInclude(),
         orderBy: [
           { isDefault: 'desc' },
@@ -146,10 +169,19 @@ export const listGenerationSessions = async (currentUserId: string) => {
   })
 }
 
-export const invalidateGenerationSessionsCache = async (currentUserId?: string | null) => {
+export const invalidateGenerationSessionsCache = async (
+  currentUserId?: string | null,
+  source?: string | null,
+) => {
   const normalizedUserId = String(currentUserId || '').trim()
   if (normalizedUserId) {
-    await invalidateRedisCaches([buildGenerationSessionsListCacheKey(normalizedUserId)])
+    const normalizedSource = String(source || '').trim()
+    if (normalizedSource) {
+      await invalidateRedisCaches([buildGenerationSessionsListCacheKey(normalizedUserId, normalizedSource)])
+      return
+    }
+    // 无 source 时清当前用户所有 source 的缓存（用 pattern）
+    await invalidateRedisCachePatterns([buildGenerationSessionsListCachePatternForUser(normalizedUserId)])
     return
   }
 
@@ -157,13 +189,18 @@ export const invalidateGenerationSessionsCache = async (currentUserId?: string |
 }
 
 // 创建新会话。
-export const createGenerationSession = async (payload: { title?: string }, currentUserId: string) => {
+export const createGenerationSession = async (
+  payload: { title?: string; source?: string },
+  currentUserId: string,
+) => {
+  const normalizedSource = normalizeGenerationSessionSource(payload.source)
   const session = await prisma.$transaction(async (tx) => {
-    await ensureDefaultGenerationSession(tx, currentUserId)
+    await ensureDefaultGenerationSession(tx, currentUserId, normalizedSource)
 
     return tx.generationSession.create({
       data: {
         userId: currentUserId,
+        source: normalizedSource,
         title: normalizeGenerationSessionTitle(payload.title),
         isDefault: false,
         sortOrder: 0,
@@ -172,7 +209,7 @@ export const createGenerationSession = async (payload: { title?: string }, curre
     })
   })
 
-  await invalidateGenerationSessionsCache(currentUserId)
+  await invalidateGenerationSessionsCache(currentUserId, normalizedSource)
   return serializeGenerationSession(session)
 }
 
@@ -197,12 +234,13 @@ export const updateGenerationSession = async (id: string, payload: { title?: str
     include: buildGenerationSessionInclude(),
   })
 
-  await invalidateGenerationSessionsCache(currentUserId)
+  await invalidateGenerationSessionsCache(currentUserId, existingSession.source)
   return serializeGenerationSession(session)
 }
 
 // 删除会话，同时级联删除该会话下的生成记录。
 export const deleteGenerationSession = async (id: string, currentUserId: string) => {
+  let deletedSource = DEFAULT_GENERATION_SESSION_SOURCE
   await prisma.$transaction(async (tx) => {
     const existingSession = await tx.generationSession.findFirst({
       where: {
@@ -219,14 +257,16 @@ export const deleteGenerationSession = async (id: string, currentUserId: string)
       throw new Error('默认会话不允许删除')
     }
 
+    deletedSource = String(existingSession.source || DEFAULT_GENERATION_SESSION_SOURCE)
+
     await tx.generationSession.delete({
       where: { id },
     })
 
-    await ensureDefaultGenerationSession(tx, currentUserId)
+    await ensureDefaultGenerationSession(tx, currentUserId, deletedSource)
   })
 
-  await invalidateGenerationSessionsCache(currentUserId)
+  await invalidateGenerationSessionsCache(currentUserId, deletedSource)
   return {
     id,
   }

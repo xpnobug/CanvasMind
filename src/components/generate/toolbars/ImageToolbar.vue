@@ -349,6 +349,7 @@ defineExpose({
     </div>
 
     <!-- 文字工具按钮 -->
+<!--
     <button class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square lv-btn-icon-only button-lc3WzE toolbar-button-FhFnQ_ toolbar-button-pEFNv9"
             type="button">
       <svg fill="none" height="1em" preserveAspectRatio="xMidYMid meet"
@@ -362,6 +363,7 @@ defineExpose({
         </g>
       </svg>
     </button>
+-->
   </div>
 </template>
 

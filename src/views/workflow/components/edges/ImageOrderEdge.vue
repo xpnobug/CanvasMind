@@ -52,7 +52,13 @@ const path = computed(() => {
 
 const labelX = computed(() => (props.sourceX + props.targetX) / 2)
 const labelY = computed(() => (props.sourceY + props.targetY) / 2)
-const edgeStyle = computed(() => ({ stroke: '#3b82f6', strokeWidth: 2, ...props.style }))
+const edgeStyle = computed(() => ({
+  stroke: '#3b82f6',
+  strokeWidth: isHover.value ? 3 : 2,
+  filter: isHover.value ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.55))' : 'none',
+  transition: 'stroke-width 0.18s cubic-bezier(0.4, 0, 0.2, 1), filter 0.18s ease-out',
+  ...props.style,
+}))
 
 const readImageOrder = (data: unknown) => (data && typeof data === 'object' && 'imageOrder' in data
   ? Number((data as { imageOrder?: number }).imageOrder) || 1

@@ -31,6 +31,11 @@ const AdminUsers = () => import('../views/admin/users/AdminUsers.vue')
 const AdminAuditLogs = () => import('../views/admin/audit/AdminAuditLogs.vue')
 const AdminAccessDenied = () => import('../views/admin/AdminAccessDenied.vue')
 
+// 视频编辑器正式路由(替代 POC,数据持久化到后端 video_projects 表)
+const VideoProjectList = () => import('../views/video-editor/VideoProjectList.vue')
+const VideoEditorPage = () => import('../views/video-editor/VideoEditorPage.vue')
+const AdminVideoProjects = () => import('../views/admin/video-projects/VideoProjectsManage.vue')
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/install',
@@ -86,6 +91,19 @@ const routes: RouteRecordRaw[] = [
     component: PolicyDetail,
   },
   {
+    path: '/video-editor',
+    name: 'VideoProjectList',
+    component: VideoProjectList,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/video-editor/:projectId',
+    name: 'VideoEditor',
+    component: VideoEditorPage,
+    meta: { requiresAuth: true },
+    props: true,
+  },
+  {
     path: '/admin-forbidden',
     name: 'AdminAccessDenied',
     component: AdminAccessDenied,
@@ -117,6 +135,15 @@ const routes: RouteRecordRaw[] = [
         path: 'assets',
         name: 'AdminAssets',
         component: AdminAssets,
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+        },
+      },
+      {
+        path: 'video-projects',
+        name: 'AdminVideoProjects',
+        component: AdminVideoProjects,
         meta: {
           requiresAuth: true,
           requiresAdmin: true,

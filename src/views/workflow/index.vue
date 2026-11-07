@@ -6,26 +6,24 @@
 import { computed, ref, watch, onMounted, onUnmounted, nextTick, markRaw } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { VueFlow, useVueFlow, type Connection } from '@vue-flow/core'
+import { VueFlow, useVueFlow, SelectionMode, type Connection, type NodeMouseEvent } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
-import { MiniMap } from '@vue-flow/minimap'
-import { useAsyncAction } from '@/composables'
+import { useAsyncAction, useShortcut } from '@/composables'
 import { useLoadingStore } from '@/stores/loading'
 import {
   nodes, edges, addNode, addEdge, updateNode, applyCanvasSnapshot,
   canvasViewport, updateViewport,
   undo, redo, canUndo, canRedo, manualSaveHistory, initSampleData, initHistory,
+  pauseHistory, resumeHistory,
   type WorkflowAddEdgeParams,
   type WorkflowCanvasEdge,
   type WorkflowNodeType,
 } from './composables/useWorkflowCanvas'
 import { WORKFLOW_TEMPLATES } from './config/workflows'
-import ContentGenerator from '@/components/generate/ContentGenerator.vue'
-import { useWorkflowOrchestrator } from './composables/useWorkflowOrchestrator'
 import { useWorkflowPersistence } from './composables/useWorkflowPersistence'
-import { buildAgentWorkflowStrategy } from '@/config/agentSkills'
 import type { WorkflowDefinitionSummary } from './api/definitions'
-import type { WorkflowCanvasPosition, WorkflowIntentAnalysisResult } from './composables/workflow-orchestrator-types'
+import { updateWorkflowDefinition } from './api/definitions'
+import type { WorkflowCanvasPosition } from './composables/workflow-orchestrator-types'
 
 // 节点组件
 import TextNode from './components/nodes/TextNode.vue'
@@ -39,10 +37,29 @@ import LlmConfigNode from './components/nodes/LlmConfigNode.vue'
 import ImageRoleEdge from './components/edges/ImageRoleEdge.vue'
 import PromptOrderEdge from './components/edges/PromptOrderEdge.vue'
 import ImageOrderEdge from './components/edges/ImageOrderEdge.vue'
+import CanvasDefaultEdge from '@/components/canvas/CanvasDefaultEdge.vue'
+
+// 画布壳（infinite-canvas → canana-vue 迁移产物）
+import CanvasContextMenu from '@/components/canvas/CanvasContextMenu.vue'
+import CanvasZoomControls from '@/components/canvas/CanvasZoomControls.vue'
+import CanvasMiniMap from '@/components/canvas/CanvasMiniMap.vue'
+import CanvasConnectionLine from '@/components/canvas/CanvasConnectionLine.vue'
+import RightPanel from '@components/canana/RightPanel.vue'
+import { useChatSessions } from '@/composables/useChatSessions'
+import { useCanvasSelection } from '@/composables/useCanvasSelection'
+import { useCanvasClipboard } from '@/composables/useCanvasClipboard'
+import { useCanvasDrop } from '@/composables/useCanvasDrop'
+import {
+  canvasBackgroundMode,
+  removeNode,
+  duplicateNode,
+  clearCanvas,
+} from './composables/useWorkflowCanvas'
+import type { ContextMenuItem, ContextMenuPosition } from '@/types/canvas-interaction'
 
 const router = useRouter()
 const route = useRoute()
-const { viewport, zoomIn, zoomOut, fitView, updateNodeInternals } = useVueFlow()
+const { viewport, zoomIn, zoomOut, fitView, updateNodeInternals, screenToFlowCoordinate } = useVueFlow()
 
 // 注册自定义节点类型
 const nodeTypes = {
@@ -56,13 +73,11 @@ const nodeTypes = {
 
 // 注册自定义边类型
 const edgeTypes = {
+  default: markRaw(CanvasDefaultEdge),
   imageRole: markRaw(ImageRoleEdge),
   promptOrder: markRaw(PromptOrderEdge),
   imageOrder: markRaw(ImageOrderEdge),
 } as any
-
-// 工作流编排器
-const { analyzeIntent, executeWorkflow } = useWorkflowOrchestrator()
 
 // 工作流持久化
 const {
@@ -118,6 +133,10 @@ const autosaveErrorMessage = ref('')
 const autosaveReady = ref(false)
 const autosaveInFlight = ref<Promise<void> | null>(null)
 
+// 头部标题重命名
+const renamingTitle = ref(false)
+const renameTitleInput = ref('')
+
 interface WorkflowTemplateNode {
   id: string
   type: WorkflowNodeType
@@ -138,10 +157,6 @@ interface WorkflowNodeOption {
   name: string
   color: string
   icon: string
-}
-
-interface PromptSendOptions {
-  skill?: string
 }
 
 const currentWorkflowTitle = computed(() => {
@@ -167,6 +182,46 @@ const autosaveStatusText = computed(() => {
 
   return currentWorkflowId.value ? '实时保存已开启' : '准备自动保存'
 })
+
+const startRenameTitle = () => {
+  renameTitleInput.value = currentWorkflowTitle.value
+  renamingTitle.value = true
+  nextTick(() => {
+    const el = document.querySelector<HTMLInputElement>('.wf-header-meta__title-input')
+    el?.focus()
+    el?.select()
+  })
+}
+
+const cancelRenameTitle = () => {
+  renamingTitle.value = false
+}
+
+const submitRenameTitle = async () => {
+  const nextTitle = renameTitleInput.value.trim()
+  if (!nextTitle) {
+    renamingTitle.value = false
+    return
+  }
+
+  // 未保存的新工作流：只改本地 name，后续保存/自动保存时带上
+  if (!currentWorkflowId.value) {
+    workflowName.value = nextTitle
+    renamingTitle.value = false
+    return
+  }
+
+  try {
+    const detail = await updateWorkflowDefinition(currentWorkflowId.value, { name: nextTitle })
+    currentWorkflowDetail.value = detail
+    workflowName.value = detail.definition.name
+  } catch (error) {
+    console.error('重命名工作流失败', error)
+    ElMessage.error('重命名失败，请稍后重试')
+  } finally {
+    renamingTitle.value = false
+  }
+}
 
 const buildComparableCanvasSnapshot = (input: {
   nodesJson: unknown
@@ -514,41 +569,6 @@ const onPaneClick = () => {
   showNodeMenu.value = false
 }
 
-// 处理内容生成器发送（使用工作流编排器）
-const handlePromptSend = async (
-  message: string,
-  type: string,
-  options?: PromptSendOptions,
-) => {
-  const cx = -viewport.value.x / viewport.value.zoom + (window.innerWidth / 2) / viewport.value.zoom
-  const cy = -viewport.value.y / viewport.value.zoom + (window.innerHeight / 2) / viewport.value.zoom
-  const position = { x: cx - 300, y: cy - 100 }
-
-  if (type === 'agent') {
-    try {
-      const strategy = buildAgentWorkflowStrategy(options?.skill || 'general', message)
-      if (strategy.mode === 'direct') {
-        await executeWorkflow(strategy.params as unknown as WorkflowIntentAnalysisResult, position)
-      } else {
-        const intent = await analyzeIntent(strategy.userInput, {
-          systemPromptOverride: strategy.systemPrompt,
-        })
-        await executeWorkflow(intent, position)
-      }
-    } catch (err) {
-      console.error('工作流执行失败:', err)
-    }
-  } else if (type === 'image') {
-    await executeWorkflow({ workflow_type: 'text_to_image', image_prompt: message }, position)
-  } else if (type === 'video') {
-    await executeWorkflow({
-      workflow_type: 'text_to_image_to_video',
-      image_prompt: message,
-      video_prompt: message,
-    }, position)
-  }
-}
-
 // 返回首页：保存草稿 → 跳转。globalKey:'blocking' 期间会弹遮罩"正在保存草稿…"，
 // 避免用户感觉点了没反应。useAsyncAction 自身防止重复点击。
 const goBackAction = useAsyncAction(async () => {
@@ -673,31 +693,138 @@ const flushAutosave = async () => {
   await autosaveInFlight.value
 }
 
-// 键盘快捷键
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && quickLinkSourceId.value) {
-    e.preventDefault()
-    quickLinkSourceId.value = null
-    return
-  }
+// 键盘快捷键（统一走 useShortcut 注册，自动管理生命周期 + 输入框焦点屏蔽）
+useShortcut(
+  'Escape',
+  () => {
+    if (quickLinkSourceId.value) {
+      quickLinkSourceId.value = null
+    }
+  },
+  // Esc 不阻止默认，让 el-dialog / el-popover 等浮层也能关闭
+  { preventDefault: false },
+)
+useShortcut('CmdOrCtrl+Z', () => undo())
+useShortcut(['CmdOrCtrl+Shift+Z', 'CmdOrCtrl+Y'], () => redo())
+useShortcut('CmdOrCtrl+N', () => {
+  void handleCreateWorkflow()
+})
 
-  if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-    e.preventDefault()
-    e.shiftKey ? redo() : undo()
-    return
-  }
+// 空格临时平移：按住 Space 时禁用节点拖拽，左键也加入 panOnDrag
+const isSpacePressed = ref(false)
+const panOnDragValue = computed<true | number[]>(() => (isSpacePressed.value ? [0, 1, 2] : true))
 
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
-    e.preventDefault()
-    void handleCreateWorkflow()
+const isEditableSpaceTarget = (el: EventTarget | null): boolean => {
+  if (!(el instanceof HTMLElement)) return false
+  const tag = el.tagName.toLowerCase()
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true
+  return el.isContentEditable
+}
+
+const handleSpaceDown = (event: KeyboardEvent) => {
+  if (event.code !== 'Space' || event.repeat) return
+  if (isEditableSpaceTarget(event.target)) return
+  event.preventDefault()
+  isSpacePressed.value = true
+}
+const handleSpaceUp = (event: KeyboardEvent) => {
+  if (event.code === 'Space') {
+    isSpacePressed.value = false
   }
+}
+
+// 节点拖拽期间暂停历史入栈，拖拽结束统一作为 1 条历史记录
+const onNodeDragStart = () => {
+  pauseHistory()
+}
+const onNodeDragStop = () => {
+  resumeHistory()
+}
+
+// === 选择 / 剪贴板 / 拖入 / 右键菜单 ===
+const { selectAll } = useCanvasSelection()
+const { copySelected, pasteFromSlot, hasClipboard } = useCanvasClipboard()
+const { onDrop: onCanvasFileDrop, onDragOver: onCanvasFileDragOver } = useCanvasDrop()
+
+// 小地图开关
+const isMiniMapOpen = ref(true)
+const toggleMiniMap = () => {
+  isMiniMapOpen.value = !isMiniMapOpen.value
+}
+
+// 右键上下文菜单
+const contextMenuVisible = ref(false)
+const contextMenuPosition = ref<ContextMenuPosition>({ x: 0, y: 0 })
+const contextMenuItems = ref<ContextMenuItem[]>([])
+const closeContextMenu = () => {
+  contextMenuVisible.value = false
+}
+const openPaneContextMenu = (event: MouseEvent) => {
+  event.preventDefault()
+  const flowPos = screenToFlowCoordinate({ x: event.clientX, y: event.clientY })
+  contextMenuItems.value = [
+    { id: 'add-text', label: '新建文本', onClick: () => addNode('text', flowPos) },
+    { id: 'add-image', label: '新建图片', onClick: () => addNode('image', flowPos) },
+    { id: 'add-video', label: '新建视频', onClick: () => addNode('video', flowPos) },
+    { id: 'add-image-config', label: '新建文生图配置', onClick: () => addNode('imageConfig', flowPos) },
+    { id: 'divider', label: '', type: 'divider' },
+    {
+      id: 'paste',
+      label: '粘贴',
+      shortcut: 'Cmd+V',
+      disabled: !hasClipboard(),
+      onClick: () => pasteFromSlot(),
+    },
+  ]
+  contextMenuPosition.value = { x: event.clientX, y: event.clientY }
+  contextMenuVisible.value = true
+}
+const openNodeContextMenu = (payload: NodeMouseEvent) => {
+  payload.event.preventDefault()
+  const e = payload.event as unknown as MouseEvent
+  contextMenuItems.value = [
+    { id: 'duplicate', label: '复制', shortcut: 'Cmd+C', onClick: () => duplicateNode(payload.node.id) },
+    { id: 'delete', label: '删除', shortcut: 'Del', danger: true, onClick: () => removeNode(payload.node.id) },
+  ]
+  contextMenuPosition.value = { x: e.clientX, y: e.clientY }
+  contextMenuVisible.value = true
+}
+
+// 清空画布（带确认）
+const clearCanvasWithConfirm = () => {
+  if (typeof window === 'undefined') return
+  if (window.confirm('确定要清空画布吗？此操作不可撤销。')) {
+    clearCanvas()
+  }
+}
+
+// 扩展快捷键
+useShortcut('CmdOrCtrl+A', () => selectAll())
+useShortcut('CmdOrCtrl+C', () => {
+  copySelected()
+})
+useShortcut('CmdOrCtrl+V', () => {
+  pasteFromSlot()
+})
+
+// 助手面板（复用 canana 视图的 RightPanel）
+const { isPanelCollapsed: isAssistantCollapsed, togglePanel: toggleAssistantPanel } = useChatSessions()
+const pendingAssistantMessage = ref('')
+
+// 助手生成的图片落到画布：在视口中心创建 image 节点
+const handleAssistantAddImage = ({ url }: { url: string }) => {
+  if (!url) return
+  const center = screenToFlowCoordinate({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+  addNode('image', center, { url, label: '助手生成' })
 }
 
 onMounted(() => {
   initSampleData()
   initHistory()
   initialCanvasBaselineSnapshot.value = currentCanvasSnapshot.value
-  window.addEventListener('keydown', handleKeydown)
+
+  window.addEventListener('keydown', handleSpaceDown)
+  window.addEventListener('keyup', handleSpaceUp)
 
   const initialWorkflowId = String(route.query.workflowId || '').trim()
   const initialVersionId = String(route.query.versionId || '').trim()
@@ -711,7 +838,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('keydown', handleSpaceDown)
+  window.removeEventListener('keyup', handleSpaceUp)
   clearAutosaveTimer()
 })
 
@@ -754,33 +882,68 @@ watch(currentCanvasSnapshot, () => {
 </script>
 
 <template>
-  <div class="workflow-container">
+  <div class="workflow-container" :class="{ 'workflow-right-panel-open': !isAssistantCollapsed }">
     <div class="workflow-workbench">
       <div class="workflow-main">
-        <VueFlow
-          v-model:nodes="nodes"
-          v-model:edges="edges"
-          v-model:viewport="viewport"
-          :node-types="nodeTypes"
-          :edge-types="edgeTypes"
-          :default-viewport="canvasViewport"
-          :min-zoom="0.1"
-          :max-zoom="2"
-          :snap-to-grid="true"
-          :snap-grid="[20, 20]"
-          :delete-key-code="['Delete', 'Backspace']"
-          :connect-on-click="false"
-          :node-class-name="resolveNodeClass"
-          @connect="onConnect"
-          @node-click="handleNodeClick"
-          @pane-click="onPaneClick"
-          @viewport-change="handleViewportChange"
-          @edges-change="onEdgesChange"
-          class="workflow-canvas"
+        <div
+          class="workflow-canvas-wrap"
+          @dragover="onCanvasFileDragOver"
+          @drop="onCanvasFileDrop"
         >
-          <Background :gap="20" :size="1" />
-          <MiniMap position="bottom-right" :pannable="true" :zoomable="true" />
-        </VueFlow>
+          <VueFlow
+            v-model:nodes="nodes"
+            v-model:edges="edges"
+            v-model:viewport="viewport"
+            :node-types="nodeTypes"
+            :edge-types="edgeTypes"
+            :default-viewport="canvasViewport"
+            :min-zoom="0.1"
+            :max-zoom="2"
+            :snap-to-grid="true"
+            :snap-grid="[20, 20]"
+            :delete-key-code="['Delete', 'Backspace']"
+            :selection-key-code="'Meta'"
+            :multi-selection-key-code="'Shift'"
+            :selection-mode="SelectionMode.Partial"
+            :pan-on-drag="panOnDragValue"
+            :nodes-draggable="!isSpacePressed"
+            :pan-on-scroll="false"
+            :connect-on-click="false"
+            :connection-line-component="CanvasConnectionLine"
+            :node-class-name="resolveNodeClass"
+            @connect="onConnect"
+            @node-click="handleNodeClick"
+            @pane-click="onPaneClick"
+            @viewport-change="handleViewportChange"
+            @edges-change="onEdgesChange"
+            @node-drag-start="onNodeDragStart"
+            @node-drag-stop="onNodeDragStop"
+            @pane-context-menu="openPaneContextMenu"
+            @node-context-menu="openNodeContextMenu"
+            class="workflow-canvas"
+            :class="{ 'workflow-canvas--space-panning': isSpacePressed }"
+          >
+            <Background
+              v-if="canvasBackgroundMode !== 'blank'"
+              :gap="canvasBackgroundMode === 'dots' ? 24 : 20"
+              :size="canvasBackgroundMode === 'dots' ? 1.2 : 1"
+              :variant="canvasBackgroundMode === 'dots' ? 'dots' : 'lines'"
+            />
+          </VueFlow>
+
+          <CanvasMiniMap :visible="isMiniMapOpen" />
+          <CanvasZoomControls
+            :mini-map-open="isMiniMapOpen"
+            @toggle-mini-map="toggleMiniMap"
+            @clear="clearCanvasWithConfirm"
+          />
+          <CanvasContextMenu
+            :visible="contextMenuVisible"
+            :position="contextMenuPosition"
+            :items="contextMenuItems"
+            @close="closeContextMenu"
+          />
+        </div>
 
         <header class="workflow-header">
           <div class="workflow-header-left">
@@ -794,7 +957,24 @@ watch(currentCanvasSnapshot, () => {
 
           <div class="workflow-header-right">
             <div class="wf-header-meta">
-              <span class="wf-header-meta__title">{{ currentWorkflowTitle }}</span>
+              <input
+                v-if="renamingTitle"
+                v-model="renameTitleInput"
+                class="wf-header-meta__title wf-header-meta__title-input"
+                type="text"
+                maxlength="80"
+                @blur="submitRenameTitle"
+                @keyup.enter.prevent="submitRenameTitle"
+                @keyup.esc.prevent="cancelRenameTitle"
+              />
+              <span
+                v-else
+                class="wf-header-meta__title"
+                title="点击重命名工作流"
+                @click="startRenameTitle"
+              >
+                {{ currentWorkflowTitle }}
+              </span>
               <span class="wf-header-meta__status">{{ currentWorkflowStatusText }} · {{ autosaveStatusText }}</span>
             </div>
           </div>
@@ -864,13 +1044,13 @@ watch(currentCanvasSnapshot, () => {
 
             <div class="wf-divider"></div>
 
-            <button class="wf-btn wf-btn-icon" :disabled="!canUndo()" @click="undo()" title="撤销">
+            <button class="wf-btn wf-btn-icon" :disabled="!canUndo" @click="undo()" title="撤销">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M3 10h10a5 5 0 015 5v0a5 5 0 01-5 5H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M7 14l-4-4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <button class="wf-btn wf-btn-icon" :disabled="!canRedo()" @click="redo()" title="重做">
+            <button class="wf-btn wf-btn-icon" :disabled="!canRedo" @click="redo()" title="重做">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M21 10H11a5 5 0 00-5 5v0a5 5 0 005 5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M17 14l4-4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -893,7 +1073,7 @@ watch(currentCanvasSnapshot, () => {
           </button>
         </div>
 
-        <div class="workflow-bottom-toolbar">
+        <div class="workflow-bottom-toolbar" v-if="false">
           <div class="workflow-bottom-toolbar-container">
             <button class="wf-btn wf-btn-sm" @click="fitView({ padding: 0.2 })" title="适应视图">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -1037,14 +1217,38 @@ watch(currentCanvasSnapshot, () => {
           </div>
         </Transition>
 
-        <ContentGenerator
-          class="workflow-content-generator"
-          :collapsible="true"
-          :default-expanded="false"
-          popup-placement="top"
-          @send="handlePromptSend"
-        />
+<!--        <ContentGenerator-->
+<!--          class="workflow-content-generator"-->
+<!--          :collapsible="true"-->
+<!--          :default-expanded="false"-->
+<!--          popup-placement="top"-->
+<!--          @send="handlePromptSend"-->
+<!--        />-->
       </div>
+
+      <!-- 右侧助手面板（复用 canana 视图的 RightPanel）：fixed 定位 + translateX 动画 -->
+      <aside class="workflow-assistant-aside">
+        <RightPanel
+          :title="currentWorkflowTitle"
+          :visible="!isAssistantCollapsed"
+          :initial-message="pendingAssistantMessage"
+          @close="toggleAssistantPanel"
+          @message-received="pendingAssistantMessage = ''"
+          @add-image-to-canvas="handleAssistantAddImage"
+        />
+      </aside>
+
+      <!-- 折叠态下的展开把手 -->
+      <button
+        v-if="isAssistantCollapsed"
+        class="canvas-assistant-toggle"
+        title="展开助手面板"
+        @click="toggleAssistantPanel"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
     </div>
   </div>
 </template>

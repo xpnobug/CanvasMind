@@ -692,10 +692,11 @@ const resolveReferenceImagesFromMeta = (metaJson: unknown) => {
 }
 
 // 统一从记录元信息中恢复来源，未显式标记时按 generate 兜底。
+const KNOWN_GENERATION_RECORD_SOURCES = new Set(['generate', 'workflow', 'canvas-assistant'])
 const resolveGenerationRecordSource = (metaJson: unknown) => {
   const source = String((metaJson as any)?.source || '').trim().toLowerCase()
-  if (source === 'workflow') {
-    return 'workflow'
+  if (KNOWN_GENERATION_RECORD_SOURCES.has(source)) {
+    return source
   }
   return 'generate'
 }
@@ -889,7 +890,7 @@ export const createGenerationRecord = async (payload: GenerationRecordPayload, c
   let lastRecordAtForUpdate: Date | null = null
   try {
     created = await prisma.$transaction(async (tx) => {
-      const session = await resolveGenerationSessionForUser(tx, currentUserId, payload.sessionId)
+      const session = await resolveGenerationSessionForUser(tx, currentUserId, payload.sessionId, payload.source)
 
       const createdRecord = await tx.generationRecord.create({
         data: {
@@ -1154,7 +1155,7 @@ export const updateGenerationRecord = async (id: string, payload: GenerationReco
         throw new Error('无权修改当前生成记录')
       }
 
-      const session = await resolveGenerationSessionForUser(tx, currentUserId, payload.sessionId || existingRecord.sessionId)
+      const session = await resolveGenerationSessionForUser(tx, currentUserId, payload.sessionId || existingRecord.sessionId, payload.source)
       const existingReferenceImages = Array.isArray((existingRecord.metaJson as any)?.referenceImages)
         ? (existingRecord.metaJson as any).referenceImages
         : []

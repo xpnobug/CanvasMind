@@ -46,6 +46,7 @@ model AppUser {
   cardRedeemRecords  CardRedeemRecord[]
   workflowDefinitions        WorkflowDefinition[]
   workflowDefinitionVersions WorkflowDefinitionVersion[]
+  videoProjects      VideoProject[]
 
   @@map("app_users")
 }
@@ -488,6 +489,7 @@ model ObjectStorageConfig {
 model GenerationSession {
   id           String             @id @default(cuid()) @db.VarChar(36)
   userId       String             @map("user_id") @db.VarChar(36)
+  source       String             @default("generate") @db.VarChar(64)
   title        String             @db.VarChar(120)
   isDefault    Boolean            @default(false) @map("is_default")
   sortOrder    Int                @default(0) @map("sort_order")
@@ -499,6 +501,7 @@ model GenerationSession {
 
   @@index([userId, isDefault, updatedAt], map: "idx_generation_sessions_user_default_updated_at")
   @@index([userId, lastRecordAt], map: "idx_generation_sessions_user_last_record_at")
+  @@index([userId, source, lastRecordAt], map: "idx_generation_sessions_user_source_last_record_at")
   @@map("generation_sessions")
 }
 
@@ -584,6 +587,7 @@ model AssetItem {
   height             Int?
   durationSeconds    Int?               @map("duration_seconds")
   fileSizeBytes      BigInt?            @map("file_size_bytes")
+  mimeType           String?            @map("mime_type") @db.VarChar(128)
   promptText         String?            @map("prompt_text") @db.LongText
   modelLabel         String?            @map("model_label") @db.VarChar(100)
   aspectRatio        String?            @map("aspect_ratio") @db.VarChar(32)
@@ -609,6 +613,32 @@ model AssetItem {
   @@index([generationRecordId], map: "idx_asset_items_generation_record_id")
   @@index([generationOutputId], map: "idx_asset_items_generation_output_id")
   @@map("asset_items")
+}
+
+/// 视频编辑器项目工程表。
+/// 存储 Cutia SerializedProject 的整体序列化（含 scenes/settings/metadata 等 Json），
+/// 与 asset_items（最终产物入库）互补：本表是用户的"草稿/工程"。
+/// 软删除：is_deleted=true 而非物理删除；upsert 覆盖恢复。
+model VideoProject {
+  id                    String   @id @default(cuid()) @db.VarChar(36)
+  userId                String   @map("user_id") @db.VarChar(36)
+  name                  String   @db.VarChar(255)
+  thumbnail             String?  @db.LongText
+  version               Int      @default(3)
+  metadataJson          Json     @map("metadata_json")
+  settingsJson          Json     @map("settings_json")
+  scenesJson            Json     @map("scenes_json")
+  timelineViewStateJson Json?    @map("timeline_view_state_json")
+  agentMessagesJson     Json?    @map("agent_messages_json")
+  currentSceneId        String?  @map("current_scene_id") @db.VarChar(64)
+  durationSeconds       Int?     @map("duration_seconds")
+  isDeleted             Boolean  @default(false) @map("is_deleted")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  user                  AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isDeleted, updatedAt], map: "idx_video_projects_user_updated_at")
+  @@map("video_projects")
 }
 
 /// 资源收藏关系表。
@@ -1162,6 +1192,7 @@ enum OutputType {
 enum AssetType {
   IMAGE
   VIDEO
+  AUDIO
 }
 
 enum AssetVisibility {
@@ -1186,6 +1217,7 @@ enum AssetSource {
   GENERATED
   UPLOADED
   IMPORTED
+  EDITOR_UPLOAD
 }
 
 enum AgentRunStatus {

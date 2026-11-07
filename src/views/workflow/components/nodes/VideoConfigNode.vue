@@ -3,7 +3,11 @@
  * 视频配置节点 - 模型/比例/时长选择 + 生成
  */
 import { ref, computed, watch, onMounted } from 'vue'
-import { Handle, Position, useVueFlow } from '@vue-flow/core'
+import { useVueFlow } from '@vue-flow/core'
+import { CopyDocument, Delete, VideoCamera } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import CanvasNodeHoverToolbar, { type NodeToolbarAction } from '@/components/canvas/CanvasNodeHoverToolbar.vue'
+import CanvasConfigNodeShell from '@/components/canvas/CanvasConfigNodeShell.vue'
 import {
   updateNode,
   removeNode,
@@ -15,7 +19,6 @@ import {
   type WorkflowCanvasNode,
   type WorkflowVideoConfigNodeData,
 } from '../../composables/useWorkflowCanvas'
-import WfNodeTitle from '../WfNodeTitle.vue'
 import { VIDEO_RATIO_LIST, getAllVideoModels, getDefaultVideoModelKey, getModelByName, loadPublicModelCatalog } from '@/config/models'
 import { resolveGatewayUpstream } from '@/api/ai-gateway'
 import { createVideoTask, pollVideoTask } from '../../api/video'
@@ -24,7 +27,11 @@ import WfSelect from '@/components/common/WfSelect.vue'
 const props = defineProps<{
   id: string
   data: WorkflowVideoConfigNodeData & { selected?: boolean }
+  selected?: boolean
 }>()
+const isSelected = computed(() => props.selected || props.data?.selected)
+const handleAddLeft = () => ElMessage.info('从左侧追加上游节点：接入中')
+const handleAddRight = () => ElMessage.info('从右侧追加下游节点：接入中')
 const { updateNodeInternals } = useVueFlow()
 
 const showActions = ref(false)
@@ -172,6 +179,11 @@ const handleDuplicate = () => {
   if (newId) setTimeout(() => updateNodeInternals([newId]), 50)
 }
 
+const hoverActions = computed<NodeToolbarAction[]>(() => [
+  { id: 'duplicate', label: '复制', icon: CopyDocument, onClick: handleDuplicate },
+  { id: 'delete', label: '删除', icon: Delete, danger: true, onClick: handleDelete },
+])
+
 // 监听自动执行标志
 watch(
   () => props.data?.autoExecute,
@@ -185,23 +197,19 @@ watch(
 </script>
 
 <template>
-  <div class="wf-node-wrapper" @mouseenter="showActions = true" @mouseleave="showActions = false">
-    <div class="wf-node wf-node-video-config" :class="{ selected: data.selected }">
-      <div class="wf-node-header">
-        <div class="wf-node-header-left">
-          <span class="wf-node-header-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <WfNodeTitle :node-id="id" :label="data.label" placeholder="视频生成" />
-        </div>
-        <button class="wf-btn wf-btn-sm" @click="handleDelete">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-
-      <div class="wf-node-body" style="display: flex; flex-direction: column; gap: 8px;">
+  <div class="video-config-node-outer" @mouseenter="showActions = true" @mouseleave="showActions = false">
+    <CanvasConfigNodeShell
+      :node-id="id"
+      :label="data?.label || '图生视频'"
+      :icon="VideoCamera"
+      :selected="isSelected"
+      type="video-config"
+      :min-width="320"
+      :min-height="240"
+      @add-left="handleAddLeft"
+      @add-right="handleAddRight"
+    >
+      <div class="wf-node-body" style="display: flex; flex-direction: column; gap: 8px; padding: 16px;">
         <div style="font-size: 11px; color: var(--text-tertiary);">输入: {{ promptCount }}</div>
 
         <div>
@@ -226,19 +234,9 @@ watch(
         </button>
       </div>
 
-      <Handle type="target" :position="Position.Left" id="left" />
-      <Handle type="source" :position="Position.Right" id="right" />
-    </div>
-
-    <div v-show="showActions" class="wf-node-actions">
-      <button class="wf-node-action-btn" @click="handleDuplicate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
-        <span>复制</span>
-      </button>
-      <button class="wf-node-action-btn" @click="handleDelete">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>删除</span>
-      </button>
-    </div>
+      <template #overlay>
+        <CanvasNodeHoverToolbar :visible="showActions" :actions="hoverActions" />
+      </template>
+    </CanvasConfigNodeShell>
   </div>
 </template>

@@ -252,7 +252,7 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
   padding: 0px 20px;
-  //border-radius: 20px;
+  /* border-radius: 20px; */
   background: var(--theme-side-menu-background, #111218);
   border: 1px solid var(--stroke-primary, rgba(255, 255, 255, 0.08));
 }

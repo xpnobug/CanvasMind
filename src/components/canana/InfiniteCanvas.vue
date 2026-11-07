@@ -1,13 +1,14 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { 
-  useViewport, 
-  useGridLayout, 
-  useCanvasState, 
+import {
+  useViewport,
+  useGridLayout,
+  useCanvasState,
   useDragSort,
   useImageResize,
   useHistory,
-  usePointerEvents
+  usePointerEvents,
+  useShortcut
 } from '@/composables'
 
 const props = defineProps({
@@ -483,29 +484,28 @@ function handleWheel(e) {
 }
 
 function handleKeyDown(e) {
+  // Space：进入临时 panning 模式（按住模式，需配对 keyup 释放，因此不走 useShortcut）
   if (e.code === 'Space' && !e.repeat) {
     e.preventDefault()
     canvasState.setSpacePressed(true)
   }
-  if (e.code === 'Escape') {
-    // 取消当前操作或取消选中
+}
+
+// 单次触发快捷键统一走 useShortcut：自动管理生命周期 + 输入框焦点屏蔽
+useShortcut(
+  'Escape',
+  () => {
     if (canvasState.isDragging.value || canvasState.isResizing.value) {
       canvasState.cancel()
     } else {
       canvasState.deselect()
     }
-  }
-  // Ctrl/Cmd + Z 撤销
-  if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ' && !e.shiftKey) {
-    e.preventDefault()
-    history.undo()
-  }
-  // Ctrl/Cmd + Shift + Z 或 Ctrl/Cmd + Y 重做
-  if ((e.metaKey || e.ctrlKey) && (e.code === 'KeyZ' && e.shiftKey || e.code === 'KeyY')) {
-    e.preventDefault()
-    history.redo()
-  }
-}
+  },
+  // Esc 不阻止默认，让 el-dialog / el-popover 等浮层也能关闭
+  { preventDefault: false },
+)
+useShortcut('CmdOrCtrl+Z', () => history.undo())
+useShortcut(['CmdOrCtrl+Shift+Z', 'CmdOrCtrl+Y'], () => history.redo())
 
 function handleKeyUp(e) {
   if (e.code === 'Space') {

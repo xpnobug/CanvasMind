@@ -1,0 +1,12 @@
+#!/bin/sh
+# 移除 Cursor / Claude 等 AI 工具自动注入的 Co-authored-by 尾注
+MSG_FILE=$1
+[ -f "$MSG_FILE" ] || exit 0
+
+tmp="${MSG_FILE}.clean"
+sed \
+  -e '/^Co-authored-by: Cursor <cursoragent@cursor.com>$/d' \
+  -e '/^Co-authored-by: Claude /Id' \
+  -e '/^🤖 Generated with \[/d' \
+  "$MSG_FILE" > "$tmp"
+mv "$tmp" "$MSG_FILE"

@@ -4,6 +4,27 @@
 @import '@vue-flow/core/dist/style.css';
 @import '@vue-flow/core/dist/theme-default.css';
 @import '@vue-flow/minimap/dist/style.css';
+@import '@vue-flow/node-resizer/dist/style.css';
+
+/* canana 视图样式：复用 RightPanel 等组件需要的内部样式 */
+@import '../../canana/styles/canvas.css';
+@import '../../canana/styles/sidebar-empty-state.css';
+@import '../../canana/styles/empty-state.css';
+@import '../../canana/styles/index.css';
+
+/* NodeResizer 视觉覆盖：用 lv-theme 变量统一画风 */
+.workflow-canvas .vue-flow__resize-control.handle {
+  background: var(--canvas-resize-handle-bg, #fff) !important;
+  border: 2px solid var(--canvas-selection-border, #00cae0) !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+}
+.workflow-canvas .vue-flow__resize-control.line {
+  border-color: var(--canvas-selection-border, #00cae0) !important;
+  border-width: 1px !important;
+  background: transparent !important;
+}
 
 /* ========== 主容器 ========== */
 .workflow-container {
@@ -26,11 +47,78 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 100%;
+  flex: 1 1 0;
+  min-width: 0;
   position: relative;
 }
 
+/* 助手面板折叠态的展开把手（贴在画布右边缘） */
+.canvas-assistant-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 64px;
+  background: var(--canvas-float-block-default);
+  backdrop-filter: blur(var(--canvas-float-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--canvas-float-backdrop-blur));
+  border: 0.5px solid var(--stroke-secondary);
+  border-radius: 12px 0 0 12px;
+  border-right: 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 80;
+  transition: background-color 0.12s, color 0.12s;
+}
+.canvas-assistant-toggle:hover {
+  background: var(--canvas-float-block-hover);
+  color: var(--text-primary);
+}
+
+/* 右侧助手面板（复用 canana RightPanel：fixed + translateX 动画） */
+.workflow-assistant-aside {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--canvas-sidebar-bg);
+  border-left: 1px solid var(--stroke-secondary);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+.workflow-container.workflow-right-panel-open .workflow-assistant-aside {
+  transform: translateX(0);
+}
+
+/* 助手面板打开时，画布主区让出右侧 440 让 ContentGenerator 等浮层不被遮 */
+.workflow-container.workflow-right-panel-open .workflow-workbench {
+  padding-right: 440px;
+  transition: padding-right 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.workflow-workbench {
+  transition: padding-right 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ========== Vue Flow 画布覆盖样式 ========== */
+
+/* 画布外层壳：承担 dragover/drop + 浮层 absolute 定位基准；填满 .workflow-main 剩余高度 */
+.workflow-canvas-wrap {
+  position: relative;
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .workflow-canvas {
   width: 100%;
   height: 100%;
@@ -44,6 +132,31 @@
   fill: var(--stroke-secondary, rgba(204, 221, 255, 0.06));
 }
 
+.workflow-canvas .vue-flow__background pattern path {
+  stroke: var(--stroke-secondary, rgba(204, 221, 255, 0.06));
+}
+
+/* 深色模式：画布底色略提亮，网格线降低对比，避免纯黑底过于压抑 */
+html[data-theme='dark'] .workflow-container,
+body[lv-theme='dark'] .workflow-container {
+  background-color: var(--canvas-workflow-bg, #181b22);
+}
+
+html[data-theme='dark'] .workflow-canvas .vue-flow__background,
+body[lv-theme='dark'] .workflow-canvas .vue-flow__background {
+  background-color: var(--canvas-workflow-bg, #181b22);
+}
+
+html[data-theme='dark'] .workflow-canvas .vue-flow__background pattern path,
+body[lv-theme='dark'] .workflow-canvas .vue-flow__background pattern path {
+  stroke: rgba(204, 221, 255, 0.1);
+}
+
+html[data-theme='dark'] .workflow-canvas .vue-flow__background pattern circle,
+body[lv-theme='dark'] .workflow-canvas .vue-flow__background pattern circle {
+  fill: rgba(204, 221, 255, 0.1);
+}
+
 /* 节点基础样式 */
 .workflow-canvas .vue-flow__node {
   border: none;
@@ -55,6 +168,12 @@
 
 .workflow-canvas .vue-flow__node.selected {
   box-shadow: none;
+  outline: none;
+}
+
+/* 选中态用节点本身（.wf-node）的描边，避免 vue-flow 默认紫色 outline 渗出 */
+.workflow-canvas .vue-flow__node.selected .wf-node {
+  box-shadow: 0 0 0 2px var(--canvas-selection-border, #00cae0);
 }
 
 /* 连线样式 */
@@ -161,6 +280,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.wf-header-meta__title-input {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--stroke-secondary, rgba(204, 221, 255, 0.2));
+  outline: none;
+  padding: 0;
+}
+
+.wf-header-meta__title-input:focus {
+  border-bottom-color: var(--brand-main-default, #00cae0);
 }
 
 .wf-header-meta__status {
@@ -469,7 +600,11 @@
   backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
   border: 0.5px solid var(--stroke-tertiary, rgba(204, 221, 255, 0.08));
   border-radius: 12px;
-  width: 280px;
+  width: 100%;
+  height: 100%;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
   cursor: default;
   position: relative;
 }
@@ -525,9 +660,9 @@
 
 /* 节点悬浮操作 */
 .wf-node-wrapper {
-  padding-right: 50px;
-  padding-top: 20px;
   position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .wf-node-actions {
@@ -1270,6 +1405,31 @@
   line-height: 1;
   backdrop-filter: blur(6px);
   pointer-events: auto;
+}
+
+/* 浅色主题下的顶部状态横幅配色：改为浅灰底 + 浅蓝描边，文本用深色 */
+body[lv-theme='light'] .wf-quick-link-banner,
+html[data-theme='light'] .wf-quick-link-banner {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 8px 24px rgba(15, 20, 25, 0.08);
+  color: var(--text-primary, #0f1419);
+}
+
+body[lv-theme='light'] .wf-quick-link-banner__text strong,
+html[data-theme='light'] .wf-quick-link-banner__text strong {
+  color: #2563eb;
+}
+
+body[lv-theme='light'] .wf-quick-link-banner__hint,
+html[data-theme='light'] .wf-quick-link-banner__hint {
+  background: rgba(15, 20, 25, 0.06);
+  color: var(--text-secondary, #536471);
+}
+
+body[lv-theme='light'] .wf-quick-link-banner__close,
+html[data-theme='light'] .wf-quick-link-banner__close {
+  color: var(--text-secondary, #536471);
 }
 
 .wf-quick-link-banner__dot {

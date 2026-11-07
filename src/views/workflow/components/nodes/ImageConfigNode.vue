@@ -4,7 +4,11 @@
  * 收集连接的提示词和参考图，通过服务端任务统一执行图片生成
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { Handle, Position, useVueFlow } from '@vue-flow/core'
+import { useVueFlow } from '@vue-flow/core'
+import { CopyDocument, Delete, Picture } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import CanvasNodeHoverToolbar, { type NodeToolbarAction } from '@/components/canvas/CanvasNodeHoverToolbar.vue'
+import CanvasConfigNodeShell from '@/components/canvas/CanvasConfigNodeShell.vue'
 import {
   updateNode,
   removeNode,
@@ -16,7 +20,6 @@ import {
   type WorkflowCanvasNode,
   type WorkflowImageConfigNodeData,
 } from '../../composables/useWorkflowCanvas'
-import WfNodeTitle from '../WfNodeTitle.vue'
 import { BANANA_SIZE_OPTIONS, SEEDREAM_SIZE_OPTIONS, getAllImageModels, loadPublicModelCatalog, getDefaultImageModelKey, getModelByName } from '@/config/models'
 import { createGenerationTask, resolveGenerationTaskModel, subscribeGenerationTaskEvents } from '@/api/generation-tasks'
 import WfSelect from '@/components/common/WfSelect.vue'
@@ -25,7 +28,11 @@ import { appendImageReferencesToRequestBody, collectOrderedImageReferences } fro
 const props = defineProps<{
   id: string
   data: WorkflowImageConfigNodeData & { selected?: boolean }
+  selected?: boolean
 }>()
+const isSelected = computed(() => props.selected || props.data?.selected)
+const handleAddLeft = () => ElMessage.info('从左侧追加上游节点：接入中')
+const handleAddRight = () => ElMessage.info('从右侧追加下游节点：接入中')
 const { updateNodeInternals } = useVueFlow()
 
 const showActions = ref(false)
@@ -318,6 +325,11 @@ const handleDuplicate = () => {
   if (newId) setTimeout(() => updateNodeInternals([newId]), 50)
 }
 
+const hoverActions = computed<NodeToolbarAction[]>(() => [
+  { id: 'duplicate', label: '复制', icon: CopyDocument, onClick: handleDuplicate },
+  { id: 'delete', label: '删除', icon: Delete, danger: true, onClick: handleDelete },
+])
+
 // 监听自动执行标志
 watch(
   () => props.data?.autoExecute,
@@ -331,27 +343,20 @@ watch(
 </script>
 
 <template>
-  <div class="wf-node-wrapper" @mouseenter="showActions = true" @mouseleave="showActions = false">
-    <div class="wf-node wf-node-image-config" :class="{ selected: data.selected }">
-      <!-- 头部 -->
-      <div class="wf-node-header">
-        <div class="wf-node-header-left">
-          <span class="wf-node-header-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <WfNodeTitle :node-id="id" :label="data.label" placeholder="文生图" />
-        </div>
-        <button class="wf-btn wf-btn-sm" @click="handleDelete">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- 配置内容 -->
-      <div class="wf-node-body" style="display: flex; flex-direction: column; gap: 8px;">
+  <div class="image-config-node-outer" @mouseenter="showActions = true" @mouseleave="showActions = false">
+    <CanvasConfigNodeShell
+      :node-id="id"
+      :label="data?.label || '文生图'"
+      :icon="Picture"
+      :selected="isSelected"
+      type="image-config"
+      :min-width="320"
+      :min-height="260"
+      @add-left="handleAddLeft"
+      @add-right="handleAddRight"
+    >
+      <!-- 配置内容（保留原 wf-node-body 表单）-->
+      <div class="wf-node-body" style="display: flex; flex-direction: column; gap: 8px; padding: 16px;">
         <!-- 连接信息 -->
         <div style="display: flex; gap: 8px; font-size: 11px; color: var(--text-tertiary);">
           <span>提示词: {{ promptCount }}</span>
@@ -390,26 +395,9 @@ watch(
         </button>
       </div>
 
-      <!-- 连接点 -->
-      <Handle type="target" :position="Position.Left" id="left" />
-      <Handle type="source" :position="Position.Right" id="right" />
-    </div>
-
-    <!-- 悬浮操作 -->
-    <div v-show="showActions" class="wf-node-actions">
-      <button class="wf-node-action-btn" @click="handleDuplicate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <span>复制</span>
-      </button>
-      <button class="wf-node-action-btn" @click="handleDelete">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>删除</span>
-      </button>
-    </div>
+      <template #overlay>
+        <CanvasNodeHoverToolbar :visible="showActions" :actions="hoverActions" />
+      </template>
+    </CanvasConfigNodeShell>
   </div>
 </template>

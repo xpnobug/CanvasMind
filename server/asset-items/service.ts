@@ -6,7 +6,8 @@ import { invalidateRedisCachePatterns } from '../redis/cache-manager'
 import { getOrSetJsonCache } from '../redis/json-cache'
 import { redisKeys } from '../redis/keys'
 import { prisma } from '../db/prisma'
-import type { AssetActionPayload, AssetListQuery, AssetListResult } from './shared'
+import { saveUploadedBuffer } from '../storage/service'
+import type { AssetActionPayload, AssetKind, AssetListQuery, AssetListResult } from './shared'
 
 const DEFAULT_AUTHOR = {
   id: '',
@@ -33,8 +34,16 @@ const buildAssetItemsQueryHash = (query: AssetListQuery) => {
       take: Number(query.take || 0),
       publishState: String(query.publishState || '').trim(),
       ownerKeyword: String(query.ownerKeyword || '').trim(),
+      includeEditorUploads: query.includeEditorUploads ? 1 : 0,
     }))
     .digest('hex')
+}
+
+// 把前端 assetType('image' | 'video' | 'audio') 映射为 Prisma enum。
+const toPrismaAssetType = (kind: AssetListQuery['assetType']) => {
+  if (kind === 'video') return 'VIDEO' as const
+  if (kind === 'audio') return 'AUDIO' as const
+  return 'IMAGE' as const
 }
 
 const buildPublicAssetItemsCacheKey = (query: AssetListQuery) => {
@@ -192,6 +201,7 @@ const serializeAssetItem = (record: any) => {
     width: record.width || undefined,
     height: record.height || undefined,
     durationSeconds: record.durationSeconds || undefined,
+    mimeType: record.mimeType || undefined,
     visibility: String(record.visibility || '').toLowerCase(),
     publishStatus: String(record.publishStatus || '').toLowerCase(),
     reviewStatus: String(record.reviewStatus || '').toLowerCase(),
@@ -213,11 +223,12 @@ export const listPublicAssetItems = async (query: AssetListQuery) => {
     ttlSeconds: 45,
     factory: async () => {
       const where: Prisma.AssetItemWhereInput = {
-        assetType: query.assetType === 'video' ? 'VIDEO' : 'IMAGE',
+        assetType: toPrismaAssetType(query.assetType),
         isDeleted: false,
         visibility: 'PUBLIC',
         publishStatus: 'PUBLISHED',
         reviewStatus: 'APPROVED',
+        source: { not: 'EDITOR_UPLOAD' as const },
       }
       const totalCount = await prisma.assetItem.count({ where })
       const pagination = resolvePagination(query, totalCount)
@@ -248,6 +259,38 @@ export const listPublicAssetItems = async (query: AssetListQuery) => {
 
 // 查询当前用户资产。
 export const listMineAssetItems = async (query: AssetListQuery, currentUserId: string) => {
+  // ids batch 反查: 用于加载视频项目时根据项目 JSON 中的 mediaId 集合反查 AssetItem。
+  // 此路径不走缓存(每次 ids 集合不同),直接 DB 命中。
+  if (query.ids.length > 0) {
+    const records = await prisma.assetItem.findMany({
+      where: {
+        userId: currentUserId,
+        id: { in: query.ids },
+        isDeleted: false,
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, avatarUrl: true },
+        },
+      },
+    })
+    // 保持返回顺序与输入 ids 一致, 缺失的项跳过(死引用容错)
+    const byId = new Map(records.map((r) => [r.id, r]))
+    const orderedItems = query.ids
+      .map((id) => byId.get(id))
+      .filter((record): record is NonNullable<typeof record> => Boolean(record))
+      .map(serializeAssetItem)
+    return {
+      items: orderedItems,
+      summary: {
+        totalCount: orderedItems.length,
+        totalPages: 1,
+        page: 1,
+        pageSize: orderedItems.length,
+      },
+    }
+  }
+
   return getOrSetJsonCache({
     key: buildMineAssetItemsCacheKey(query, currentUserId),
     ttlSeconds: 30,
@@ -255,8 +298,11 @@ export const listMineAssetItems = async (query: AssetListQuery, currentUserId: s
       const publishStateWhere = buildPublishStateWhereInput(query.publishState)
       const where: Prisma.AssetItemWhereInput = {
         userId: currentUserId,
-        assetType: query.assetType === 'video' ? 'VIDEO' : 'IMAGE',
+        assetType: toPrismaAssetType(query.assetType),
         isDeleted: false,
+        // 默认排除编辑器上传的工作素材, 让主站资产库保持纯净。
+        // 编辑器内"我的资产" tab 通过 includeEditorUploads=true 显示全部。
+        ...(query.includeEditorUploads ? {} : { source: { not: 'EDITOR_UPLOAD' as const } }),
         ...publishStateWhere,
       }
       const totalCount = await prisma.assetItem.count({ where })
@@ -298,8 +344,10 @@ export const listAllAssetItems = async (query: AssetListQuery) => {
       const publishStateWhere = buildPublishStateWhereInput(query.publishState)
       const ownerWhere = buildOwnerWhereInput(query.ownerKeyword)
       const where: Prisma.AssetItemWhereInput = {
-        assetType: query.assetType === 'video' ? 'VIDEO' : 'IMAGE',
+        assetType: toPrismaAssetType(query.assetType),
         isDeleted: false,
+        // admin 全量管理界面默认不显示编辑器工作素材, includeEditorUploads=true 才显示
+        ...(query.includeEditorUploads ? {} : { source: { not: 'EDITOR_UPLOAD' as const } }),
         ...publishStateWhere,
         ...ownerWhere,
       }
@@ -496,4 +544,68 @@ export const applyAssetAction = async (payload: AssetActionPayload, currentUserI
     default:
       throw new Error('不支持的资源动作')
   }
+}
+
+// 把前端编辑器 upload headers 的 assetType('image'|'video'|'audio') 映射为 Prisma enum。
+const editorAssetKindToPrisma = (kind: AssetKind) => {
+  if (kind === 'video') return 'VIDEO' as const
+  if (kind === 'audio') return 'AUDIO' as const
+  return 'IMAGE' as const
+}
+
+// 从编辑器上传的 buffer 写入 AssetItem。
+// 用于 cutia 编辑器内 MediaManager.addMediaAsset 异步触发的云端同步。
+// 不复用主站 /api/storage/upload(那个不写 AssetItem,且无业务校验)。
+export const uploadAssetItemFromEditor = async (input: {
+  buffer: Buffer
+  filename: string
+  mimeType: string
+  assetType: AssetKind
+  userId: string
+  metadata: Record<string, unknown>
+}) => {
+  // 调用通用上传, 自动走对象存储(优先)或本地上传
+  const uploaded = await saveUploadedBuffer({
+    buffer: input.buffer,
+    filename: input.filename,
+    mimeType: input.mimeType,
+    category: 'editor-uploads',
+  })
+
+  const meta = input.metadata || {}
+  const widthNum = Number(meta.width)
+  const heightNum = Number(meta.height)
+  const durationNum = Number(meta.durationSeconds ?? meta.duration)
+  const thumbnailUrl = String(meta.thumbnailUrl || '').trim() || null
+  const title = String(meta.title || input.filename || '').trim().slice(0, 255)
+
+  const record = await prisma.assetItem.create({
+    data: {
+      userId: input.userId,
+      assetType: editorAssetKindToPrisma(input.assetType),
+      title,
+      fileUrl: uploaded.publicUrl,
+      thumbnailUrl,
+      mimeType: input.mimeType,
+      width: Number.isFinite(widthNum) && widthNum > 0 ? Math.floor(widthNum) : null,
+      height: Number.isFinite(heightNum) && heightNum > 0 ? Math.floor(heightNum) : null,
+      durationSeconds: Number.isFinite(durationNum) && durationNum > 0 ? Math.round(durationNum) : null,
+      fileSizeBytes: BigInt(input.buffer.byteLength),
+      source: 'EDITOR_UPLOAD',
+      visibility: 'PRIVATE',
+      publishStatus: 'HIDDEN',
+      reviewStatus: 'APPROVED',
+      sourceMetaJson: meta as Prisma.InputJsonValue,
+    },
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, avatarUrl: true },
+      },
+    },
+  })
+
+  // 失效"我的列表"缓存(包含 EDITOR_UPLOAD 过滤的也要刷)
+  await invalidateAssetItemsCaches()
+
+  return serializeAssetItem(record)
 }

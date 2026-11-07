@@ -3,6 +3,7 @@ import { readApiData } from './response'
 
 export interface PersistedGenerationSession {
   id: string
+  source: string
   title: string
   isDefault: boolean
   sortOrder: number
@@ -15,20 +16,22 @@ export interface PersistedGenerationSession {
 
 export interface GenerationSessionUpsertPayload {
   title?: string
+  source?: string
 }
 
 const GENERATION_SESSIONS_API_PATH = '/api/generation-sessions'
 
-// 获取当前用户的生成会话列表
-export const listGenerationSessions = async () => {
-  const response = await fetch(buildApiUrl(GENERATION_SESSIONS_API_PATH), {
+// 获取当前用户在指定 source 入口下的生成会话列表（不传 source 默认归到 generate）
+export const listGenerationSessions = async (source?: string) => {
+  const query = source ? `?source=${encodeURIComponent(source)}` : ''
+  const response = await fetch(buildApiUrl(`${GENERATION_SESSIONS_API_PATH}${query}`), {
     method: 'GET',
     credentials: 'include',
   })
   return readApiData<PersistedGenerationSession[]>(response)
 }
 
-// 创建新会话
+// 创建新会话（payload.source 决定归属入口）
 export const createGenerationSession = async (payload: GenerationSessionUpsertPayload = {}) => {
   const response = await fetch(buildApiUrl(GENERATION_SESSIONS_API_PATH), {
     method: 'POST',

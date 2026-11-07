@@ -41,6 +41,18 @@ interface Props {
   initialCreationType?: CreationType
   /** 展示变体：首页可使用差异化按钮样式 */
   variant?: SurfaceVariant
+  /** 隐藏顶部创作类型切换器（节点下方场景常用：节点已锁定类型，不允许切换） */
+  hideTypeSelector?: boolean
+  /** 自定义输入框 placeholder，覆盖按类型推断的默认文案 */
+  placeholderOverride?: string
+  /** 隐藏 Agent 工具栏内的技能（"使用技能"）下拉，节点下方场景默认隐藏 */
+  hideSkillSelector?: boolean
+  /** 隐藏 Sidebar Agent 模式的附件按钮 + 参考图上传/缩略图区，避免在不需要图上下文的节点（如 TextNode）露出 */
+  hideImageUpload?: boolean
+  /** 由外部塞入的参考图（如 ImageNode 把上游连线的图作为参考图），会同步进 imageReferenceImages */
+  externalReferenceImages?: string[]
+  /** 强制工具栏显示文字（默认 sidebar 走 icon-only=true，节点下方传 true 时还原为带文字模式） */
+  verboseToolbar?: boolean
 }
 
 interface GeneratorSendOptions {
@@ -97,7 +109,13 @@ const props = withDefaults(defineProps<Props>(), {
   externalPrompt: undefined,
   promptSyncKey: undefined,
   initialCreationType: undefined,
-  variant: 'home'
+  variant: 'home',
+  hideTypeSelector: false,
+  placeholderOverride: '',
+  hideSkillSelector: false,
+  hideImageUpload: false,
+  externalReferenceImages: () => [],
+  verboseToolbar: false,
 })
 
 // 事件定义
@@ -119,6 +137,24 @@ const imageReferenceInputRef = ref<HTMLInputElement | null>(null)
 const videoFirstFrameInputRef = ref<HTMLInputElement | null>(null)
 const videoLastFrameInputRef = ref<HTMLInputElement | null>(null)
 const IMAGE_REFERENCE_LIMIT = 9
+
+// 外部塞入的参考图（如节点画布把上游连线的图作为参考图）→ 同步进 imageReferenceImages
+// 用 deep 监听，让 ImageNode 切换上游连线时实时反映到输入框
+watch(
+  () => props.externalReferenceImages,
+  (urls) => {
+    if (!Array.isArray(urls)) return
+    const normalized = urls.filter(Boolean).slice(0, IMAGE_REFERENCE_LIMIT)
+    // 仅在差异时写入，避免循环
+    const same =
+      normalized.length === imageReferenceImages.value.length &&
+      normalized.every((u, i) => u === imageReferenceImages.value[i])
+    if (!same) {
+      imageReferenceImages.value = normalized
+    }
+  },
+  { immediate: true, deep: true },
+)
 
 // 登录态与全局登录弹窗。
 const authStore = useAuthStore()
@@ -434,6 +470,9 @@ defineExpose({
 
 // 根据创作类型返回不同的 placeholder
 const placeholder = computed(() => {
+  // 外部强制覆盖（节点下方等场景）优先级最高
+  const overrideText = String(props.placeholderOverride || '').trim()
+  if (overrideText) return overrideText
   const configuredPlaceholder = String(inputSettings.value?.placeholder || '').trim()
   if (isCollapsed.value) {
     return configuredPlaceholder || '说说今天想做点什么'
@@ -778,7 +817,7 @@ onUnmounted(() => {
       <div class="content-oZ2zsI">
         <!-- 参考图上传区域 -->
         <!-- 图片模式：上传前保持原单卡布局，上传后切多图编排 -->
-        <div v-if="currentType === 'image' || currentType === 'agent'" :class="['references-vWIzeo', 'references-Gf5d1P', { 'collapsed-_VpN2b collapsed-IXfvom': isCollapsed && !isSidebar }]">
+        <div v-if="(currentType === 'image' || currentType === 'agent') && !(currentType === 'agent' && hideImageUpload)" :class="['references-vWIzeo', 'references-Gf5d1P', { 'collapsed-_VpN2b collapsed-IXfvom': isCollapsed && !isSidebar }]">
           <div :class="['reference-group-_DAGw1', 'reference-group-c2buvf', { 'collapsed-J9LsWu collapsed-GMNiSS': isCollapsed && !isSidebar, 'generator-reference-group--multi': imageReferenceImages.length > 0 }]"
                :style="imageReferenceGroupStyle">
             <div class="reference-group-background-f6pFpT reference-group-background-cr79bH"></div>
@@ -1136,7 +1175,7 @@ onUnmounted(() => {
             <template v-if="isCollapsed && !isSidebar">
               <!-- 类型选择器 -->
               <TypeSelector
-                v-if="conversationEntrySettings.mode.enabled"
+                v-if="conversationEntrySettings.mode.enabled && !hideTypeSelector"
                 ref="typeSelectorRef"
                 v-model="currentType"
                 :options="availableModeOptions"
@@ -1149,7 +1188,7 @@ onUnmounted(() => {
                 ref="agentToolbarRef"
                 :placement="popupPlacement"
                 :show-model-selector="conversationEntrySettings.modelSelector.enabled"
-                :show-assistant-selector="conversationEntrySettings.assistantSelector.enabled"
+                :show-assistant-selector="!hideSkillSelector && conversationEntrySettings.assistantSelector.enabled"
                 :default-model-key="conversationEntrySettings.modelSelector.defaultModelKey"
                 :allowed-model-keys="conversationEntrySettings.modelSelector.allowedModelKeys"
                 :default-assistant-key="conversationEntrySettings.assistantSelector.defaultAssistantKey"
@@ -1168,7 +1207,7 @@ onUnmounted(() => {
             <template v-else>
               <!-- 类型选择器（侧边栏模式使用紧凑模式） -->
               <TypeSelector
-                v-if="conversationEntrySettings.mode.enabled"
+                v-if="conversationEntrySettings.mode.enabled && !hideTypeSelector"
                 ref="typeSelectorExpandRef"
                 v-model="currentType"
                 :options="availableModeOptions"
@@ -1178,7 +1217,7 @@ onUnmounted(() => {
               />
 
               <!-- 附件按钮（仅侧边栏 Agent 模式显示） -->
-              <button v-if="isSidebar && currentType === 'agent'"
+              <button v-if="isSidebar && currentType === 'agent' && !hideImageUpload"
                       class="lv-btn lv-btn-secondary lv-btn-size-default lv-btn-shape-square lv-btn-icon-only button-lc3WzE toolbar-button-FhFnQ_"
                       type="button"
                       :title="imageReferenceCount ? `参考图片 ${imageReferenceCount} 张` : '添加参考图片'"
@@ -1199,9 +1238,9 @@ onUnmounted(() => {
                 v-if="currentType === 'agent'"
                 ref="agentToolbarExpandRef"
                 :placement="popupPlacement"
-                :icon-only="isSidebar"
+                :icon-only="isSidebar && !verboseToolbar"
                 :show-model-selector="conversationEntrySettings.modelSelector.enabled"
-                :show-assistant-selector="conversationEntrySettings.assistantSelector.enabled"
+                :show-assistant-selector="!hideSkillSelector && conversationEntrySettings.assistantSelector.enabled"
                 :default-model-key="conversationEntrySettings.modelSelector.defaultModelKey"
                 :allowed-model-keys="conversationEntrySettings.modelSelector.allowedModelKeys"
                 :default-assistant-key="conversationEntrySettings.assistantSelector.defaultAssistantKey"
@@ -1216,13 +1255,13 @@ onUnmounted(() => {
               />
 
               <!-- 图片生成工具栏 -->
-              <ImageToolbar v-else-if="currentType === 'image'" ref="imageToolbarRef" :placement="popupPlacement" :icon-only="isSidebar" />
+              <ImageToolbar v-else-if="currentType === 'image'" ref="imageToolbarRef" :placement="popupPlacement" :icon-only="isSidebar && !verboseToolbar" />
 
               <!-- 视频生成工具栏 -->
-              <VideoToolbar v-else-if="currentType === 'video'" ref="videoToolbarRef" :placement="popupPlacement" :icon-only="isSidebar" />
+              <VideoToolbar v-else-if="currentType === 'video'" ref="videoToolbarRef" :placement="popupPlacement" :icon-only="isSidebar && !verboseToolbar" />
 
               <!-- 数字人/动作模仿工具栏 -->
-              <DigitalHumanToolbar v-else :placement="popupPlacement" :icon-only="isSidebar" />
+              <DigitalHumanToolbar v-else :placement="popupPlacement" :icon-only="isSidebar && !verboseToolbar" />
             </template>
           </div>
         </div>

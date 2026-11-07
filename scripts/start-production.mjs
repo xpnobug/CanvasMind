@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
+import { config as loadEnvFile } from 'dotenv'
+import { runStartupLegacySecretsSync } from './lib/run-startup-legacy-secrets-sync.mjs'
 
 // 执行子命令；默认收集输出，必要时再决定是否原样透传。
 const runCommand = (command, args, options = {}) => {
@@ -12,7 +14,7 @@ const runCommand = (command, args, options = {}) => {
     const child = spawn(command, args, {
       stdio: ['inherit', 'pipe', 'pipe'],
       shell: process.platform === 'win32',
-      env: process.env,
+      env: options.env ?? process.env,
     })
 
     child.stdout?.on('data', (chunk) => {
@@ -96,7 +98,12 @@ const start = async () => {
   console.info('[start-production] 启动准备中')
   console.info(`[start-production] 环境文件: ${hasEnvFile ? '.env.production' : '未检测到 .env.production，使用当前进程环境变量'}`)
 
-  // 先执行数据库迁移，确保表结构已就绪。
+  if (hasEnvFile) {
+    loadEnvFile({ path: path.resolve(process.cwd(), '.env.production') })
+    process.env.ENV_FILE = '.env.production'
+  }
+
+  // 先执行数据库迁移，创建 secret 相关表；删旧密钥列由后续同步负责。
   console.info('[start-production] 正在检查数据库迁移')
   const migrateResult = await runCommand('npx', ['prisma', 'migrate', 'deploy'])
   const migrationSummary = summarizePrismaMigrateOutput(`${migrateResult.stdout}\n${migrateResult.stderr}`)
@@ -104,6 +111,13 @@ const start = async () => {
     `[start-production] 数据库迁移检查完成: ${migrationSummary.databaseName || 'unknown'} @ ${migrationSummary.databaseAddress || 'unknown'} · `
     + `${migrationSummary.migrationCount || '0'} 个迁移 · ${migrationSummary.statusText}`,
   )
+
+  // 迁移建表后，再把旧 api_key 写入 secret_configs，最后删除 legacy 列。
+  try {
+    await runStartupLegacySecretsSync()
+  } catch (error) {
+    console.error('[start-production] 旧版厂商密钥同步失败，将继续启动', error)
+  }
 
   // 根据运行环境决定是否显式加载 .env.production。
   const serverArgs = hasEnvFile

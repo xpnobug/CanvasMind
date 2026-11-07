@@ -2,6 +2,7 @@ import { readJsonBody, sendJson } from '../ai-gateway/shared'
 
 export interface GenerationSessionPayload {
   title?: string
+  source?: string
 }
 
 // 读取生成会话请求体

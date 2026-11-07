@@ -1,9 +1,25 @@
-import { sendJson } from '../ai-gateway/shared'
+import { readRawBuffer, sendJson } from '../ai-gateway/shared'
 import { requireAdminSessionUser, requireCurrentSessionUser } from '../auth/session'
 import { isPrismaConfigured } from '../db/prisma'
-import { readAssetActionBody, readAssetListQuery, sendAssetItemsError } from './shared'
-import { applyAssetAction, listAllAssetItems, listMineAssetItems, listPublicAssetItems } from './service'
-import { ASSET_ITEMS_BASE_PATH } from './constants'
+import {
+  readAssetActionBody,
+  readAssetListQuery,
+  readEditorUploadHeaders,
+  sendAssetItemsError,
+} from './shared'
+import {
+  applyAssetAction,
+  listAllAssetItems,
+  listMineAssetItems,
+  listPublicAssetItems,
+  uploadAssetItemFromEditor,
+} from './service'
+import {
+  ASSET_ITEMS_ALLOWED_MIME_PREFIXES,
+  ASSET_ITEMS_BASE_PATH,
+  ASSET_ITEMS_MAX_UPLOAD_BYTES,
+  ASSET_ITEMS_UPLOAD_PATH,
+} from './constants'
 
 // 处理资源列表请求。
 export const handleAssetItemsRequest = async (req: any, res: any) => {
@@ -15,6 +31,45 @@ export const handleAssetItemsRequest = async (req: any, res: any) => {
 
     const requestUrl = String(req.url || '')
     const pathname = requestUrl.split('?')[0]
+
+    // POST /api/asset-items/upload — cutia 编辑器素材上传专用入口
+    if (req.method === 'POST' && pathname === ASSET_ITEMS_UPLOAD_PATH) {
+      const currentUser = await requireCurrentSessionUser(req, res)
+      if (!currentUser) {
+        return
+      }
+
+      const headers = readEditorUploadHeaders(req)
+      // MIME 前缀校验, 防止非媒体文件混入
+      const mimeAllowed = ASSET_ITEMS_ALLOWED_MIME_PREFIXES.some((prefix) =>
+        headers.mimeType.toLowerCase().startsWith(prefix),
+      )
+      if (!mimeAllowed) {
+        sendAssetItemsError(res, 415, `不支持的 MIME 类型: ${headers.mimeType}`)
+        return
+      }
+
+      const buffer = await readRawBuffer(req)
+      if (!buffer.byteLength) {
+        sendAssetItemsError(res, 400, '上传内容不能为空')
+        return
+      }
+      if (buffer.byteLength > ASSET_ITEMS_MAX_UPLOAD_BYTES) {
+        sendAssetItemsError(res, 413, `文件大小超过上限 (${Math.round(ASSET_ITEMS_MAX_UPLOAD_BYTES / 1024 / 1024)}MB)`)
+        return
+      }
+
+      const data = await uploadAssetItemFromEditor({
+        buffer,
+        filename: headers.filename,
+        mimeType: headers.mimeType,
+        assetType: headers.assetType,
+        userId: currentUser.id,
+        metadata: headers.metadata,
+      })
+      sendJson(res, 200, { data })
+      return
+    }
 
     if (req.method === 'GET' && pathname === ASSET_ITEMS_BASE_PATH) {
       const query = readAssetListQuery(requestUrl)

@@ -10,9 +10,21 @@ const logGenerationSessionsRequestError = (detail: Record<string, unknown>) => {
   console.error('[generation-sessions][request-error]', JSON.stringify(detail))
 }
 
+// 解析 URL 上的 source query 参数（GET 列表用），无值时返回 undefined 走默认。
+const parseSourceFromUrl = (url: string): string | undefined => {
+  const queryIndex = url.indexOf('?')
+  if (queryIndex < 0) return undefined
+  const params = new URLSearchParams(url.slice(queryIndex + 1))
+  const value = params.get('source')
+  if (value === null) return undefined
+  const trimmed = value.trim()
+  return trimmed || undefined
+}
+
 // 处理生成会话的列表、创建、更新和删除请求。
 export const handleGenerationSessionsRequest = async (req: any, res: any) => {
-  const requestUrl = String(req.url || '').split('?')[0]
+  const rawUrl = String(req.url || '')
+  const requestUrl = rawUrl.split('?')[0]
   const sessionId = requestUrl.startsWith(`${GENERATION_SESSIONS_BASE_PATH}/`)
     ? decodeURIComponent(requestUrl.slice(GENERATION_SESSIONS_BASE_PATH.length + 1))
     : ''
@@ -30,7 +42,8 @@ export const handleGenerationSessionsRequest = async (req: any, res: any) => {
     }
 
     if (req.method === 'GET' && requestUrl === GENERATION_SESSIONS_BASE_PATH) {
-      const data = await listGenerationSessions(String(currentUser.id || ''))
+      const source = parseSourceFromUrl(rawUrl)
+      const data = await listGenerationSessions(String(currentUser.id || ''), source)
       sendJson(res, 200, { data })
       return
     }

@@ -5,8 +5,8 @@ services:
     container_name: canana-vue-app
     restart: unless-stopped
     env_file:
-      # 默认读取根目录 .env，也可通过 APP_ENV_FILE 覆盖。
-      - ${APP_ENV_FILE:-./.env}
+      # 默认读取 .env.production，可通过 APP_ENV_FILE 覆盖
+      - ${APP_ENV_FILE:-./.env.production}
     ports:
       # 对外暴露统一应用端口。
       - "${SERVER_PORT:-5409}:${SERVER_PORT:-5409}"

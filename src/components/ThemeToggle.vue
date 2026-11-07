@@ -24,11 +24,13 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useThemePreferenceStore } from '@/stores/theme-preference'
 
 const themeStore = useThemePreferenceStore()
+const route = useRoute()
 const isDark = computed(() => themeStore.currentTheme.value === 'dark')
-const showToggle = computed(() => themeStore.allowUserToggle.value)
+const showToggle = computed(() => themeStore.allowUserToggle.value && !route.path.startsWith('/workflow'))
 
 function toggle() {
   themeStore.setThemeMode(isDark.value ? 'light' : 'dark')

@@ -1,4 +1,7 @@
 import { createApp } from 'vue'
+// 注：Cutia 编辑器主题（@theme inline / @custom-variant / @utility）通过
+// styles.css 内部的 @import 引入，让 Tailwind v4 编译其 at-rules；
+// 不可在此处用 JS import 加载，会绕过 Tailwind 管线导致样式失效。
 import '@styles/styles.css'
 import App from './App.vue'
 import router from './router'

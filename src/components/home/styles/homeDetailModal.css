@@ -559,10 +559,10 @@
     }
 }
 
-:export {
-    modal-z-index: 1001;
-    infinite-canvas-commercial-modal: 1000000;
-    gui-edit-text-layer-overlay: 99999
+:root {
+    --modal-z-index: 1001;
+    --infinite-canvas-commercial-modal: 1000000;
+    --gui-edit-text-layer-overlay: 99999;
 }
 
 @keyframes simple-tooltip-fadein-top {
@@ -1782,12 +1782,6 @@
     position: absolute;
     width: 100%;
     z-index: 10
-}
-
-:export {
-    modal-z-index: 1001;
-    infinite-canvas-commercial-modal: 1000000;
-    gui-edit-text-layer-overlay: 99999
 }
 
 @keyframes simple-tooltip-fadein-top {

@@ -7,6 +7,8 @@ import { isAuthPath } from './auth/constants'
 import { handleAuthRequest } from './auth/request-handler'
 import { isAssetItemsPath } from './asset-items/constants'
 import { handleAssetItemsRequest } from './asset-items/request-handler'
+import { isVideoProjectsPath } from './video-projects/constants'
+import { handleVideoProjectsRequest } from './video-projects/request-handler'
 import { isAdminUsersPath } from './admin-users/constants'
 import { handleAdminUsersRequest } from './admin-users/request-handler'
 import { isAdminGenerationSessionsPath } from './admin-generation-sessions/constants'
@@ -60,6 +62,8 @@ const UPLOADS_PUBLIC_PATH_PREFIX = '/uploads/'
 const DEFAULT_CORS_ALLOWED_ORIGINS = [
   'http://localhost:5010',
   'http://127.0.0.1:5010',
+  'http://localhost:5011',
+  'http://127.0.0.1:5011',
   'http://localhost:4173',
   'http://127.0.0.1:4173',
 ]
@@ -440,6 +444,14 @@ const REQUEST_ROUTE_STRATEGIES: RequestRouteStrategy[] = [
     match: isAssetItemsPath,
     handle: async (req, res) => {
       await handleAssetItemsRequest(req, res)
+      return true
+    },
+  },
+  {
+    key: 'video-projects',
+    match: isVideoProjectsPath,
+    handle: async (req, res) => {
+      await handleVideoProjectsRequest(req, res)
       return true
     },
   },

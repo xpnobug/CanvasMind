@@ -4,9 +4,14 @@ interface AdminLayoutContextValue {
   sidebarCollapsed: Ref<boolean>
   mobileSidebarOpen: Ref<boolean>
   isMobile: Ref<boolean>
+  /** 递增后仅重挂载当前内容页（不卸壳层） */
+  contentRefreshTick: Ref<number>
+  /** 顶栏 + 标签页已展示标题时，隐藏页内重复标题区 */
+  suppressPageIntroText: Ref<boolean>
   toggleSidebar: () => void
   toggleMobileSidebar: () => void
   closeMobileSidebar: () => void
+  refreshPage: () => void
 }
 
 const ADMIN_SIDEBAR_STORAGE_KEY = 'canana-admin-sidebar-collapsed'
@@ -33,6 +38,8 @@ export const createAdminLayoutContext = () => {
   const sidebarCollapsed = ref(readStoredSidebarCollapsed())
   const mobileSidebarOpen = ref(false)
   const isMobile = ref(detectIsMobile())
+  const contentRefreshTick = ref(0)
+  const suppressPageIntroText = ref(true)
 
   const toggleSidebar = () => {
     if (isMobile.value) {
@@ -49,6 +56,10 @@ export const createAdminLayoutContext = () => {
 
   const closeMobileSidebar = () => {
     mobileSidebarOpen.value = false
+  }
+
+  const refreshPage = () => {
+    contentRefreshTick.value += 1
   }
 
   const syncViewportState = () => {
@@ -70,9 +81,12 @@ export const createAdminLayoutContext = () => {
     sidebarCollapsed,
     mobileSidebarOpen,
     isMobile,
+    contentRefreshTick,
+    suppressPageIntroText,
     toggleSidebar,
     toggleMobileSidebar,
     closeMobileSidebar,
+    refreshPage,
     syncViewportState,
   }
 }
@@ -86,15 +100,21 @@ export const useAdminLayoutContext = () => {
   const fallbackSidebarCollapsed = ref(false)
   const fallbackMobileSidebarOpen = ref(false)
   const fallbackIsMobile = ref(false)
+  const fallbackContentRefreshTick = ref(0)
 
   if (!context) {
     return {
       sidebarCollapsed: fallbackSidebarCollapsed,
       mobileSidebarOpen: fallbackMobileSidebarOpen,
       isMobile: fallbackIsMobile,
+      contentRefreshTick: fallbackContentRefreshTick,
       toggleSidebar: () => {},
       toggleMobileSidebar: () => {},
       closeMobileSidebar: () => {},
+      refreshPage: () => {
+        fallbackContentRefreshTick.value += 1
+      },
+      suppressPageIntroText: ref(true),
       isDesktopCollapsed: computed(() => false),
     }
   }

@@ -1,5 +1,23 @@
 <template>
   <div class="home-header">
+    <!-- 桌面壳：顶区光晕/星点；颜色按当前主题从 workbench.headerBackground* 取 -->
+    <HomeHeaderTopBackground
+      v-if="headerBackgroundEnabled && (headerBackgroundGlowEnabled || headerBackgroundStarEnabled)"
+      :image-url="headerBackgroundImageUrl"
+      :glow-color="headerBackgroundGlowColor"
+      :glow-opacity="headerBackgroundGlowOpacity"
+      :glow-enabled="headerBackgroundGlowEnabled"
+      :star-enabled="headerBackgroundStarEnabled"
+      :star-color="headerBackgroundStarColor"
+    />
+
+    <HomeTopBanner
+      v-if="renderTopBanner && showTopBanner"
+      :config="resolvedTopBannerSettings"
+      :disable-navigation="disableNavigation"
+      :preview-readonly="previewReadonly"
+    />
+
     <div v-if="showWorkbenchTitle" class="header-bto0dS">
       <template v-if="showSiteNameInTitle">{{ siteNamePrefix }}</template>
       {{ workbenchPrefixText }}
@@ -42,16 +60,29 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 首页创作头：保留公开版 TypeSelector / 生成器 / Banner 能力，
+ * 叠 Pro 桌面壳（顶区背景 + 默认关闭的 TopBanner）。
+ */
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TypeSelector from './TypeSelector.vue'
 import GenerateContentGenerator from '@/components/generate/ContentGenerator.vue'
 import TaskIndicator from './TaskIndicator.vue'
 import HomeBanner from './HomeBanner.vue'
+import HomeHeaderTopBackground from './HomeHeaderTopBackground.vue'
+import HomeTopBanner from './HomeTopBanner.vue'
 import { useSystemSettingsStore } from '@/stores/system-settings'
+import { useThemePreferenceStore } from '@/stores/theme-preference'
 import { useHomeLayoutConfig } from '@/composables/useHomeLayoutConfig'
-import type { SystemConfigPayload, SystemHomeBannerItemConfig } from '@/api/system-config'
+import {
+  normalizeHomeTopBannerSettings,
+  type SystemConfigPayload,
+  type SystemHomeBannerItemConfig,
+  type SystemHomeTopBannerConfig,
+} from '@/api/system-config'
 import type { CreationType } from '@/components/generate/selectors'
+import './home-header-create-layout.css'
 
 interface HomeHeaderSendOptions {
   model?: string
@@ -69,20 +100,26 @@ const props = withDefaults(defineProps<{
   bannerItemsOverride?: SystemHomeBannerItemConfig[]
   disableNavigation?: boolean
   previewReadonly?: boolean
+  /** 布局层已挂 TopBanner 时可关，避免双份 */
+  renderTopBanner?: boolean
 }>(), {
   systemFormOverride: null,
   bannerItemsOverride: () => [],
   disableNavigation: false,
   previewReadonly: false,
+  renderTopBanner: true,
 })
 
 const router = useRouter()
 const systemSettingsStore = useSystemSettingsStore()
-const { headerSettings, bannerSettings } = useHomeLayoutConfig()
+const themeStore = useThemePreferenceStore()
+const { headerSettings, bannerSettings, topBannerSettings, showTopBanner: showTopBannerFromStore } = useHomeLayoutConfig()
 
 const resolvedSystemSettings = computed(() => {
   return props.systemFormOverride || systemSettingsStore.publicSystemSettings.value
 })
+
+const isLightTheme = computed(() => themeStore.currentTheme.value === 'light')
 
 const resolvedHeaderSettings = computed(() => {
   return props.systemFormOverride
@@ -102,6 +139,21 @@ const resolvedBannerSettings = computed(() => {
   return props.systemFormOverride
     ? props.systemFormOverride.homeLayoutSettings.banner
     : bannerSettings.value
+})
+
+const resolvedTopBannerSettings = computed<SystemHomeTopBannerConfig>(() => {
+  if (props.systemFormOverride) {
+    return normalizeHomeTopBannerSettings(props.systemFormOverride.homeLayoutSettings.topBanner)
+  }
+  return topBannerSettings.value
+})
+
+const showTopBanner = computed(() => {
+  if (props.systemFormOverride) {
+    const cfg = resolvedTopBannerSettings.value
+    return cfg.enabled === true && !!String(cfg.contentText || '').trim()
+  }
+  return showTopBannerFromStore.value
 })
 
 const resolvedBannerItems = computed(() => {
@@ -145,6 +197,31 @@ const currentModeLabel = computed(() => {
   return options.find(item => item.value === defaultMode)?.label || options[0]?.label || 'Agent 模式'
 })
 
+const headerBackgroundEnabled = computed(() => resolvedWorkbenchSettings.value.headerBackgroundEnabled !== false)
+/** 顶区 SVG 不再铺整页图；保留 prop 兼容，实际整页图由布局层按主题取 */
+const headerBackgroundImageUrl = computed(() => (
+  isLightTheme.value
+    ? String(resolvedWorkbenchSettings.value.headerBackgroundImageUrlLight || '').trim()
+    : String(resolvedWorkbenchSettings.value.headerBackgroundImageUrl || '').trim()
+))
+const headerBackgroundGlowColor = computed(() => (
+  isLightTheme.value
+    ? resolvedWorkbenchSettings.value.headerBackgroundGlowColorLight
+    : resolvedWorkbenchSettings.value.headerBackgroundGlowColor
+))
+const headerBackgroundGlowOpacity = computed(() => (
+  isLightTheme.value
+    ? resolvedWorkbenchSettings.value.headerBackgroundGlowOpacityLight
+    : resolvedWorkbenchSettings.value.headerBackgroundGlowOpacity
+))
+const headerBackgroundGlowEnabled = computed(() => resolvedWorkbenchSettings.value.headerBackgroundGlowEnabled !== false)
+const headerBackgroundStarEnabled = computed(() => resolvedWorkbenchSettings.value.headerBackgroundStarEnabled !== false)
+const headerBackgroundStarColor = computed(() => (
+  isLightTheme.value
+    ? resolvedWorkbenchSettings.value.headerBackgroundStarColorLight
+    : resolvedWorkbenchSettings.value.headerBackgroundStarColor
+))
+
 const handleSend = (message: string, type: CreationType, options?: HomeHeaderSendOptions) => {
   if (props.previewReadonly) {
     return
@@ -167,8 +244,8 @@ const handleSend = (message: string, type: CreationType, options?: HomeHeaderSen
       ...(options?.model && { model: options.model }),
       ...(options?.skill && { skill: options.skill }),
       ...(options?.ratio && { ratio: options.ratio }),
-      ...(options?.resolution && { resolution: options.resolution })
-    }
+      ...(options?.resolution && { resolution: options.resolution }),
+    },
   })
 }
 </script>

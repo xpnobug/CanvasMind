@@ -1,0 +1,207 @@
+.admin-layout.is-collapsed {
+  grid-template-columns: var(--admin-sidebar-collapsed-width) minmax(0, 1fr);
+}
+
+.admin-layout__mask {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  border: none;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.admin-sidebar.is-collapsed {
+  padding: 24px 12px;
+  align-items: center;
+}
+
+.admin-sidebar__link {
+  gap: 12px;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__nav {
+  width: 100%;
+}
+
+.admin-sidebar__link-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-main-default) 10%, transparent);
+  color: var(--brand-main-default);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.admin-sidebar__link-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.admin-sidebar__badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--brand-main-block-default);
+  color: var(--brand-main-default);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+
+.admin-sidebar.is-collapsed .admin-sidebar__brand {
+  width: 100%;
+  align-items: center;
+  text-align: center;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__link {
+  justify-content: center;
+  padding: 0;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__link:hover {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-layout,
+  .admin-sidebar,
+  .admin-sidebar__link {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.admin-header-bar__left,
+.admin-header__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-header__menu {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.admin-header__menu span {
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text-primary);
+}
+
+@media (max-width: 960px) {
+  .admin-layout,
+  .admin-layout.is-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-layout {
+    transition: none;
+  }
+
+  /* 选择器提高优先级，避免其它样式表后加载时把抽屉打回 static/文档流 */
+  .admin-layout > .admin-sidebar,
+  .admin-layout > .admin-sidebar.is-collapsed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    width: 288px;
+    max-width: calc(100vw - 40px);
+    height: 100vh;
+    height: 100dvh;
+    border-right: 1px solid var(--line-divider, #00000014);
+    border-bottom: none;
+    transform: translateX(-108%);
+    transition: transform 0.3s var(--admin-sidebar-ease, cubic-bezier(0.4, 0, 0.2, 1));
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.16);
+    align-items: stretch;
+    padding: 24px 18px;
+    padding-top: max(24px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .admin-layout > .admin-sidebar.is-mobile-open {
+    transform: translateX(0);
+  }
+
+  .admin-layout__mask {
+    z-index: 35;
+  }
+
+  .admin-header-bar__toolbar {
+    padding: 0 14px;
+    min-height: 56px;
+  }
+
+  .admin-worktab {
+    padding: 6px 14px 10px;
+  }
+
+  .admin-header-search-trigger {
+    min-width: 0;
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .admin-header-search-trigger__label,
+  .admin-header-search-trigger__kbd {
+    display: none;
+  }
+
+  .admin-header-bar__breadcrumb,
+  .admin-breadcrumb {
+    display: none;
+  }
+
+  .admin-header {
+    padding: 0 18px;
+    min-height: 64px;
+  }
+
+  .admin-header__title {
+    font-size: 18px;
+  }
+
+  .admin-header__tag {
+    display: none;
+  }
+
+  .admin-page {
+    padding: 20px 18px;
+  }
+}
+
+.admin-grid--providers {
+  grid-template-columns: minmax(0, 1fr);
+}
+

@@ -80,6 +80,32 @@ const DEFAULT_HOME_BANNER_ITEMS = [
   { key: 'agent', title: 'Agent 模式', subtitle: '多步骤智能创作', imageSource: 'default', presetKey: 'agent', imageUrl: '', backgroundImageUrl: '', mainImageUrl: '', overlayImageUrl: '', glowColor: '#FFD057', actionType: 'route', actionValue: '/generate?type=agent', visible: true, sortOrder: 50 },
 ] as const
 
+/** 顶通横幅默认关闭；旧库无字段时 normalize 用此兜底，避免读写丢字段 */
+const DEFAULT_HOME_TOP_BANNER = {
+  enabled: false,
+  bannerId: 'home-top-banner-default',
+  height: 0,
+  tagMode: 'static',
+  tagText: '',
+  tagTextColor: '#FFFFFF',
+  tagBackgroundColor: '#F50095',
+  countdownEndAt: '',
+  showTagIcon: true,
+  contentText: '',
+  contentTextColor: '#000000',
+  ctaEnabled: false,
+  ctaText: '',
+  ctaTextColor: '#000000',
+  ctaBorderColor: '#000000',
+  ctaBackgroundColor: '',
+  actionType: 'none',
+  actionValue: '',
+  gradientStart: '#D5F5FF',
+  gradientEnd: '#D5F5FF',
+  backgroundImageUrl: '',
+  showClose: true,
+}
+
 const createDefaultSystemConfig = () => ({
   siteInfo: {
     siteName: 'Canana',
@@ -158,6 +184,17 @@ const createDefaultSystemConfig = () => ({
         suffixText: '即刻造梦！',
         showModeSelectorInTitle: true,
         showSubmitButton: true,
+        headerBackgroundEnabled: true,
+        headerBackgroundImageUrl: '',
+        headerBackgroundImageUrlLight: '',
+        headerBackgroundGlowColor: '#008EE5',
+        headerBackgroundGlowColorLight: '#008EE5',
+        headerBackgroundGlowOpacity: 0.28,
+        headerBackgroundGlowOpacityLight: 0.12,
+        headerBackgroundGlowEnabled: true,
+        headerBackgroundStarEnabled: true,
+        headerBackgroundStarColor: '#FFFFFF0A',
+        headerBackgroundStarColorLight: '#00000008',
       },
       input: {
         placeholder: '说说今天想做点什么',
@@ -264,6 +301,7 @@ const createDefaultSystemConfig = () => ({
       showTaskIndicator: true,
       showBanner: true,
     },
+    topBanner: { ...DEFAULT_HOME_TOP_BANNER },
     banner: {
       enabled: true,
       items: DEFAULT_HOME_BANNER_ITEMS.map(item => ({ ...item })),
@@ -438,6 +476,45 @@ const normalizeHomeBannerItems = (value: unknown, fallback: Array<Record<string,
   return normalized.length ? normalized : fallback.map(item => ({ ...item }))
 }
 
+/** 顶通横幅：显式字段合并，避免旧配置缺字段或保存时被整段丢掉 */
+const normalizeHomeTopBannerSettings = (value: unknown, fallback: Record<string, any>) => {
+  const nextValue = readPlainObject(value)
+  const actionType = String(nextValue.actionType || fallback.actionType || 'none').trim()
+  const resolveStringField = (field: string, defaultValue = '') => {
+    if (Object.prototype.hasOwnProperty.call(nextValue, field)) {
+      return String(nextValue[field] ?? '').trim()
+    }
+    return String(fallback[field] ?? defaultValue).trim()
+  }
+
+  return {
+    enabled: nextValue.enabled === true,
+    bannerId: resolveStringField('bannerId', 'home-top-banner-default') || 'home-top-banner-default',
+    height: Number.isFinite(Number(nextValue.height))
+      ? Math.max(0, Math.min(96, Number(nextValue.height)))
+      : Number(fallback.height || 0),
+    tagMode: String(nextValue.tagMode || fallback.tagMode || 'static').trim() === 'countdown' ? 'countdown' : 'static',
+    tagText: resolveStringField('tagText'),
+    tagTextColor: normalizeHexColor(nextValue.tagTextColor, String(fallback.tagTextColor || '#FFFFFF')),
+    tagBackgroundColor: normalizeHexColor(nextValue.tagBackgroundColor, String(fallback.tagBackgroundColor || '#F50095')),
+    countdownEndAt: resolveStringField('countdownEndAt'),
+    showTagIcon: nextValue.showTagIcon !== false,
+    contentText: resolveStringField('contentText'),
+    contentTextColor: normalizeHexColor(nextValue.contentTextColor, String(fallback.contentTextColor || '#000000')),
+    ctaEnabled: nextValue.ctaEnabled === true,
+    ctaText: resolveStringField('ctaText'),
+    ctaTextColor: normalizeHexColor(nextValue.ctaTextColor, String(fallback.ctaTextColor || '#000000')),
+    ctaBorderColor: normalizeHexColor(nextValue.ctaBorderColor, String(fallback.ctaBorderColor || '#000000')),
+    ctaBackgroundColor: resolveStringField('ctaBackgroundColor'),
+    actionType: actionType === 'route' || actionType === 'url' || actionType === 'dialog' ? actionType : 'none',
+    actionValue: resolveStringField('actionValue'),
+    gradientStart: normalizeHexColor(nextValue.gradientStart, String(fallback.gradientStart || '#D5F5FF')),
+    gradientEnd: normalizeHexColor(nextValue.gradientEnd, String(fallback.gradientEnd || '#D5F5FF')),
+    backgroundImageUrl: resolveStringField('backgroundImageUrl'),
+    showClose: nextValue.showClose !== false,
+  }
+}
+
 export const createDefaultConversationSettings = () => createDefaultSystemConfig().conversationSettings
 export const getDefaultGenerationProgressSettings = () => createDefaultSystemConfig().generationProgressSettings
 
@@ -498,6 +575,33 @@ export const normalizeConversationSettings = (input?: SystemConversationSettings
         suffixText: String(workbench.suffixText || defaults.entryDisplay.workbench.suffixText).trim(),
         showModeSelectorInTitle: workbench.showModeSelectorInTitle !== false,
         showSubmitButton: workbench.showSubmitButton !== false,
+        headerBackgroundEnabled: workbench.headerBackgroundEnabled !== false,
+        headerBackgroundImageUrl: String(workbench.headerBackgroundImageUrl || '').trim(),
+        headerBackgroundImageUrlLight: String(workbench.headerBackgroundImageUrlLight || '').trim(),
+        headerBackgroundGlowColor: normalizeHexColor(
+          workbench.headerBackgroundGlowColor,
+          defaults.entryDisplay.workbench.headerBackgroundGlowColor,
+        ),
+        headerBackgroundGlowColorLight: normalizeHexColor(
+          workbench.headerBackgroundGlowColorLight,
+          defaults.entryDisplay.workbench.headerBackgroundGlowColorLight,
+        ),
+        headerBackgroundGlowOpacity: Number.isFinite(Number(workbench.headerBackgroundGlowOpacity))
+          ? Math.max(0, Math.min(1, Number(workbench.headerBackgroundGlowOpacity)))
+          : defaults.entryDisplay.workbench.headerBackgroundGlowOpacity,
+        headerBackgroundGlowOpacityLight: Number.isFinite(Number(workbench.headerBackgroundGlowOpacityLight))
+          ? Math.max(0, Math.min(1, Number(workbench.headerBackgroundGlowOpacityLight)))
+          : defaults.entryDisplay.workbench.headerBackgroundGlowOpacityLight,
+        headerBackgroundGlowEnabled: workbench.headerBackgroundGlowEnabled !== false,
+        headerBackgroundStarEnabled: workbench.headerBackgroundStarEnabled !== false,
+        headerBackgroundStarColor: normalizeHexColor(
+          workbench.headerBackgroundStarColor,
+          defaults.entryDisplay.workbench.headerBackgroundStarColor,
+        ),
+        headerBackgroundStarColorLight: normalizeHexColor(
+          workbench.headerBackgroundStarColorLight,
+          defaults.entryDisplay.workbench.headerBackgroundStarColorLight,
+        ),
       },
       input: {
         placeholder: String(inputSettings.placeholder || defaults.entryDisplay.input.placeholder).trim(),
@@ -596,6 +700,7 @@ const normalizeSystemConfig = (input?: SystemConfigPayload | null) => {
   const homeSideMenuSettings = readPlainObject(input?.homeSideMenuSettings)
   const homeLayoutSettings = readPlainObject(input?.homeLayoutSettings)
   const homeLayoutHeaderSettings = readPlainObject(homeLayoutSettings.header)
+  const homeLayoutTopBannerSettings = readPlainObject(homeLayoutSettings.topBanner)
   const homeLayoutBannerSettings = readPlainObject(homeLayoutSettings.banner)
   const defaultStageMap = new Map(
     defaults.generationProgressSettings.stages.map(item => [item.key, item]),
@@ -736,6 +841,10 @@ const normalizeSystemConfig = (input?: SystemConfigPayload | null) => {
         showTaskIndicator: homeLayoutHeaderSettings.showTaskIndicator !== false,
         showBanner: homeLayoutHeaderSettings.showBanner !== false,
       },
+      topBanner: normalizeHomeTopBannerSettings(
+        homeLayoutTopBannerSettings,
+        defaults.homeLayoutSettings.topBanner,
+      ),
       banner: {
         enabled: homeLayoutBannerSettings.enabled !== false,
         items: normalizeHomeBannerItems(homeLayoutBannerSettings.items, defaults.homeLayoutSettings.banner.items),

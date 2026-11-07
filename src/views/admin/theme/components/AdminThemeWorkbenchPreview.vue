@@ -3,6 +3,23 @@
     <div class="admin-theme-canvas" :class="previewThemeClass" :style="previewThemeVars">
       <div class="admin-theme-canvas__viewport">
         <div
+          class="admin-theme-frontstage__top-banner"
+          :class="{ 'is-hidden-block': !previewTopBannerSettings.enabled }"
+        >
+          <HomeTopBanner
+            :config="previewTopBannerSettings"
+            :disable-navigation="true"
+            :preview-readonly="true"
+          />
+          <div class="admin-theme-frontstage__top-banner-actions">
+            <AdminThemeWorkbenchItemActions
+              :visible="previewTopBannerSettings.enabled"
+              :action-keys="['edit', 'visible']"
+              @action="$emit('contentBlockAction', { action: $event, blockKey: 'top-banner' })"
+            />
+          </div>
+        </div>
+        <div
           class="admin-theme-frontstage"
           :class="{ 'is-theme-linked-active': activeThemeSectionId === 'theme-section-mode' }"
           @click="$emit('themeSectionSelect', 'theme-section-mode')"
@@ -38,8 +55,20 @@
             </aside>
             <main
               class="admin-theme-frontstage__main"
-              :class="{ 'is-theme-field-active': activeThemeFieldId === 'pageBackground' }"
+              :class="{
+                'is-theme-field-active': activeThemeFieldId === 'pageBackground',
+                'home-main-content-background': Boolean(previewHeaderBackgroundImageUrl),
+              }"
+              :style="previewMainStyle"
             >
+              <!-- img 铺底：不依赖 CSS 变量 / ::before，避免 scoped 底色把图盖住 -->
+              <img
+                v-if="previewHeaderBackgroundImageUrl"
+                class="home-main-content-background__layer"
+                :src="previewHeaderBackgroundImageUrl"
+                alt=""
+                aria-hidden="true"
+              >
               <div class="content-wrapper-cF1zaN admin-theme-frontstage__content-wrapper">
                 <div class="main-container-nXfW_A admin-theme-frontstage__content-main">
                   <div class="content-TZbgMr admin-theme-frontstage__content-scroll">
@@ -76,17 +105,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type CSSProperties } from 'vue'
 import AdminThemeFrontSideMenuPreview from '@/views/admin/theme/components/AdminThemeFrontSideMenuPreview.vue'
-import AdminThemeFrontHomeHeaderPreview, { type WorkbenchContentBlockKey } from '@/views/admin/theme/components/AdminThemeFrontHomeHeaderPreview.vue'
-import type { CSSProperties } from 'vue'
-import type {
-  SystemConfigPayload,
-  SystemHomeBannerItemConfig,
-  SystemHomeSideMenuGroupConfig,
-  SystemHomeSideMenuItemConfig,
+import AdminThemeFrontHomeHeaderPreview, { type WorkbenchContentBlockKey as HeaderBlockKey } from '@/views/admin/theme/components/AdminThemeFrontHomeHeaderPreview.vue'
+import AdminThemeWorkbenchItemActions, { type WorkbenchMenuActionKey } from '@/views/admin/theme/components/AdminThemeWorkbenchItemActions.vue'
+import HomeTopBanner from '@/components/home/components/HomeTopBanner.vue'
+import '@/components/home/components/home-main-content-background.css'
+import {
+  normalizeHomeTopBannerSettings,
+  type SystemConfigPayload,
+  type SystemHomeBannerItemConfig,
+  type SystemHomeSideMenuGroupConfig,
+  type SystemHomeSideMenuItemConfig,
+  type SystemHomeTopBannerConfig,
 } from '@/api/system-config'
-import type { WorkbenchMenuActionKey } from '@/views/admin/theme/components/AdminThemeWorkbenchItemActions.vue'
+
+export type WorkbenchContentBlockKey = HeaderBlockKey | 'top-banner'
 
 interface MenuGroupView extends SystemHomeSideMenuGroupConfig {
   items: SystemHomeSideMenuItemConfig[]
@@ -127,9 +161,62 @@ const previewBannerItems = computed(() => {
   return [...(props.systemForm.homeLayoutSettings.banner.items || [])]
     .sort((left, right) => left.sortOrder - right.sortOrder)
 })
+
+const previewTopBannerSettings = computed<SystemHomeTopBannerConfig>(() => {
+  return normalizeHomeTopBannerSettings(props.systemForm.homeLayoutSettings?.topBanner)
+})
+
+/**
+ * 预览主栏整页铺底。
+ * 按预览明暗取图；对应侧为空时回退另一侧，避免后台预览「有配置却全黑」。
+ * 前台仍严格：亮色空不回退暗色。
+ */
+const previewHeaderBackgroundImageUrl = computed(() => {
+  const workbench = props.systemForm.conversationSettings?.entryDisplay?.workbench
+  if (workbench?.headerBackgroundEnabled === false) return ''
+  const dark = String(workbench?.headerBackgroundImageUrl || '').trim()
+  const light = String(workbench?.headerBackgroundImageUrlLight || '').trim()
+  if (props.previewThemeClass === 'is-light') {
+    return light || dark
+  }
+  return dark || light
+})
+
+/** 主栏同时内联 backgroundImage，双保险 */
+const previewMainStyle = computed(() => {
+  const url = previewHeaderBackgroundImageUrl.value
+  if (!url) return undefined
+  return {
+    backgroundColor: 'transparent',
+    backgroundImage: `url(${JSON.stringify(url)})`,
+    backgroundPosition: 'top',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+  } as CSSProperties
+})
 </script>
 
 <style scoped>
+.admin-theme-frontstage__top-banner {
+  position: relative;
+  width: 100%;
+}
+
+.admin-theme-frontstage__top-banner.is-hidden-block {
+  opacity: 0.45;
+}
+
+.admin-theme-frontstage__top-banner :deep(.home-top-banner) {
+  z-index: 1;
+}
+
+.admin-theme-frontstage__top-banner-actions {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 2;
+}
+
 .admin-theme-canvas-wrap {
   min-height: 0;
   height: 100%;
@@ -240,6 +327,40 @@ const previewBannerItems = computed(() => {
 
 .admin-theme-frontstage__main.is-theme-field-active {
   box-shadow: inset 0 0 0 2px rgba(34, 211, 238, 0.3);
+}
+
+.admin-theme-frontstage__main.home-main-content-background {
+  background-color: transparent;
+}
+
+.admin-theme-frontstage__main > .home-main-content-background__layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  pointer-events: none;
+}
+
+.admin-theme-frontstage__main.home-main-content-background > :not(.home-main-content-background__layer) {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-frontstage__content-wrapper),
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-frontstage__content-main),
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-frontstage__content-scroll),
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-frontstage__scroll-shell),
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-frontstage__scroll-content),
+.admin-theme-frontstage__main.home-main-content-background :deep(.scroll-container-Jsws2j),
+.admin-theme-frontstage__main.home-main-content-background :deep(.scroll-content-DaYLnh),
+.admin-theme-frontstage__main.home-main-content-background :deep(.section-generator),
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-front-home-preview),
+.admin-theme-frontstage__main.home-main-content-background :deep(.home-header),
+.admin-theme-frontstage__main.home-main-content-background :deep(.admin-theme-frontstage__section-generator) {
+  background: transparent;
 }
 
 .admin-theme-frontstage__content-wrapper {

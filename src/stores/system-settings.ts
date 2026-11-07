@@ -5,6 +5,7 @@ import {
   createDefaultHomeLayoutSettings,
   createDefaultHomeSideMenuSettings,
   getPublicSystemConfig,
+  normalizeHomeLayoutSettings,
   type SystemConfigPayload,
 } from '@/api/system-config'
 import { applySystemThemeRuntime, refreshSystemThemeRuntime } from '@/utils/theme-runtime'
@@ -100,8 +101,16 @@ const syncThemeRuntime = (settings: SystemConfigPayload) => {
   applySystemThemeRuntime(settings)
 }
 
+/** 公开包可能缺 topBanner：走统一 normalize，避免壳层读字段崩溃 */
+const ensureHomeLayoutShellFields = (settings: SystemConfigPayload): SystemConfigPayload => {
+  return {
+    ...settings,
+    homeLayoutSettings: normalizeHomeLayoutSettings(settings.homeLayoutSettings),
+  }
+}
+
 const applyPublicSystemSettings = (settings?: SystemConfigPayload | null) => {
-  publicSystemSettings.value = settings || createDefaultSettings()
+  publicSystemSettings.value = ensureHomeLayoutShellFields(settings || createDefaultSettings())
   syncSiteRuntime(publicSystemSettings.value)
   syncThemeRuntime(publicSystemSettings.value)
   return publicSystemSettings.value

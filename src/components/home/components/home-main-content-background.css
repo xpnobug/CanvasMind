@@ -1,0 +1,61 @@
+/**
+ * 首页主内容背景图：fixed + 100vw/100vh + cover + top，整页铺开。
+ *
+ * 挂在 `.container-moSF_y.home-main-content-background` 上：
+ * - 去掉壳层不透明底，避免盖住 ::before
+ * - 子级抬 z-index，侧栏自带底色仍压在图上
+ */
+
+.container-moSF_y.home-main-content-background {
+  background-color: transparent;
+  isolation: isolate;
+}
+
+.container-moSF_y.home-main-content-background::before {
+  background-image: var(--home-main-content-background-image);
+  background-position: top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: '';
+  height: 100vh;
+  inset: 0;
+  opacity: 1;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 0.32s ease;
+  width: 100vw;
+  z-index: 0;
+}
+
+.container-moSF_y.home-main-content-background > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 主题工作台预览主栏：absolute 铺满预览盒，不 fixed 到整页后台 */
+.admin-theme-frontstage__main.home-main-content-background {
+  background: transparent;
+  isolation: isolate;
+  position: relative;
+}
+
+.admin-theme-frontstage__main.home-main-content-background::before {
+  background-image: var(--home-main-content-background-image);
+  background-position: top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: '';
+  height: 100%;
+  inset: 0;
+  opacity: 1;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+/* 预览区背景改由 AdminThemeWorkbenchPreview 内真实层铺图；此处只抬非背景层子节点 */
+.admin-theme-frontstage__main.home-main-content-background > :not(.home-main-content-background__layer) {
+  position: relative;
+  z-index: 1;
+}

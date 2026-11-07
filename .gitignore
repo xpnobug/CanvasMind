@@ -31,5 +31,6 @@ package-lock.json
 .codemoss/
 .codex-temp/
 .kiro/
+.env
 .env.development
 .env.production

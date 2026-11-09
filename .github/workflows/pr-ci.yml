@@ -1,0 +1,51 @@
+name: PR Tests and Build
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Typecheck, tests, and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: mysql://ci:ci@127.0.0.1:3306/ci
+      PROVIDER_CONFIG_SECRET: ci-only-not-a-production-secret
+
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Run script tests
+        run: npm run test:scripts
+
+      - name: Build frontend
+        run: npm run build:client
+
+      - name: Build isolated backend service bundle
+        run: npm run build:service

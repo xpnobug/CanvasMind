@@ -1,377 +1,417 @@
 <template>
-  <AdminPageContainer title="营销中心" description="集中管理会员订阅、积分充值、卡密兑换与奖励规则。">
+  <AdminPageContainer
+    class="admin-list-page"
+    title="营销中心"
+    description="集中管理会员订阅、积分充值、卡密兑换与奖励规则。"
+    compact
+  >
     <template #actions>
       <button class="admin-button admin-button--secondary" type="button" :disabled="loading" @click="loadAllData">
         {{ loading ? '刷新中...' : '刷新数据' }}
       </button>
     </template>
 
-    <section class="admin-marketing-hero">
-      <div class="admin-marketing-hero__main">
-        <div class="admin-marketing-hero__eyebrow">营销工作台</div>
-        <h3 class="admin-marketing-hero__title">统一管理会员、积分、激励与补偿等核心运营能力</h3>
-        <p class="admin-marketing-hero__desc">
-          当前模块为 <strong>{{ currentToolInfo.title }}</strong>，主要用于 {{ currentToolInfo.description }}。
-          可结合左侧模块导航快速切换到具体业务域，集中处理日常运营动作。
-        </p>
-        <div class="admin-marketing-hero__chips">
-          <span class="admin-chip">当前模块：{{ currentToolInfo.title }}</span>
-          <span class="admin-chip">{{ currentToolInfo.meta }}</span>
-        </div>
-      </div>
-      <div class="admin-marketing-hero__stats">
-        <div class="admin-stat-card">
-          <div class="admin-stat-card__label">会员等级</div>
-          <div class="admin-stat-card__value">{{ overview?.membership.levelCount ?? levels.length }}</div>
-          <div class="admin-stat-card__hint">当前已配置会员等级与成长体系</div>
-        </div>
-        <div class="admin-stat-card">
-          <div class="admin-stat-card__label">会员计划</div>
-          <div class="admin-stat-card__value">{{ overview?.membership.planCount ?? plans.length }}</div>
-          <div class="admin-stat-card__hint">支持月卡、季卡、年卡等订阅产品</div>
-        </div>
-        <div class="admin-stat-card">
-          <div class="admin-stat-card__label">充值套餐</div>
-          <div class="admin-stat-card__value">{{ overview?.recharge.packageCount ?? packages.length }}</div>
-          <div class="admin-stat-card__hint">用于积分充值与多充多送活动</div>
-        </div>
-        <div class="admin-stat-card">
-          <div class="admin-stat-card__label">奖励规则</div>
-          <div class="admin-stat-card__value">{{ overview?.rewards.ruleCount ?? rewardRules.length }}</div>
-          <div class="admin-stat-card__hint">覆盖登录、注册、签到等激励动作</div>
-        </div>
-      </div>
-    </section>
+    <div class="admin-grid admin-grid--stats admin-marketing-kpis">
+      <AdminStatCard label="会员等级" :value="overview?.membership.levelCount ?? levels.length" hint="含免费档与付费档" />
+      <AdminStatCard label="会员计划" :value="overview?.membership.planCount ?? plans.length" hint="按周期售卖的订阅商品" />
+      <AdminStatCard label="充值套餐" :value="overview?.recharge.packageCount ?? packages.length" hint="积分包与多充多送" />
+      <AdminStatCard label="卡密批次" :value="overview?.cdk?.batchCount ?? cardBatches.length" hint="兑换码批次与库存" />
+    </div>
 
-    <section class="admin-marketing-workspace">
-      <aside class="admin-marketing-sidebar">
-        <div class="admin-card admin-marketing-sidebar-card">
-          <div class="admin-card__header">
-            <div>
-              <h4 class="admin-card__title">运营模块</h4>
-              <div class="admin-card__desc">按业务域拆分，减少运营跳转成本。</div>
-            </div>
-          </div>
-          <div class="admin-card__content">
-            <div class="admin-marketing-tools">
-              <button
-                v-for="tool in marketingTools"
-                :key="tool.key"
-                class="admin-marketing-tool"
-                :class="{ 'is-active': activeTool === tool.key }"
-                type="button"
-                @click="activeTool = tool.key"
-              >
-                <div class="admin-marketing-tool__icon">{{ tool.icon }}</div>
-                <div class="admin-marketing-tool__body">
-                  <div class="admin-marketing-tool__title">{{ tool.title }}</div>
-                  <div class="admin-marketing-tool__desc">{{ tool.description }}</div>
-                  <div class="admin-marketing-tool__meta">{{ tool.meta() }}</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      </aside>
+    <div class="admin-marketing-shell">
+      <nav class="admin-marketing-tabs" role="tablist" aria-label="营销模块">
+        <button
+          v-for="item in marketingTabs"
+          :key="item.key"
+          type="button"
+          role="tab"
+          class="admin-marketing-tabs__item"
+          :class="{ 'is-active': activeTool === item.key }"
+          :aria-selected="activeTool === item.key"
+          @click="activeTool = item.key"
+        >
+          <span class="admin-marketing-tabs__label">{{ item.title }}</span>
+          <span class="admin-marketing-tabs__meta">{{ item.group }} · {{ item.count }}</span>
+        </button>
+      </nav>
 
       <div class="admin-marketing-main">
-        <div class="admin-marketing-main__header">
-          <div>
-            <h3 class="admin-marketing-main__title">{{ currentToolInfo.title }}</h3>
-            <div class="admin-marketing-main__desc">{{ currentToolInfo.focus }}</div>
-          </div>
-          <div class="admin-marketing-main__meta">{{ currentToolInfo.meta }}</div>
-        </div>
-
         <div v-if="activeTool === 'membership'" class="admin-marketing-section-shell">
-          <div class="admin-grid admin-grid--two admin-marketing-panel-grid">
-            <div class="admin-card admin-marketing-module-card">
-              <div class="admin-card__header">
-                <div>
-                  <h4 class="admin-card__title">会员等级</h4>
-                  <div class="admin-card__desc">定义会员层级、专属权益、每月赠送积分和排序权重。</div>
-                </div>
-                <button class="admin-button admin-button--primary" type="button" @click="openLevelDialog()">新增等级</button>
-              </div>
-              <div class="admin-card__content">
-                <div v-if="!levels.length" class="admin-empty">暂无会员等级，请先创建。</div>
-                <div v-else class="admin-list">
-                  <div v-for="item in levels" :key="item.id" class="admin-list-item admin-marketing-list-item">
-                    <div>
-                      <div class="admin-list-item__title">{{ item.name }}</div>
-                      <div class="admin-list-item__meta">
-                        Lv.{{ item.level }} · 每月赠送 {{ item.monthlyBonusPoints }} 积分 · 容量 {{ item.storageCapacity || 0 }}
-                      </div>
-                    </div>
-                    <div class="admin-marketing-list-item__badges">
-                      <span class="admin-chip">排序 {{ item.sortOrder }}</span>
-                      <span class="admin-status" :class="item.isEnabled ? 'admin-status--success' : 'admin-status--muted'">
-                        {{ item.isEnabled ? '已启用' : '已停用' }}
-                      </span>
-                    </div>
-                    <div class="admin-row-actions">
-                      <button class="admin-inline-button" type="button" @click="openLevelDialog(item)">编辑</button>
-                      <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeleteLevel(item)">删除</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="admin-card admin-marketing-module-card">
-              <div class="admin-card__header">
-                <div>
-                  <h4 class="admin-card__title">会员计划</h4>
-                  <div class="admin-card__desc">创建订阅商品，支持设置时长、售价、原价和赠送积分。</div>
-                </div>
-                <button class="admin-button admin-button--primary" type="button" @click="openPlanDialog()">新增计划</button>
-              </div>
-              <div class="admin-card__content">
-                <div v-if="!plans.length" class="admin-empty">暂无会员计划，请先配置。</div>
-                <div v-else class="admin-list">
-                  <div v-for="item in plans" :key="item.id" class="admin-list-item admin-marketing-list-item">
-                    <div>
-                      <div class="admin-list-item__title">{{ item.name }}</div>
-                      <div class="admin-list-item__meta">
-                        {{ item.durationValue }} {{ getDurationUnitLabel(item.durationUnit) }} · {{ getPlanBillingSummary(item.billingRules) }}
-                      </div>
-                    </div>
-                    <div class="admin-marketing-list-item__badges">
-                      <span class="admin-chip">赠送 {{ item.bonusPoints }} 积分</span>
-                      <span class="admin-status" :class="item.isEnabled ? 'admin-status--success' : 'admin-status--muted'">
-                        {{ item.isEnabled ? '已上架' : '已下架' }}
-                      </span>
-                    </div>
-                    <div class="admin-row-actions">
-                      <button class="admin-inline-button" type="button" @click="openPlanDialog(item)">编辑</button>
-                      <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeletePlan(item)">删除</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="admin-marketing-subtabs" role="tablist" aria-label="会员配置">
+            <button
+              type="button"
+              role="tab"
+              class="admin-marketing-subtabs__item"
+              :class="{ 'is-active': membershipSubTab === 'levels' }"
+              :aria-selected="membershipSubTab === 'levels'"
+              @click="membershipSubTab = 'levels'"
+            >
+              会员等级
+              <span>{{ levels.length }}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="admin-marketing-subtabs__item"
+              :class="{ 'is-active': membershipSubTab === 'plans' }"
+              :aria-selected="membershipSubTab === 'plans'"
+              @click="membershipSubTab = 'plans'"
+            >
+              会员计划
+              <span>{{ plans.length }}</span>
+            </button>
           </div>
+
+          <AdminListFrame v-if="membershipSubTab === 'levels'">
+            <template #toolbar>
+              <AdminListToolbar
+                :disabled="loading"
+                :has-active-filters="Boolean(listKeyword.trim())"
+                @clear="clearListKeyword"
+              >
+                <input
+                  v-model.trim="listKeyword"
+                  class="admin-list-toolbar__input is-wide"
+                  type="text"
+                  placeholder="搜索等级名称"
+                  :disabled="loading"
+                >
+                <template #actions>
+                  <button class="admin-button admin-button--primary" type="button" @click="openLevelDialog()">新增等级</button>
+                </template>
+              </AdminListToolbar>
+            </template>
+            <AdminArtTable :loading="loading" :data="filteredLevels" empty-text="暂无会员等级，请先创建。">
+              <el-table-column label="名称" min-width="160">
+                <template #default="{ row }">
+                  <div class="admin-marketing-table__title">{{ row.name }}</div>
+                  <div class="admin-marketing-table__meta">Lv.{{ row.level }} · 容量 {{ row.storageCapacity || 0 }}</div>
+                </template>
+              </el-table-column>
+              <el-table-column label="月赠积分" width="100" align="right">
+                <template #default="{ row }">{{ row.monthlyBonusPoints }}</template>
+              </el-table-column>
+              <el-table-column label="排序" width="72" align="center" prop="sortOrder" />
+              <el-table-column label="启用" width="88" align="center">
+                <template #default="{ row }">
+                  <el-switch
+                    :model-value="row.isEnabled"
+                    size="small"
+                    :disabled="enableTogglingId === row.id"
+                    @change="(value: string | number | boolean) => handleToggleLevelEnabled(row, Boolean(value))"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="140" fixed="right" align="right">
+                <template #default="{ row }">
+                  <div class="admin-row-actions">
+                    <button class="admin-inline-button" type="button" @click="openLevelDialog(row)">编辑</button>
+                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeleteLevel(row)">删除</button>
+                  </div>
+                </template>
+              </el-table-column>
+            </AdminArtTable>
+          </AdminListFrame>
+
+          <AdminListFrame v-else>
+            <template #toolbar>
+              <AdminListToolbar
+                :disabled="loading"
+                :has-active-filters="Boolean(listKeyword.trim())"
+                @clear="clearListKeyword"
+              >
+                <input
+                  v-model.trim="listKeyword"
+                  class="admin-list-toolbar__input is-wide"
+                  type="text"
+                  placeholder="搜索计划名称 / 时长"
+                  :disabled="loading"
+                >
+                <template #actions>
+                  <button class="admin-button admin-button--primary" type="button" @click="openPlanDialog()">新增计划</button>
+                </template>
+              </AdminListToolbar>
+            </template>
+            <AdminEmptyState v-if="!loading && !levels.length" message="请先创建会员等级，再配置计划。" />
+            <div v-else class="admin-marketing-plan-groups">
+              <section
+                v-for="group in filteredPlanGroups"
+                :key="group.key"
+                class="admin-marketing-plan-group"
+              >
+                <header class="admin-marketing-plan-group__head">
+                  <div class="admin-marketing-plan-group__identity">
+                    <strong class="admin-marketing-plan-group__title">{{ group.title }}</strong>
+                    <span v-if="group.levelLabel" class="admin-chip">{{ group.levelLabel }}</span>
+                  </div>
+                  <div class="admin-marketing-plan-group__meta">
+                    <div class="admin-marketing-plan-group__stats">
+                      <span>{{ group.plans.length }} 个计划</span>
+                      <span>启用 {{ group.enabledCount }}</span>
+                    </div>
+                  </div>
+                </header>
+                <AdminArtTable :loading="loading" :data="group.plans" empty-text="该分组暂无计划。">
+                  <el-table-column label="计划" min-width="160">
+                    <template #default="{ row }">
+                      <div class="admin-marketing-table__title">{{ row.name }}</div>
+                      <div class="admin-marketing-plan-card__sub">
+                        <span>{{ row.durationValue }} {{ getDurationUnitLabel(row.durationUnit) }}</span>
+                        <span v-if="row.label" class="admin-chip">{{ row.label }}</span>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="售价" min-width="140" align="right">
+                    <template #default="{ row }">
+                      <div class="admin-marketing-table__title">{{ getPlanBillingSummary(row.billingRules) }}</div>
+                      <div
+                        v-if="row.originalPrice !== null && row.originalPrice !== undefined && String(row.originalPrice).trim() !== ''"
+                        class="admin-marketing-plan-card__origin"
+                      >
+                        原价 {{ formatMoney(row.originalPrice) }}
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="赠送" width="88" align="right">
+                    <template #default="{ row }">{{ row.bonusPoints || 0 }}</template>
+                  </el-table-column>
+                  <el-table-column label="排序" width="64" align="center" prop="sortOrder" />
+                  <el-table-column label="启用" width="72" align="center">
+                    <template #default="{ row }">
+                      <el-switch
+                        :model-value="row.isEnabled"
+                        size="small"
+                        :disabled="enableTogglingId === row.id"
+                        @change="(value: string | number | boolean) => handleTogglePlanEnabled(row, Boolean(value))"
+                      />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="140" fixed="right" align="right">
+                    <template #default="{ row }">
+                      <div class="admin-row-actions admin-marketing-plan-actions">
+                        <button class="admin-inline-button" type="button" @click="openPlanDialog(row)">编辑</button>
+                        <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeletePlan(row)">删除</button>
+                      </div>
+                    </template>
+                  </el-table-column>
+                </AdminArtTable>
+              </section>
+            </div>
+          </AdminListFrame>
         </div>
 
         <div v-else-if="activeTool === 'recharge'" class="admin-marketing-section-shell">
-          <div class="admin-card admin-marketing-module-card">
-            <div class="admin-card__header">
-              <div>
-                <h4 class="admin-card__title">积分充值</h4>
-                <div class="admin-card__desc">支持配置充值金额、基础积分、赠送积分和促销角标。</div>
-              </div>
-              <button class="admin-button admin-button--primary" type="button" @click="openPackageDialog()">新增套餐</button>
-            </div>
-            <div class="admin-card__content">
-              <div v-if="!packages.length" class="admin-empty">暂无积分充值套餐。</div>
-              <div v-else class="admin-provider-grid admin-marketing-package-grid">
-                <div v-for="item in packages" :key="item.id" class="admin-provider-tile admin-marketing-package-card">
-                  <div class="admin-provider-tile__header">
-                    <div>
-                      <div class="admin-provider-tile__title">{{ item.name }}</div>
-                      <div class="admin-provider-tile__desc">{{ item.description || '未填写套餐说明' }}</div>
-                    </div>
-                    <span class="admin-status" :class="item.isEnabled ? 'admin-status--success' : 'admin-status--muted'">
-                      {{ item.isEnabled ? '已启用' : '已停用' }}
-                    </span>
+          <AdminListFrame>
+            <template #toolbar>
+              <AdminListToolbar
+                :disabled="loading"
+                :has-active-filters="Boolean(listKeyword.trim())"
+                @clear="clearListKeyword"
+              >
+                <input
+                  v-model.trim="listKeyword"
+                  class="admin-list-toolbar__input is-wide"
+                  type="text"
+                  placeholder="搜索套餐名称 / 角标"
+                  :disabled="loading"
+                >
+                <template #actions>
+                  <button class="admin-button admin-button--primary" type="button" @click="openPackageDialog()">新增套餐</button>
+                </template>
+              </AdminListToolbar>
+            </template>
+            <AdminArtTable :loading="loading" :data="filteredPackages" empty-text="暂无积分充值套餐。">
+              <el-table-column label="套餐" min-width="180">
+                <template #default="{ row }">
+                  <div class="admin-marketing-table__title">{{ row.name }}</div>
+                  <div class="admin-marketing-table__meta">{{ row.description || row.label || '—' }}</div>
+                </template>
+              </el-table-column>
+              <el-table-column label="积分" width="88" align="right" prop="points" />
+              <el-table-column label="赠送" width="88" align="right" prop="bonusPoints" />
+              <el-table-column label="售价" width="100" align="right">
+                <template #default="{ row }">{{ formatMoney(row.price) }}</template>
+              </el-table-column>
+              <el-table-column label="角标" width="120">
+                <template #default="{ row }">{{ row.badgeText || '—' }}</template>
+              </el-table-column>
+              <el-table-column label="排序" width="72" align="center" prop="sortOrder" />
+              <el-table-column label="启用" width="88" align="center">
+                <template #default="{ row }">
+                  <el-switch
+                    :model-value="row.isEnabled"
+                    size="small"
+                    :disabled="enableTogglingId === row.id"
+                    @change="(value: string | number | boolean) => handleTogglePackageEnabled(row, Boolean(value))"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="140" fixed="right" align="right">
+                <template #default="{ row }">
+                  <div class="admin-row-actions">
+                    <button class="admin-inline-button" type="button" @click="openPackageDialog(row)">编辑</button>
+                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeletePackage(row)">删除</button>
                   </div>
-                  <div class="admin-provider-tile__chips">
-                    <span class="admin-chip">积分 {{ item.points }}</span>
-                    <span class="admin-chip">赠送 {{ item.bonusPoints }}</span>
-                    <span v-if="item.badgeText" class="admin-chip">{{ item.badgeText }}</span>
-                  </div>
-                  <div class="admin-provider-tile__endpoint">
-                    <span>售价</span>
-                    <strong>{{ formatMoney(item.price) }}</strong>
-                  </div>
-                  <div class="admin-marketing-package-card__footer">
-                    <span class="admin-marketing-package-card__footer-text">排序 {{ item.sortOrder }}</span>
-                    <span v-if="item.originalPrice" class="admin-marketing-package-card__footer-text">原价 {{ formatMoney(item.originalPrice) }}</span>
-                  </div>
-                  <div class="admin-provider-tile__actions">
-                    <button class="admin-inline-button" type="button" @click="openPackageDialog(item)">编辑</button>
-                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeletePackage(item)">删除</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                </template>
+              </el-table-column>
+            </AdminArtTable>
+          </AdminListFrame>
         </div>
 
         <div v-else-if="activeTool === 'rewards'" class="admin-marketing-section-shell">
-          <div class="admin-card admin-marketing-module-card">
-            <div class="admin-card__header">
-              <div>
-                <h4 class="admin-card__title">奖励中心</h4>
-                <div class="admin-card__desc">管理登录奖励、注册奖励和签到奖励等营销激励规则。</div>
-              </div>
-              <button class="admin-button admin-button--primary" type="button" @click="openRewardDialog()">新增规则</button>
-            </div>
-            <div class="admin-card__content">
-              <div v-if="!rewardRules.length" class="admin-empty">暂无奖励规则。</div>
-              <div v-else class="admin-list">
-                <div v-for="item in rewardRules" :key="item.id" class="admin-list-item admin-marketing-list-item">
-                  <div>
-                    <div class="admin-list-item__title">{{ item.name }}</div>
-                    <div class="admin-list-item__meta">
-                      {{ getRewardTriggerLabel(item.triggerType) }} · {{ getCycleTypeLabel(item.cycleType) }} · 每周期 {{ item.limitPerCycle }} 次
-                    </div>
-                  </div>
-                  <div class="admin-marketing-list-item__badges">
-                    <span class="admin-chip">奖励 {{ item.rewardPoints }} 积分</span>
-                    <span class="admin-status" :class="item.isEnabled ? 'admin-status--success' : 'admin-status--muted'">
-                      {{ item.isEnabled ? '启用中' : '已关闭' }}
-                    </span>
-                  </div>
+          <AdminListFrame>
+            <template #toolbar>
+              <AdminListToolbar
+                :disabled="loading"
+                :has-active-filters="Boolean(listKeyword.trim())"
+                @clear="clearListKeyword"
+              >
+                <input
+                  v-model.trim="listKeyword"
+                  class="admin-list-toolbar__input is-wide"
+                  type="text"
+                  placeholder="搜索规则名称"
+                  :disabled="loading"
+                >
+                <template #actions>
+                  <button class="admin-button admin-button--primary" type="button" @click="openRewardDialog()">新增规则</button>
+                </template>
+              </AdminListToolbar>
+            </template>
+            <AdminArtTable :loading="loading" :data="filteredRewardRules" empty-text="暂无奖励规则。">
+              <el-table-column label="规则" min-width="160">
+                <template #default="{ row }">
+                  <div class="admin-marketing-table__title">{{ row.name }}</div>
+                  <div class="admin-marketing-table__meta">{{ row.code || '—' }}</div>
+                </template>
+              </el-table-column>
+              <el-table-column label="触发" width="110">
+                <template #default="{ row }">{{ getRewardTriggerLabel(row.triggerType) }}</template>
+              </el-table-column>
+              <el-table-column label="周期" width="100">
+                <template #default="{ row }">{{ getCycleTypeLabel(row.cycleType) }}</template>
+              </el-table-column>
+              <el-table-column label="每周期上限" width="110" align="center" prop="limitPerCycle" />
+              <el-table-column label="奖励积分" width="100" align="right" prop="rewardPoints" />
+              <el-table-column label="启用" width="88" align="center">
+                <template #default="{ row }">
+                  <el-switch
+                    :model-value="row.isEnabled"
+                    size="small"
+                    :disabled="enableTogglingId === row.id"
+                    @change="(value: string | number | boolean) => handleToggleRewardEnabled(row, Boolean(value))"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="140" fixed="right" align="right">
+                <template #default="{ row }">
                   <div class="admin-row-actions">
-                    <button class="admin-inline-button" type="button" @click="openRewardDialog(item)">编辑</button>
-                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeleteReward(item)">删除</button>
+                    <button class="admin-inline-button" type="button" @click="openRewardDialog(row)">编辑</button>
+                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeleteReward(row)">删除</button>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                </template>
+              </el-table-column>
+            </AdminArtTable>
+          </AdminListFrame>
         </div>
 
         <div v-else-if="activeTool === 'cdk'" class="admin-marketing-section-shell">
-          <div class="admin-card admin-marketing-module-card">
-            <div class="admin-card__header">
-              <div>
-                <h4 class="admin-card__title">卡密兑换</h4>
-                <div class="admin-card__desc">用于批量生成兑换码，可绑定积分奖励或会员权益，适合运营活动投放。</div>
-              </div>
-              <button class="admin-button admin-button--primary" type="button" @click="openBatchDialog()">新增批次</button>
-            </div>
-            <div class="admin-card__content">
-              <div v-if="!cardBatches.length" class="admin-empty">暂无卡密批次。</div>
-              <div v-else class="admin-list">
-                <div v-for="item in cardBatches" :key="item.id" class="admin-list-item admin-marketing-list-item admin-marketing-list-item--batch">
-                  <div>
-                    <div class="admin-list-item__title">{{ item.name }}</div>
-                    <div class="admin-list-item__meta">
-                      批次号 {{ item.batchNo }} · 总数 {{ item.totalCount }} · 已用 {{ item.usedCount }} · {{ getCardRewardSummary(item) }}
-                    </div>
-                  </div>
-                  <div class="admin-marketing-list-item__badges">
-                    <span class="admin-chip">剩余 {{ Math.max(item.totalCount - item.usedCount, 0) }}</span>
-                    <span class="admin-status" :class="item.isEnabled ? 'admin-status--success' : 'admin-status--muted'">
-                      {{ item.isEnabled ? '可兑换' : '已停用' }}
-                    </span>
-                  </div>
+          <AdminListFrame>
+            <template #toolbar>
+              <AdminListToolbar
+                :disabled="loading"
+                :has-active-filters="Boolean(listKeyword.trim())"
+                @clear="clearListKeyword"
+              >
+                <input
+                  v-model.trim="listKeyword"
+                  class="admin-list-toolbar__input is-wide"
+                  type="text"
+                  placeholder="搜索批次名称 / 批次号"
+                  :disabled="loading"
+                >
+                <template #actions>
+                  <button class="admin-button admin-button--primary" type="button" @click="openBatchDialog()">新增批次</button>
+                </template>
+              </AdminListToolbar>
+            </template>
+            <AdminArtTable :loading="loading" :data="filteredCardBatches" empty-text="暂无卡密批次。">
+              <el-table-column label="批次" min-width="180">
+                <template #default="{ row }">
+                  <div class="admin-marketing-table__title">{{ row.name }}</div>
+                  <div class="admin-marketing-table__meta">{{ row.batchNo }}</div>
+                </template>
+              </el-table-column>
+              <el-table-column label="奖励" min-width="140">
+                <template #default="{ row }">{{ getCardRewardSummary(row) }}</template>
+              </el-table-column>
+              <el-table-column label="总量" width="80" align="right" prop="totalCount" />
+              <el-table-column label="已用" width="80" align="right" prop="usedCount" />
+              <el-table-column label="剩余" width="80" align="right">
+                <template #default="{ row }">{{ Math.max(row.totalCount - row.usedCount, 0) }}</template>
+              </el-table-column>
+              <el-table-column label="启用" width="88" align="center">
+                <template #default="{ row }">
+                  <el-switch
+                    :model-value="row.isEnabled"
+                    size="small"
+                    :disabled="enableTogglingId === row.id"
+                    @change="(value: string | number | boolean) => handleToggleBatchEnabled(row, Boolean(value))"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="200" fixed="right" align="right">
+                <template #default="{ row }">
                   <div class="admin-row-actions">
-                    <button class="admin-inline-button" type="button" @click="openCodesDialog(item)">查看卡密</button>
-                    <button class="admin-inline-button" type="button" @click="openBatchDialog(item)">编辑</button>
-                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeleteBatch(item)">删除</button>
+                    <button class="admin-inline-button" type="button" @click="openCodesDialog(row)">卡密</button>
+                    <button class="admin-inline-button" type="button" @click="openBatchDialog(row)">编辑</button>
+                    <button class="admin-inline-button admin-inline-button--danger" type="button" @click="handleDeleteBatch(row)">删除</button>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                </template>
+              </el-table-column>
+            </AdminArtTable>
+          </AdminListFrame>
         </div>
 
         <div v-else class="admin-marketing-section-shell">
-          <div class="admin-card admin-marketing-module-card">
-            <div class="admin-card__header">
-              <div>
-                <h4 class="admin-card__title">积分流水明细</h4>
-                <div class="admin-card__desc">支持按动作、来源、终端类型、退款状态和关键词筛选，并可对失败未退款流水直接补偿。</div>
-              </div>
-              <div class="admin-row-actions">
-                <button class="admin-button admin-button--secondary" type="button" :disabled="compensationLoading" @click="loadPointLogs">
-                  {{ compensationLoading ? '刷新中...' : '刷新流水' }}
-                </button>
-                <button class="admin-button admin-button--secondary" type="button" @click="openManualCompensationDialog">
-                  手动补偿
-                </button>
-                <button
-                  class="admin-button admin-button--primary"
-                  type="button"
-                  :disabled="compensationSubmitting || !selectedCompensationAssociationNos.length"
-                  @click="handleExecuteSelectedPointLogCompensation"
+          <AdminListFrame>
+            <template #toolbar>
+              <AdminListToolbar
+                :disabled="compensationLoading"
+                :has-active-filters="pointLogActiveFilterCount > 0"
+                :facets="pointLogFacets"
+                @update:facet="handlePointLogFacetUpdate"
+                @clear="handleResetPointLogFilters"
+              >
+                <input
+                  v-model.trim="pointLogFilters.keyword"
+                  class="admin-list-toolbar__input is-wide"
+                  type="text"
+                  placeholder="搜索用户、流水号、备注、模型、任务提示词"
+                  :disabled="compensationLoading"
+                  @keydown.enter.prevent="handleApplyPointLogFilters"
                 >
-                  {{ compensationSubmitting ? '补偿中...' : `补偿已选 ${selectedCompensationAssociationNos.length} 条` }}
-                </button>
-              </div>
-            </div>
-            <div class="admin-card__content">
-              <AdminFilterToolbar>
-                <template #search>
-                  <div class="admin-marketing-log-filter-field admin-marketing-log-filter-field--search">
-                    <span class="admin-marketing-log-filter-field__label">关键词搜索</span>
-                    <input
-                      v-model.trim="pointLogFilters.keyword"
-                      class="admin-input admin-marketing-log-filter-field__control"
-                      type="text"
-                      placeholder="搜索用户、流水号、备注、模型、任务提示词"
-                      @keydown.enter.prevent="handleApplyPointLogFilters"
-                    >
-                  </div>
-                </template>
                 <template #actions>
-                  <button class="admin-button admin-button--secondary" type="button" :disabled="compensationLoading" @click="handleResetPointLogFilters">
-                    重置
+                  <button class="admin-button admin-button--secondary" type="button" :disabled="compensationLoading" @click="loadPointLogs">
+                    {{ compensationLoading ? '刷新中...' : '刷新流水' }}
+                  </button>
+                  <button class="admin-button admin-button--secondary" type="button" @click="openManualCompensationDialog">
+                    手动补偿
+                  </button>
+                  <button
+                    class="admin-button admin-button--primary"
+                    type="button"
+                    :disabled="compensationSubmitting || !selectedCompensationAssociationNos.length"
+                    @click="handleExecuteSelectedPointLogCompensation"
+                  >
+                    {{ compensationSubmitting ? '补偿中...' : `补偿已选 ${selectedCompensationAssociationNos.length} 条` }}
                   </button>
                   <button class="admin-button admin-button--primary" type="button" :disabled="compensationLoading" @click="handleApplyPointLogFilters">
-                    {{ compensationLoading ? '筛选中...' : '应用筛选' }}
+                    应用筛选
                   </button>
                 </template>
-                <template #filters>
-                  <div class="admin-marketing-log-filters">
-                  <label class="admin-marketing-log-filter-field">
-                    <span class="admin-marketing-log-filter-field__label">动作类型</span>
-                    <select v-model="pointLogFilters.action" class="admin-select admin-marketing-log-filter-field__control">
-                      <option value="">全部动作</option>
-                      <option value="INCREASE">收入</option>
-                      <option value="DECREASE">支出</option>
-                    </select>
-                  </label>
-                  <label class="admin-marketing-log-filter-field">
-                    <span class="admin-marketing-log-filter-field__label">来源渠道</span>
-                    <select v-model="pointLogFilters.sourceType" class="admin-select admin-marketing-log-filter-field__control">
-                      <option value="">全部来源</option>
-                      <option value="GENERATION_CONSUME">生成消费</option>
-                      <option value="RECHARGE_ORDER">充值</option>
-                      <option value="MEMBERSHIP_ORDER">订阅</option>
-                      <option value="REWARD_RULE">奖励规则</option>
-                      <option value="CHECKIN">签到</option>
-                      <option value="CARD_REDEEM">卡密兑换</option>
-                    </select>
-                  </label>
-                  <label class="admin-marketing-log-filter-field">
-                    <span class="admin-marketing-log-filter-field__label">终端类型</span>
-                    <select v-model="pointLogFilters.endpointType" class="admin-select admin-marketing-log-filter-field__control">
-                      <option value="">全部终端</option>
-                      <option value="chat">CHAT</option>
-                      <option value="image">IMAGE</option>
-                      <option value="video">VIDEO</option>
-                    </select>
-                  </label>
-                  <label class="admin-marketing-log-filter-field">
-                    <span class="admin-marketing-log-filter-field__label">退款状态</span>
-                    <select v-model="pointLogFilters.refundStatus" class="admin-select admin-marketing-log-filter-field__control">
-                      <option value="">全部退款状态</option>
-                      <option value="compensable">待补偿</option>
-                      <option value="refunded">已退款</option>
-                      <option value="unrefunded">未退款</option>
-                    </select>
-                  </label>
-                  <label class="admin-marketing-log-filter-field">
-                    <span class="admin-marketing-log-filter-field__label">时间窗口</span>
-                    <select v-model.number="pointLogFilters.days" class="admin-select admin-marketing-log-filter-field__control">
-                      <option :value="7">近 7 天</option>
-                      <option :value="30">近 30 天</option>
-                      <option :value="90">近 90 天</option>
-                    </select>
-                  </label>
-                  </div>
-                </template>
-                <template #meta>
-                  <span class="admin-skill-toolbar__summary">
-                    共 {{ pointLogSummary.totalCount }} 条流水
-                    <em v-if="pointLogActiveFilterCount">，已启用 {{ pointLogActiveFilterCount }} 个筛选</em>
-                  </span>
-                </template>
-              </AdminFilterToolbar>
+              </AdminListToolbar>
+            </template>
 
               <div class="admin-marketing-log-summary">
                 <div class="admin-marketing-log-summary__item">
@@ -392,7 +432,7 @@
                 </div>
               </div>
 
-              <div v-if="!pointLogs.length" class="admin-empty">当前筛选条件下暂无积分流水。</div>
+              <AdminEmptyState v-if="!pointLogs.length" message="当前筛选条件下暂无积分流水。" />
               <div v-else class="admin-list admin-point-log-list">
                 <label v-for="item in pointLogs" :key="item.id" class="admin-list-item admin-point-log-item">
                   <div class="admin-point-log-item__check">
@@ -465,30 +505,31 @@
                     </button>
                   </div>
                 </label>
-                <AdminPagination
-                  v-model:page="pointLogPagination.page"
-                  v-model:page-size="pointLogPagination.pageSize"
-                  :total="pointLogSummary.totalCount"
-                  :disabled="compensationLoading || compensationSubmitting"
-                  @change="handlePointLogPaginationChange"
-                />
               </div>
-            </div>
-          </div>
+            <template #pagination>
+              <AdminPagination
+                v-model:page="pointLogPagination.page"
+                v-model:page-size="pointLogPagination.pageSize"
+                :total="pointLogSummary.totalCount"
+                :disabled="compensationLoading || compensationSubmitting"
+                @change="handlePointLogPaginationChange"
+              />
+            </template>
+          </AdminListFrame>
         </div>
       </div>
-    </section>
+    </div>
 
-    <div v-if="manualCompensationDialogVisible" class="admin-dialog-mask" @click="closeManualCompensationDialog">
-      <div class="admin-dialog admin-dialog--provider-form" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">手动补偿</h3>
-            <div class="admin-dialog__desc">用于处理历史遗留漏账或缺少生成记录关联的流水，请按关联号逐条核实后执行。</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closeManualCompensationDialog">×</button>
-        </div>
-        <div class="admin-dialog__body admin-form">
+    <AdminDialog
+      v-model:visible="manualCompensationDialogVisible"
+      title="手动补偿"
+      description="按流水号手动补偿积分，支持强制模式。"
+      size="provider-form"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="compensationSubmitting"
+      @close="closeManualCompensationDialog"
+    >
+<div class="admin-dialog__body admin-form">
           <div class="admin-form__field">
             <label class="admin-form__label">手动输入关联号</label>
             <textarea
@@ -519,19 +560,18 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AdminDialog>
 
-    <div v-if="levelDialogVisible" class="admin-dialog-mask" @click="closeLevelDialog">
-      <div class="admin-dialog admin-dialog--provider-form" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">{{ levelEditingId ? '编辑会员等级' : '新增会员等级' }}</h3>
-            <div class="admin-dialog__desc">配置会员层级、每月积分和权益说明。</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closeLevelDialog">×</button>
-        </div>
-        <form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitLevel">
+    <AdminDialog
+      v-model:visible="levelDialogVisible"
+      :title="levelEditingId ? '编辑会员等级' : '新增会员等级'"
+      description="配置会员层级、每月积分和权益说明。"
+      size="provider-form"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="submitting"
+      @close="closeLevelDialog"
+    >
+<form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitLevel">
           <div class="admin-form__grid">
             <div class="admin-form__field">
               <label class="admin-form__label">等级名称</label>
@@ -579,19 +619,18 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDialog>
 
-    <div v-if="planDialogVisible" class="admin-dialog-mask" @click="closePlanDialog">
-      <div class="admin-dialog admin-dialog--provider-form" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">{{ planEditingId ? '编辑会员计划' : '新增会员计划' }}</h3>
-            <div class="admin-dialog__desc">设置订阅时长、价格和绑定等级。</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closePlanDialog">×</button>
-        </div>
-        <form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitPlan">
+    <AdminDialog
+      v-model:visible="planDialogVisible"
+      :title="planEditingId ? '编辑会员计划' : '新增会员计划'"
+      description="设置订阅时长、价格和绑定等级。"
+      size="provider-form"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="submitting"
+      @close="closePlanDialog"
+    >
+<form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitPlan">
           <div class="admin-form__grid">
             <div class="admin-form__field">
               <label class="admin-form__label">计划名称</label>
@@ -665,19 +704,18 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDialog>
 
-    <div v-if="packageDialogVisible" class="admin-dialog-mask" @click="closePackageDialog">
-      <div class="admin-dialog admin-dialog--provider-form" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">{{ packageEditingId ? '编辑充值套餐' : '新增充值套餐' }}</h3>
-            <div class="admin-dialog__desc">支持设置多充多送、原价与角标文案。</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closePackageDialog">×</button>
-        </div>
-        <form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitPackage">
+    <AdminDialog
+      v-model:visible="packageDialogVisible"
+      :title="packageEditingId ? '编辑充值套餐' : '新增充值套餐'"
+      description="配置积分包售价、赠送与促销角标。"
+      size="provider-form"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="submitting"
+      @close="closePackageDialog"
+    >
+<form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitPackage">
           <div class="admin-form__grid">
             <div class="admin-form__field">
               <label class="admin-form__label">套餐名称</label>
@@ -737,19 +775,18 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDialog>
 
-    <div v-if="rewardDialogVisible" class="admin-dialog-mask" @click="closeRewardDialog">
-      <div class="admin-dialog admin-dialog--provider-form" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">{{ rewardEditingId ? '编辑奖励规则' : '新增奖励规则' }}</h3>
-            <div class="admin-dialog__desc">配置登录、注册、签到等触发动作与积分规则。</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closeRewardDialog">×</button>
-        </div>
-        <form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitReward">
+    <AdminDialog
+      v-model:visible="rewardDialogVisible"
+      :title="rewardEditingId ? '编辑奖励规则' : '新增奖励规则'"
+      description="配置触发条件、周期上限与奖励积分。"
+      size="provider-form"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="submitting"
+      @close="closeRewardDialog"
+    >
+<form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitReward">
           <div class="admin-form__grid">
             <div class="admin-form__field">
               <label class="admin-form__label">规则编码</label>
@@ -810,19 +847,18 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDialog>
 
-    <div v-if="batchDialogVisible" class="admin-dialog-mask" @click="closeBatchDialog">
-      <div class="admin-dialog admin-dialog--provider-form" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">{{ batchEditingId ? '编辑卡密批次' : '新增卡密批次' }}</h3>
-            <div class="admin-dialog__desc">设置兑换奖励、批次数量和过期时间，创建时会自动生成卡密。</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closeBatchDialog">×</button>
-        </div>
-        <form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitBatch">
+    <AdminDialog
+      v-model:visible="batchDialogVisible"
+      :title="batchEditingId ? '编辑卡密批次' : '新增卡密批次'"
+      description="批量生成兑换码并绑定积分或会员权益。"
+      size="provider-form"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="submitting"
+      @close="closeBatchDialog"
+    >
+<form class="admin-dialog__body admin-form" @submit.prevent="handleSubmitBatch">
           <div class="admin-form__grid">
             <div class="admin-form__field">
               <label class="admin-form__label">批次名称</label>
@@ -884,44 +920,49 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDialog>
 
-    <div v-if="codesDialogVisible" class="admin-dialog-mask" @click="closeCodesDialog">
-      <div class="admin-dialog admin-dialog--manager" @click.stop>
-        <div class="admin-dialog__header">
-          <div>
-            <h3 class="admin-dialog__title">卡密列表</h3>
-            <div class="admin-dialog__desc">{{ currentBatch?.name || '当前批次' }} · {{ currentBatch?.batchNo || '-' }}</div>
-          </div>
-          <button class="admin-dialog__close" type="button" @click="closeCodesDialog">×</button>
-        </div>
-        <div class="admin-dialog__body">
-          <div v-if="codesLoading" class="admin-empty">正在加载卡密...</div>
-          <div v-else-if="!cardCodes.length" class="admin-empty">当前批次暂无卡密数据。</div>
-          <div v-else class="admin-marketing-code-grid">
-            <div v-for="item in cardCodes" :key="item.id" class="admin-marketing-code-card">
-              <div class="admin-marketing-code-card__top">
-                <strong>{{ item.code }}</strong>
-                <span class="admin-status" :class="item.status === 'USED' ? 'admin-status--warning' : 'admin-status--success'">
-                  {{ item.status === 'USED' ? '已使用' : '未使用' }}
-                </span>
-              </div>
-              <div class="admin-marketing-code-card__meta">到期：{{ formatDateText(item.expiresAt) }}</div>
-              <div class="admin-marketing-code-card__meta">使用者：{{ item.usedByUser?.name || item.usedByUser?.email || item.usedByUser?.phone || '暂无' }}</div>
-              <div class="admin-marketing-code-card__meta">使用时间：{{ formatDateText(item.usedAt) }}</div>
+    <AdminDialog
+      v-model:visible="codesDialogVisible"
+      title="卡密列表"
+      :description="`${currentBatch?.name || '当前批次'} · ${currentBatch?.batchNo || '-'}`"
+      size="manager"
+      panel-class="admin-marketing-dialog"
+      :close-disabled="codesLoading"
+      @close="closeCodesDialog"
+    >
+      <div class="admin-dialog__body">
+        <div v-if="codesLoading" class="admin-empty">正在加载卡密...</div>
+        <div v-else-if="!cardCodes.length" class="admin-empty">当前批次暂无卡密数据。</div>
+        <div v-else class="admin-marketing-code-grid">
+          <div v-for="item in cardCodes" :key="item.id" class="admin-marketing-code-card">
+            <div class="admin-marketing-code-card__top">
+              <strong>{{ item.code }}</strong>
+              <span class="admin-status" :class="item.status === 'USED' ? 'admin-status--warning' : 'admin-status--success'">
+                {{ item.status === 'USED' ? '已使用' : '未使用' }}
+              </span>
             </div>
+            <div class="admin-marketing-code-card__meta">到期：{{ formatDateText(item.expiresAt) }}</div>
+            <div class="admin-marketing-code-card__meta">使用者：{{ item.usedByUser?.name || item.usedByUser?.email || item.usedByUser?.phone || '暂无' }}</div>
+            <div class="admin-marketing-code-card__meta">使用时间：{{ formatDateText(item.usedAt) }}</div>
           </div>
         </div>
       </div>
-    </div>
+    </AdminDialog>
   </AdminPageContainer>
 </template>
 
 <script setup lang="ts">
+import './admin-marketing.scoped.css'
+import './admin-marketing-panel.css'
 import { computed, onMounted, reactive, ref } from 'vue'
-import AdminFilterToolbar from '@/components/admin/common/AdminFilterToolbar.vue'
+import AdminDialog from '@/components/admin/common/AdminDialog.vue'
+import AdminEmptyState from '@/components/admin/common/AdminEmptyState.vue'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar, { type AdminListToolbarFacet } from '@/components/admin/common/AdminListToolbar.vue'
+import AdminStatCard from '@/components/admin/common/AdminStatCard.vue'
 import AdminPagination from '@/components/admin/common/AdminPagination.vue'
+import AdminArtTable from '@/components/admin/table/AdminArtTable.vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
 import { useAdminListFilters } from '@/composables/useAdminListFilters'
 import {
@@ -1021,84 +1062,211 @@ const { activeFilterCount: pointLogActiveFilterCount, resetFilters: resetPointLo
   defaults: pointLogFilterDefaults,
 })
 
-const marketingTools = computed(() => [
+const membershipSubTab = ref<'levels' | 'plans'>('levels')
+const listKeyword = ref('')
+const enableTogglingId = ref('')
+
+const clearListKeyword = () => {
+  listKeyword.value = ''
+}
+
+const matchesListKeyword = (...parts: Array<string | number | null | undefined>) => {
+  const keyword = listKeyword.value.trim().toLowerCase()
+  if (!keyword) {
+    return true
+  }
+  return parts.some((part) => String(part ?? '').toLowerCase().includes(keyword))
+}
+
+const filteredLevels = computed(() => levels.value.filter((item) => (
+  matchesListKeyword(item.name, item.level, item.monthlyBonusPoints)
+)))
+
+const filteredPackages = computed(() => packages.value.filter((item) => (
+  matchesListKeyword(item.name, item.description, item.label, item.badgeText)
+)))
+
+const filteredRewardRules = computed(() => rewardRules.value.filter((item) => (
+  matchesListKeyword(item.name, item.code, item.triggerType)
+)))
+
+const filteredCardBatches = computed(() => cardBatches.value.filter((item) => (
+  matchesListKeyword(item.name, item.batchNo)
+)))
+
+/** 按绑定等级分组计划；无等级时落入未绑定组。 */
+const planGroups = computed(() => {
+  const levelMap = new Map(levels.value.map((level) => [level.id, level]))
+  const grouped = new Map<string, {
+    key: string
+    title: string
+    levelLabel: string
+    plans: MembershipPlanItem[]
+    enabledCount: number
+  }>()
+
+  const ensureGroup = (key: string, title: string, levelLabel: string) => {
+    let group = grouped.get(key)
+    if (!group) {
+      group = { key, title, levelLabel, plans: [], enabledCount: 0 }
+      grouped.set(key, group)
+    }
+    return group
+  }
+
+  for (const plan of plans.value) {
+    const boundLevelId = String(plan.levelId || plan.billingRules?.[0]?.levelId || '').trim()
+    const level = boundLevelId ? levelMap.get(boundLevelId) : undefined
+    const group = level
+      ? ensureGroup(level.id, level.name, `Lv.${level.level}`)
+      : ensureGroup('__unbound__', '未绑定等级', '')
+    group.plans.push(plan)
+    if (plan.isEnabled) {
+      group.enabledCount += 1
+    }
+  }
+
+  // 等级顺序优先，未绑定垫底
+  const ordered: typeof grouped extends Map<string, infer V> ? V[] : never[] = []
+  for (const level of [...levels.value].sort((a, b) => a.sortOrder - b.sortOrder || a.level - b.level)) {
+    const group = grouped.get(level.id)
+    if (group) {
+      ordered.push(group)
+    }
+  }
+  const unbound = grouped.get('__unbound__')
+  if (unbound) {
+    ordered.push(unbound)
+  }
+  return ordered
+})
+
+const filteredPlanGroups = computed(() => {
+  const keyword = listKeyword.value.trim().toLowerCase()
+  if (!keyword) {
+    return planGroups.value
+  }
+  return planGroups.value
+    .map((group) => {
+      const plansInGroup = group.plans.filter((plan) => (
+        matchesListKeyword(
+          plan.name,
+          plan.label,
+          plan.durationValue,
+          plan.durationUnit,
+          group.title,
+        )
+      ))
+      return {
+        ...group,
+        plans: plansInGroup,
+        enabledCount: plansInGroup.filter((item) => item.isEnabled).length,
+      }
+    })
+    .filter((group) => group.plans.length > 0 || matchesListKeyword(group.title))
+})
+
+const marketingTabs = computed(() => [
   {
     key: 'membership' as MarketingToolKey,
-    icon: '👑',
     title: '会员订阅',
-    description: '自行设置会员等级与订阅规则',
-    meta: () => `${levels.value.length} 个等级 / ${plans.value.length} 个计划`,
+    group: '增长',
+    count: `${levels.value.length}/${plans.value.length}`,
   },
   {
     key: 'recharge' as MarketingToolKey,
-    icon: '💎',
     title: '积分充值',
-    description: '支持多充多送，提升复购转化',
-    meta: () => `${packages.value.length} 个可售套餐`,
+    group: '变现',
+    count: String(packages.value.length),
   },
   {
     key: 'rewards' as MarketingToolKey,
-    icon: '🎁',
     title: '奖励中心',
-    description: '登录、注册、签到奖励统一管理',
-    meta: () => `${rewardRules.value.length} 条奖励规则`,
+    group: '留存',
+    count: String(rewardRules.value.length),
   },
   {
     key: 'cdk' as MarketingToolKey,
-    icon: '🪪',
     title: '卡密兑换',
-    description: '批量生成卡密并投放运营活动',
-    meta: () => `${cardBatches.value.length} 个批次`,
+    group: '投放',
+    count: String(cardBatches.value.length),
   },
   {
     key: 'compensation' as MarketingToolKey,
-    icon: '🧾',
     title: '积分流水',
-    description: '查看积分明细、筛选状态并处理失败补偿',
-    meta: () => `${pointLogSummary.totalCount} 条流水 / 可补偿 ${pointLogSummary.compensableCount} 条`,
+    group: '治理',
+    count: String(pointLogSummary.totalCount),
   },
 ])
 
-const currentToolInfo = computed(() => {
-  if (activeTool.value === 'membership') {
-    return {
-      title: '会员订阅',
-      description: '管理会员等级、订阅计划与长期权益体系',
-      focus: '适合处理等级成长、订阅商品、月赠积分和会员差异化权益。',
-      meta: `${levels.value.length} 个等级 / ${plans.value.length} 个计划`,
-    }
-  }
-  if (activeTool.value === 'recharge') {
-    return {
-      title: '积分充值',
-      description: '管理积分商品、赠送策略和促销包装',
-      focus: '适合处理价格带设计、多充多送和运营售卖包装。',
-      meta: `${packages.value.length} 个套餐在线管理`,
-    }
-  }
-  if (activeTool.value === 'rewards') {
-    return {
-      title: '奖励中心',
-      description: '管理登录、注册、签到等激励触发规则',
-      focus: '适合做拉新、留存、签到等轻运营激励编排。',
-      meta: `${rewardRules.value.length} 条规则生效中`,
-    }
-  }
-  if (activeTool.value === 'cdk') {
-    return {
-      title: '卡密兑换',
-      description: '管理批次投放、卡密发放与兑换追踪',
-      focus: '适合活动发码、渠道合作、定向补贴等场景。',
-      meta: `${cardBatches.value.length} 个批次 / ${cardCodes.value.length} 条卡密缓存`,
-    }
-  }
-  return {
-    title: '积分流水',
-    description: '查看积分明细、筛选状态并处理失败补偿',
-    focus: '适合运营核对每一笔积分变动，并在失败未退款的生成流水上直接执行补偿。',
-    meta: `${pointLogSummary.totalCount} 条流水 / 可补偿 ${pointLogSummary.compensableCount} 条`,
-  }
-})
+const pointLogFacets = computed<AdminListToolbarFacet[]>(() => [
+  {
+    key: 'action',
+    title: '动作类型',
+    options: [
+      { label: '收入', value: 'INCREASE' },
+      { label: '支出', value: 'DECREASE' },
+    ],
+    modelValue: pointLogFilters.action,
+    emptyValue: '',
+  },
+  {
+    key: 'sourceType',
+    title: '来源渠道',
+    options: [
+      { label: '生成消费', value: 'GENERATION_CONSUME' },
+      { label: '充值', value: 'RECHARGE_ORDER' },
+      { label: '订阅', value: 'MEMBERSHIP_ORDER' },
+      { label: '奖励规则', value: 'REWARD_RULE' },
+      { label: '签到', value: 'CHECKIN' },
+      { label: '卡密兑换', value: 'CARD_REDEEM' },
+    ],
+    modelValue: pointLogFilters.sourceType,
+    emptyValue: '',
+  },
+  {
+    key: 'endpointType',
+    title: '终端类型',
+    options: [
+      { label: 'CHAT', value: 'chat' },
+      { label: 'IMAGE', value: 'image' },
+      { label: 'VIDEO', value: 'video' },
+    ],
+    modelValue: pointLogFilters.endpointType,
+    emptyValue: '',
+  },
+  {
+    key: 'refundStatus',
+    title: '退款状态',
+    options: [
+      { label: '待补偿', value: 'compensable' },
+      { label: '已退款', value: 'refunded' },
+      { label: '未退款', value: 'unrefunded' },
+    ],
+    modelValue: pointLogFilters.refundStatus,
+    emptyValue: '',
+  },
+  {
+    key: 'days',
+    title: '时间窗口',
+    options: [
+      { label: '近 7 天', value: '7' },
+      { label: '近 30 天', value: '30' },
+      { label: '近 90 天', value: '90' },
+    ],
+    modelValue: String(pointLogFilters.days),
+    emptyValue: '30',
+  },
+])
+
+const handlePointLogFacetUpdate = ({ key, value }: { key: string; value: string }) => {
+  if (key === 'action') pointLogFilters.action = value
+  else if (key === 'sourceType') pointLogFilters.sourceType = value
+  else if (key === 'endpointType') pointLogFilters.endpointType = value
+  else if (key === 'refundStatus') pointLogFilters.refundStatus = value
+  else if (key === 'days') pointLogFilters.days = Number(value) || 30
+}
+
 
 const createLevelForm = () => ({
   name: '',
@@ -1674,6 +1842,55 @@ const handleSubmitLevel = async () => {
   }
 }
 
+/** 列表内启用开关：只改 isEnabled，避免整表单提交。 */
+const withEnableToggle = async (id: string, runner: () => Promise<unknown>) => {
+  if (enableTogglingId.value) {
+    return
+  }
+  enableTogglingId.value = id
+  try {
+    await runner()
+    await loadAllData()
+  } finally {
+    enableTogglingId.value = ''
+  }
+}
+
+const handleToggleLevelEnabled = async (item: MembershipLevelItem, enabled: boolean) => {
+  if (item.isEnabled === enabled) {
+    return
+  }
+  await withEnableToggle(item.id, () => updateMembershipLevel(item.id, { isEnabled: enabled }))
+}
+
+const handleTogglePlanEnabled = async (item: MembershipPlanItem, enabled: boolean) => {
+  if (item.isEnabled === enabled) {
+    return
+  }
+  await withEnableToggle(item.id, () => updateMembershipPlan(item.id, { isEnabled: enabled }))
+}
+
+const handleTogglePackageEnabled = async (item: RechargePackageItem, enabled: boolean) => {
+  if (item.isEnabled === enabled) {
+    return
+  }
+  await withEnableToggle(item.id, () => updateRechargePackage(item.id, { isEnabled: enabled }))
+}
+
+const handleToggleRewardEnabled = async (item: RewardRuleItem, enabled: boolean) => {
+  if (item.isEnabled === enabled) {
+    return
+  }
+  await withEnableToggle(item.id, () => updateRewardRule(item.id, { isEnabled: enabled }))
+}
+
+const handleToggleBatchEnabled = async (item: CardBatchItem, enabled: boolean) => {
+  if (item.isEnabled === enabled) {
+    return
+  }
+  await withEnableToggle(item.id, () => updateCardBatch(item.id, { isEnabled: enabled }))
+}
+
 const handleDeleteLevel = async (item: MembershipLevelItem) => {
   if (!window.confirm(`确认删除会员等级“${item.name}”吗？`)) {
     return
@@ -1958,76 +2175,25 @@ onMounted(() => {
 
 
 <style scoped>
-.admin-marketing-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
-  gap: 18px;
-  margin-bottom: 20px;
-}
 
-.admin-marketing-hero__main {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px;
-  border-radius: 24px;
-  border: 1px solid var(--line-divider, #00000014);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--brand-main-default) 12%, transparent), transparent 32%),
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-main-block-default) 28%, var(--bg-surface)), var(--bg-surface));
-}
 
-.admin-marketing-hero__eyebrow {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--brand-main-default);
-}
 
-.admin-marketing-hero__title {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1.3;
-  color: var(--text-primary);
-}
 
-.admin-marketing-hero__desc {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-}
 
-.admin-marketing-hero__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
 
-.admin-marketing-hero__stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
 
-.admin-marketing-workspace {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
 
-.admin-marketing-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 
-.admin-marketing-sidebar-card {
-  position: sticky;
-  top: 20px;
-}
+
+
+
+
+
+
+
+
+
+
 
 .admin-marketing-main {
   display: flex;
@@ -2036,34 +2202,13 @@ onMounted(() => {
   min-width: 0;
 }
 
-.admin-marketing-main__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-  border-radius: 20px;
-  border: 1px solid var(--line-divider, #00000014);
-  background: var(--bg-surface);
-}
 
-.admin-marketing-main__title {
-  margin: 0 0 6px;
-  font-size: 22px;
-  line-height: 1.35;
-  color: var(--text-primary);
-}
 
-.admin-marketing-main__desc,
-.admin-marketing-main__meta {
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text-secondary);
-}
 
-.admin-marketing-main__meta {
-  white-space: nowrap;
-}
+
+
+
+
 
 .admin-marketing-section-shell {
   display: flex;
@@ -2071,9 +2216,7 @@ onMounted(() => {
   gap: 18px;
 }
 
-.admin-marketing-module-card {
-  border-radius: 22px;
-}
+
 
 .admin-marketing-package-card__footer {
   display: flex;
@@ -2365,90 +2508,32 @@ onMounted(() => {
 }
 
 @media (max-width: 1100px) {
-  .admin-marketing-hero,
-  .admin-marketing-workspace {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .admin-marketing-hero__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-marketing-sidebar-card {
-    position: static;
+  .admin-marketing-tabs__item {
+    flex: 0 0 auto;
   }
 
   .admin-membership-billing-item {
     grid-template-columns: 1fr 1fr;
   }
 
-  .admin-marketing-log-toolbar__search {
-    grid-template-columns: 1fr;
+  .admin-marketing-log-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-marketing-log-toolbar__actions {
-    justify-content: flex-end;
-  }
-
-  .admin-marketing-log-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-marketing-log-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-point-log-item,
-  .admin-compensation-item {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-point-log-item__aside {
-    align-items: flex-start;
-  }
-
-  .admin-point-log-item__compensation-reason {
-    text-align: left;
-  }
-
-  .admin-point-log-item__meta-grid {
-    grid-template-columns: 1fr;
+    margin-left: 0;
+    width: 100%;
   }
 }
 
 @media (max-width: 720px) {
-  .admin-marketing-hero__stats {
+  .admin-marketing-log-kpis {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .admin-marketing-main__header {
-    flex-direction: column;
-  }
-
-  .admin-marketing-main__meta {
-    white-space: normal;
-  }
-
-  .admin-marketing-log-filters {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .admin-marketing-log-summary {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .admin-marketing-log-toolbar__actions {
-    justify-content: stretch;
-    flex-direction: column;
-  }
-
-  .admin-marketing-log-toolbar__actions .admin-button {
-    width: 100%;
-  }
-
-  .admin-point-log-item__headline {
-    align-items: flex-start;
-    flex-direction: column;
+  .admin-marketing-log-toolbar__select,
+  .admin-marketing-log-toolbar__search {
+    flex: 1 1 100%;
   }
 }
 </style>

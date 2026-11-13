@@ -74,7 +74,7 @@ const createDashboardTab = (): AdminWorkTab => {
   }
 }
 
-// 模块级单例，对齐公开版 auth store 写法（不依赖 Pinia）
+// 模块级单例（不依赖 Pinia）
 const opened = ref<AdminWorkTab[]>(readStoredTabs())
 const keepAliveExclude = ref<string[]>([])
 

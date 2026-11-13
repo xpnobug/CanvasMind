@@ -60,10 +60,7 @@
 </template>
 
 <script setup lang="ts">
-/**
- * 首页创作头：保留公开版 TypeSelector / 生成器 / Banner 能力，
- * 叠 Pro 桌面壳（顶区背景 + 默认关闭的 TopBanner）。
- */
+/** 首页创作头：TypeSelector / 生成器 / Banner / 顶区背景与 TopBanner。 */
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TypeSelector from './TypeSelector.vue'

@@ -1,0 +1,201 @@
+.admin-model-discover__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+
+.admin-model-discover__summary {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.admin-model-discover__summary em {
+  font-style: normal;
+}
+
+.admin-model-discover__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.admin-model-discover__row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-model-discover__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-model-discover__headline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-model-discover__content strong,
+.admin-model-discover__content span,
+.admin-model-discover__content small {
+  word-break: break-word;
+}
+
+.admin-model-discover__content span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-model-discover__content small {
+  color: var(--text-tertiary, #8a8f98);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-model-discover__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-model-discover__badge.is-update {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.admin-model-discover__badge.is-create {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.admin-model-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 6px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-panel);
+  background: color-mix(in srgb, var(--bg-surface) 86%, var(--bg-block-secondary-default));
+}
+
+.admin-model-tabs__item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 120px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-model-tabs__item:hover {
+  background: var(--bg-block-secondary-default);
+  color: var(--text-primary);
+}
+
+.admin-model-tabs__item.is-active {
+  border-color: color-mix(in srgb, var(--brand-main-default) 30%, transparent);
+  background: color-mix(in srgb, var(--brand-main-default) 16%, transparent);
+  color: var(--brand-main-default);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-main-default) 14%, transparent);
+}
+
+.admin-model-tabs__item span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-model-tabs__item small {
+  color: inherit;
+  opacity: .72;
+  font-size: 12px;
+}
+
+.admin-model-tab-panel {
+  margin-bottom: 8px;
+}
+
+/* 拉取模型对话框：列表筛选区（搜索 + 分类）独立成行，与上方批量导入设置分隔 */
+.admin-model-discover__filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 18px 0 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-model-discover__filters .admin-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-model-discover__filters select.admin-input {
+  flex: 0 0 168px;
+}
+
+/* 筛选器优化：统一宽度、增加间距、改善视觉层次 */
+.admin-provider-filters {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.admin-provider-filters :deep(.admin-select) {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.admin-provider-bulk-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+.admin-provider-tile__check {
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.admin-provider-tile.is-selected {
+  border-color: color-mix(in srgb, var(--brand-main-default, #3b82f6) 45%, var(--line-divider, #00000014));
+}
+
+@media (max-width: 960px) {
+  .admin-provider-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-provider-filters :deep(.admin-select) {
+    width: 100%;
+  }
+}
+

@@ -2,13 +2,28 @@ import { adminDelete, adminGet, adminPatch } from './admin-request'
 
 export type AdminGenerationSessionStatus = 'ALL' | 'HAS_ERROR' | 'RUNNING' | 'COMPLETED' | 'EMPTY'
 export type AdminGenerationSessionType = 'ALL' | 'IMAGE' | 'VIDEO' | 'AGENT' | 'DIGITAL_HUMAN' | 'MOTION'
+/** 列表筛选字段；后端暂不消费，前端仅作 UI 占位。 */
+export type AdminGenerationSessionOrigin =
+  | 'ALL'
+  | 'GENERATE'
+  | 'OMNI'
+  | 'WORKFLOW'
+  | 'CANVAS_ASSISTANT'
+  | 'CUTIA_EDITOR'
+  | 'PLAYLET'
 
 export interface AdminGenerationSessionItem {
   id: string
   title: string
+  /** Pro 字段：CM 列表暂可能缺省 */
+  source?: string
+  originCategory?: 'generate' | 'omni' | 'workflow' | 'canvas-assistant' | 'cutia-editor' | 'playlet' | 'other'
+  originLabel?: string
+  workflowId?: string | null
   isDefault: boolean
   sortOrder: number
   coverImageUrl: string
+  coverPreviewKind?: 'video' | 'image' | 'none'
   lastRecordAt?: string
   createdAt: string
   updatedAt: string
@@ -27,6 +42,7 @@ export interface AdminGenerationSessionItem {
     createdAt: string
     skill: string
     model: string
+    feature?: string
   }
   recordCount: number
   failedRecordCount: number

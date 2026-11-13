@@ -1,0 +1,185 @@
+.admin-storage-page-tabs > .el-tabs__header {
+  margin-bottom: 16px;
+}
+
+.admin-storage-page-tabs > .el-tabs__header .el-tabs__item {
+  height: 36px;
+  font-size: 14px;
+}
+
+/* Tab 内原先吃不到 page__container 的 gap，用内容栈补回区块纵向间距 */
+.admin-storage-page-tabs > .el-tabs__content {
+  overflow: visible;
+}
+
+.admin-storage-tab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 与 AdminPageContainer 区块间距一致 */
+}
+
+.admin-storage-page-tabs__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-storage-page-tabs__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--brand-main-default);
+  background: color-mix(in srgb, var(--brand-main-default) 14%, transparent);
+}
+
+.admin-storage-binding-tabs > .el-tabs__header {
+  margin-bottom: 16px;
+}
+
+.admin-storage-binding-tabs > .el-tabs__header .el-tabs__item {
+  height: 34px;
+  font-size: 13px;
+}
+
+.admin-storage-binding-tabs__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-storage-feature-defaults__lead {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+.admin-storage-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* 前台 / 后台业务默认：两列等宽，标签 / 下拉 / 生效提示纵向排列 */
+.admin-storage-role-defaults {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.admin-storage-role-defaults--features {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-storage-role-defaults.is-disabled,
+.admin-storage-feature-defaults.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.admin-storage-role-defaults__item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-storage-role-defaults__label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.admin-storage-role-defaults__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 1100px) {
+  .admin-storage-role-defaults--features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-storage-role-defaults,
+  .admin-storage-role-defaults--features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-storage-local-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 184px;
+  padding: 18px;
+  border-radius: var(--admin-radius-panel);
+  border: 1px dashed var(--line-divider, #00000022);
+  background: var(--bg-surface);
+}
+
+.admin-storage-local-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-storage-local-card__desc,
+.admin-storage-local-card__footer {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-tertiary);
+}
+
+.admin-storage-local-card__path {
+  padding: 12px 14px;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-block-secondary-default);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.admin-storage-card.is-active {
+  border-color: color-mix(in srgb, var(--brand-main-default) 35%, var(--line-divider, #00000014));
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--brand-main-default) 10%, transparent);
+}
+
+.admin-storage-card__subline {
+  margin-top: 6px;
+}
+
+.admin-storage-card__info {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.admin-storage-card__label {
+  display: inline-block;
+  min-width: 66px;
+  margin-right: 8px;
+  color: var(--text-tertiary);
+}
+
+.admin-storage-empty {
+  min-height: 184px;
+  border-radius: var(--admin-radius-panel);
+}
+
+@media (max-width: 1200px) {
+  .admin-storage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .admin-storage-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

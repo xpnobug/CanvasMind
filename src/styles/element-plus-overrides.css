@@ -1,0 +1,109 @@
+/**
+ * Element Plus 全局主题覆盖
+ * - 将 --el-* 映射到 lv-theme 设计 token
+ * - 统一 Message / MessageBox / Notification 浮层样式
+ */
+
+@import './canana-element-plus-preset.css';
+
+/* 与 styles.css 中 lv-theme 选择器保持一致 */
+:root,
+body [data-lv-theme-force=dark],
+body [lv-theme=dark],
+body body[lv-theme-version="2.0"],
+html [data-lv-theme-force=dark],
+html [lv-theme=dark],
+html body[lv-theme-version="2.0"] {
+  --el-color-primary: var(--brand-main-default, #00cae0);
+  --el-color-primary-light-3: color-mix(in srgb, var(--brand-main-default, #00cae0) 70%, white);
+  --el-color-primary-light-5: color-mix(in srgb, var(--brand-main-default, #00cae0) 50%, white);
+  --el-color-primary-light-7: color-mix(in srgb, var(--brand-main-default, #00cae0) 30%, white);
+  --el-color-primary-light-8: color-mix(in srgb, var(--brand-main-default, #00cae0) 20%, white);
+  --el-color-primary-light-9: color-mix(in srgb, var(--brand-main-default, #00cae0) 10%, white);
+  --el-color-primary-dark-2: var(--brand-main-hover, #0ad4ea);
+  --el-bg-color: var(--bg-surface, #15161a);
+  --el-bg-color-page: var(--bg-body, #0f0f12);
+  --el-bg-color-overlay: var(--bg-float, #22252a);
+  --el-text-color-primary: var(--text-primary, #f5fbff);
+  --el-text-color-regular: var(--text-secondary, #e0f5ff99);
+  --el-text-color-secondary: var(--text-tertiary, #e0f5ff7a);
+  --el-text-color-placeholder: var(--text-placeholder, #e0f5ff59);
+  --el-text-color-disabled: var(--text-disabled, #e0f5ff33);
+  --el-border-color: var(--line-divider, rgba(224, 245, 255, 0.16));
+  --el-border-color-light: var(--stroke-secondary, #ccddff0f);
+  --el-border-color-lighter: var(--stroke-tertiary, #ccddff14);
+  --el-border-color-extra-light: var(--stroke-primary, #ccddff1a);
+  --el-fill-color-blank: var(--bg-surface, #15161a);
+  --el-fill-color-light: var(--bg-block-secondary-default, #ccddff0a);
+  --el-fill-color-lighter: var(--bg-block-secondary-hover, #ccddff14);
+  --el-fill-color-extra-light: var(--bg-block-primary-default, #ccddff14);
+  --el-mask-color: rgba(0, 0, 0, 0.52);
+  --el-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --el-box-shadow-light: 0 4px 12px rgba(0, 0, 0, 0.22);
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 20px;
+}
+
+body body[lv-theme-version="2.0"][lv-theme=light],
+html body[lv-theme-version="2.0"][lv-theme=light] {
+  --el-color-primary: var(--brand-main-default, #00a1c2);
+  --el-color-primary-light-3: color-mix(in srgb, var(--brand-main-default, #00a1c2) 70%, white);
+  --el-color-primary-light-5: color-mix(in srgb, var(--brand-main-default, #00a1c2) 50%, white);
+  --el-color-primary-light-7: color-mix(in srgb, var(--brand-main-default, #00a1c2) 30%, white);
+  --el-color-primary-light-8: color-mix(in srgb, var(--brand-main-default, #00a1c2) 20%, white);
+  --el-color-primary-light-9: color-mix(in srgb, var(--brand-main-default, #00a1c2) 10%, white);
+  --el-color-primary-dark-2: var(--brand-main-hover, #00b8d4);
+  --el-bg-color: var(--bg-surface, #fff);
+  --el-bg-color-page: var(--bg-body, #f8f9fa);
+  --el-bg-color-overlay: var(--bg-float, #fff);
+  --el-text-color-primary: var(--text-primary, #15161a);
+  --el-text-color-regular: var(--text-secondary, #2c3137);
+  --el-text-color-secondary: var(--text-tertiary, #5d6268);
+  --el-text-color-placeholder: var(--text-placeholder, #8b9099);
+  --el-text-color-disabled: var(--text-disabled, #b0b4bb);
+  --el-border-color: var(--line-divider, rgba(0, 0, 0, 0.08));
+  --el-border-color-light: var(--stroke-secondary, rgba(0, 0, 0, 0.06));
+  --el-border-color-lighter: var(--stroke-tertiary, rgba(0, 0, 0, 0.04));
+  --el-border-color-extra-light: var(--stroke-primary, rgba(0, 0, 0, 0.04));
+  --el-fill-color-blank: var(--bg-surface, #fff);
+  --el-fill-color-light: var(--bg-block-secondary-default, #00000008);
+  --el-fill-color-lighter: var(--bg-block-secondary-hover, #0000000d);
+  --el-fill-color-extra-light: var(--bg-block-primary-default, #0000000d);
+  --el-mask-color: rgba(0, 0, 0, 0.45);
+  --el-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --el-box-shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 设置页等未显式接入 canana-ep-dialog 的浮层：保证遮罩与面板足够实 */
+.el-overlay {
+  background-color: var(--el-mask-color, rgba(0, 0, 0, 0.5)) !important;
+}
+
+.el-dialog {
+  --el-dialog-bg-color: var(--bg-float, var(--el-bg-color-overlay, #fff));
+  background: var(--el-dialog-bg-color) !important;
+}
+
+.el-dialog__header,
+.el-dialog__body,
+.el-dialog__footer {
+  background: inherit;
+}
+
+/* 浮层层级：与 App.vue ElConfigProvider z-index=30000 对齐（Message 样式见 canana-element-plus-preset.css） */
+
+.el-notification {
+  z-index: 30001 !important;
+  background: var(--canvas-float-block-default, var(--el-bg-color-overlay)) !important;
+  border: 1px solid var(--stroke-secondary, var(--el-border-color-light));
+  border-radius: 12px;
+}
+
+.el-notification__title {
+  color: var(--text-primary, var(--el-text-color-primary));
+}
+
+.el-notification__content {
+  color: var(--text-secondary, var(--el-text-color-regular));
+}

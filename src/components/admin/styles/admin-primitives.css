@@ -309,6 +309,9 @@
 
 .admin-list-frame__body .admin-art-table .el-table {
   --el-table-border-color: transparent;
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-fill-color-blank: transparent;
   --el-table-header-bg-color: var(--bg-block-secondary-default);
   --el-table-row-hover-bg-color: color-mix(in srgb, var(--brand-main-default) 5%, var(--bg-surface));
   background: transparent;
@@ -318,6 +321,13 @@
 .admin-list-frame__body .admin-art-table .el-table--border::after,
 .admin-list-frame__body .admin-art-table .el-table__inner-wrapper::before {
   display: none;
+}
+
+/* 切断 EP 默认白底透到近透明表头上（暗色下会变成整条白杠） */
+.admin-list-frame__body .admin-art-table .el-table__inner-wrapper,
+.admin-list-frame__body .admin-art-table .el-table__header-wrapper,
+.admin-list-frame__body .admin-art-table .el-table__body-wrapper {
+  background: transparent !important;
 }
 
 .admin-list-frame__body .admin-art-table .el-table__header-wrapper {

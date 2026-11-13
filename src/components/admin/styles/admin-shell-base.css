@@ -135,7 +135,7 @@
   min-height: 0;
 }
 
-/* 对齐 art：头部仅用极淡分割线，避免多层 border 叠加重 */
+/* 头部仅用极淡分割线，避免多层 border 叠加重 */
 .admin-header-bar {
   --admin-header-line: rgba(0, 0, 0, 0.06);
   position: sticky;

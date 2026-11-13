@@ -1,65 +1,36 @@
 <template>
-  <AdminPageContainer title="技能配置" description="统一维护技能目录、工作台模式、提示词模板、工作流模板与阶段文案。">
-    <AdminFilterToolbar>
-      <template #search>
-        <div class="admin-skill-toolbar__search-wrap">
+  <AdminPageContainer
+    class="admin-list-page"
+    compact title="技能配置" description="统一维护技能目录、工作台模式、提示词模板、工作流模板与阶段文案。">
+    <AdminListFrame>
+      <template #toolbar>
+        <AdminListToolbar
+          :disabled="loading || saving"
+          :has-active-filters="activeFilterCount > 0"
+          :facets="listFacets"
+          @update:facet="handleFacetUpdate"
+          @clear="resetListFilters"
+        >
           <input
             v-model.trim="filters.keyword"
-            class="admin-input admin-provider-toolbar__search"
+            class="admin-list-toolbar__input is-wide"
             type="text"
             placeholder="搜索技能名称、标识或分类"
           >
-        </div>
+          <template #actions>
+            <button class="admin-button admin-button--secondary" type="button" @click="loadSkillList" :disabled="loading || saving">
+              {{ loading ? '刷新中...' : '刷新列表' }}
+            </button>
+            <button class="admin-button admin-button--primary" type="button" @click="openCreateDialog" :disabled="saving">
+              新增技能
+            </button>
+          </template>
+        </AdminListToolbar>
       </template>
-      <template #filters>
-        <div class="admin-skill-toolbar__filters">
-        <select v-model="filters.status" class="admin-input admin-provider-toolbar__status">
-          <option value="ALL">技能状态</option>
-          <option value="ENABLED">已启用</option>
-          <option value="DISABLED">已禁用</option>
-        </select>
-        <select v-model="filters.uiMode" class="admin-input admin-provider-toolbar__status">
-          <option value="ALL">界面模式</option>
-          <option value="WORKSPACE">工作台</option>
-          <option value="PLAIN_CHAT">普通对话</option>
-        </select>
-        <select v-model="filters.executionMode" class="admin-input admin-provider-toolbar__status">
-          <option value="ALL">执行模式</option>
-          <option v-for="item in executionModeOptions" :key="item" :value="item">{{ item }}</option>
-        </select>
-        <select v-model="filters.category" class="admin-input admin-provider-toolbar__status">
-          <option value="ALL">技能分类</option>
-          <option v-for="item in categoryOptions" :key="item" :value="item">{{ item }}</option>
-        </select>
-        </div>
-      </template>
-      <template #meta>
-        <span class="admin-skill-toolbar__summary">
-          共 {{ filteredSkills.length }} 个技能
-          <em v-if="activeFilterCount">，已启用 {{ activeFilterCount }} 个筛选</em>
-        </span>
-        <button
-          v-if="activeFilterCount"
-          class="admin-inline-button"
-          type="button"
-          @click="resetListFilters"
-        >
-          清空筛选
-        </button>
-      </template>
-      <template #actions>
-        <button class="admin-button admin-button--secondary" type="button" @click="loadSkillList" :disabled="loading || saving">
-          {{ loading ? '刷新中...' : '刷新列表' }}
-        </button>
-        <button class="admin-button admin-button--primary" type="button" @click="openCreateDialog" :disabled="saving">
-          新增技能
-        </button>
-      </template>
-    </AdminFilterToolbar>
 
-    <div v-if="loading" class="admin-empty">正在加载技能列表...</div>
-    <div v-else-if="!filteredSkills.length" class="admin-empty">当前还没有符合条件的技能。</div>
-    <div v-else class="admin-provider-grid">
+      <AdminEmptyState v-if="loading && !filteredSkills.length" message="正在加载技能列表..." :illustrated="false" compact />
+      <AdminEmptyState v-else-if="!filteredSkills.length" message="当前还没有符合条件的技能。" />
+      <div v-else class="admin-provider-grid admin-console-grid">
       <div v-for="skill in paginatedSkills" :key="skill.skillKey" class="admin-provider-tile admin-skill-tile">
         <div class="admin-provider-tile__header">
           <div class="admin-provider-tile__brand">
@@ -130,14 +101,18 @@
           </button>
         </div>
       </div>
-    </div>
-    <AdminPagination
-      v-if="filteredSkills.length > 0"
-      v-model:page="pagination.page"
-      v-model:page-size="pagination.pageSize"
-      :total="filteredSkills.length"
-      :disabled="loading || saving"
-    />
+      </div>
+
+      <template #pagination>
+        <AdminPagination
+          v-if="filteredSkills.length > 0"
+          v-model:page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="filteredSkills.length"
+          :disabled="loading || saving"
+        />
+      </template>
+    </AdminListFrame>
   </AdminPageContainer>
 
   <div v-if="dialogVisible" class="admin-dialog-mask" @click="closeDialog">
@@ -782,7 +757,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import AdminFilterToolbar from '@/components/admin/common/AdminFilterToolbar.vue'
+import AdminEmptyState from '@/components/admin/common/AdminEmptyState.vue'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar, { type AdminListToolbarFacet } from '@/components/admin/common/AdminListToolbar.vue'
 import AdminPagination from '@/components/admin/common/AdminPagination.vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
 import { matchesAdminKeyword, useAdminListFilters } from '@/composables/useAdminListFilters'
@@ -874,6 +851,14 @@ const { activeFilterCount, resetFilters } = useAdminListFilters({
   filters,
   defaults: filterDefaults,
 })
+
+const handleFacetUpdate = ({ key, value }: { key: string; value: string }) => {
+  if (key === 'status') filters.status = value as typeof filters.status
+  else if (key === 'uiMode') filters.uiMode = value as typeof filters.uiMode
+  else if (key === 'executionMode') filters.executionMode = value as typeof filters.executionMode
+  else if (key === 'category') filters.category = value as typeof filters.category
+}
+
 const { pagination, sliceItems, resetPage } = useAdminPagination({
   initialPageSize: 12,
 })
@@ -947,6 +932,44 @@ const executionModeOptions = computed(() => {
 const categoryOptions = computed(() => {
   return Array.from(new Set(skills.value.map(item => item.category).filter(Boolean))).sort((left, right) => left.localeCompare(right, 'zh-CN'))
 })
+
+const listFacets = computed<AdminListToolbarFacet[]>(() => [
+  {
+    key: 'status',
+    title: '技能状态',
+    options: [
+      { label: '已启用', value: 'ENABLED' },
+      { label: '已禁用', value: 'DISABLED' },
+    ],
+    modelValue: filters.status,
+    emptyValue: 'ALL',
+  },
+  {
+    key: 'uiMode',
+    title: '界面模式',
+    options: [
+      { label: '工作台', value: 'WORKSPACE' },
+      { label: '普通对话', value: 'PLAIN_CHAT' },
+    ],
+    modelValue: filters.uiMode,
+    emptyValue: 'ALL',
+  },
+  {
+    key: 'executionMode',
+    title: '执行模式',
+    options: executionModeOptions.value.map((item) => ({ label: item, value: item })),
+    modelValue: filters.executionMode,
+    emptyValue: 'ALL',
+  },
+  {
+    key: 'category',
+    title: '技能分类',
+    options: categoryOptions.value.map((item) => ({ label: item, value: item })),
+    modelValue: filters.category,
+    emptyValue: 'ALL',
+  },
+])
+
 const imageModelProviderOptions = computed(() => {
   return providerOptions.value.filter((provider) => {
     const models = providerImageModelMap.value[provider.id] || []

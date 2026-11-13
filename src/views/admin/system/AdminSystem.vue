@@ -1,5 +1,9 @@
 <template>
-  <AdminPageContainer :title="pageTitle" :description="pageDescription">
+  <AdminPageContainer
+    class="admin-system-page"
+    :title="pageTitle"
+    :description="pageDescription"
+  >
     <template #actions>
       <button
         v-if="currentTab !== 'login'"
@@ -31,46 +35,23 @@
     </div>
 
     <div class="admin-system-shell" :class="{ 'admin-system-shell--single': !showTabNav }">
-      <aside v-if="showTabNav" class="admin-system-nav admin-card">
-        <div class="admin-card__header">
-          <div>
-            <h4 class="admin-card__title">配置分组</h4>
-            <div class="admin-card__desc">按品牌、协议与登录分组维护系统设置。</div>
-          </div>
-        </div>
-        <div class="admin-card__content admin-system-nav__content">
-          <button
-            v-for="item in tabItems"
-            :key="item.key"
-            class="admin-system-tabs__item"
-            :class="{ 'is-active': currentTab === item.key }"
-            type="button"
-            @click="currentTab = item.key"
-          >
-            <span class="admin-system-tabs__title">{{ item.label }}</span>
-            <span class="admin-system-tabs__desc">{{ item.description }}</span>
-          </button>
-        </div>
-      </aside>
+      <nav v-if="showTabNav" class="admin-system-tabs-bar" role="tablist" aria-label="系统设置分组">
+        <button
+          v-for="item in tabItems"
+          :key="item.key"
+          class="admin-system-tabs-bar__item"
+          :class="{ 'is-active': currentTab === item.key }"
+          type="button"
+          role="tab"
+          :aria-selected="currentTab === item.key"
+          @click="currentTab = item.key"
+        >
+          <span class="admin-system-tabs-bar__label">{{ item.label }}</span>
+          <span class="admin-system-tabs-bar__desc">{{ item.description }}</span>
+        </button>
+      </nav>
 
       <div class="admin-system-main">
-        <div v-if="!isLayoutOnlyRoute" class="admin-system-section-head admin-card">
-          <div class="admin-card__content">
-            <div class="admin-system-section-head__inner">
-              <div>
-                <div class="admin-system-section-head__eyebrow">当前分组</div>
-                <h3 class="admin-system-section-head__title">{{ activeTabMeta.label }}</h3>
-                <p class="admin-system-section-head__desc">{{ activeTabMeta.description }}</p>
-              </div>
-              <div class="admin-system-section-head__tips">
-                <span class="admin-system-section-head__tip">
-                  保存后会同步影响前台展示与后台默认行为
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <AdminSystemSitePanel
           v-if="currentTab === 'site'"
           :form="systemForm"
@@ -141,6 +122,9 @@
 </template>
 
 <script setup lang="ts">
+// 系统设置页：站点 / 协议 / 登录分组。
+defineOptions({ name: 'AdminSystem' })
+import './admin-system.css'
 import { computed, defineAsyncComponent, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AdminStatCard from '@/components/admin/common/AdminStatCard.vue'
@@ -448,109 +432,86 @@ onMounted(() => {
 
 <style scoped>
 .admin-system-shell {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-items: start;
 }
 
 .admin-system-shell--single {
-  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
 
-.admin-system-nav {
-  position: sticky;
-  top: 24px;
+.admin-system-tabs-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-panel);
+  background: color-mix(in srgb, var(--bg-block-secondary-default) 72%, var(--bg-surface));
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.admin-system-nav__content {
+.admin-system-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-system-tabs-bar__item {
+  flex: 1 1 0;
+  min-width: 148px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  text-align: left;
+}
+
+.admin-system-tabs-bar__item:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+}
+
+.admin-system-tabs-bar__item.is-active {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--brand-main-default) 28%, transparent);
+  background: var(--bg-surface);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--brand-main-default) 8%, transparent);
+}
+
+.admin-system-tabs-bar__label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.admin-system-tabs-bar__desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-system-tabs-bar__item.is-active .admin-system-tabs-bar__desc {
+  color: color-mix(in srgb, var(--text-secondary) 88%, var(--brand-main-default) 12%);
 }
 
 .admin-system-main {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.admin-system-section-head__inner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.admin-system-section-head__eyebrow {
-  margin-bottom: 8px;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.admin-system-section-head__title {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 24px;
-  line-height: 1.2;
-}
-
-.admin-system-section-head__desc {
-  margin: 8px 0 0;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
-.admin-system-section-head__tips {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.admin-system-section-head__tip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--brand-primary, #6b8cff) 22%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 8%, var(--bg-surface));
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.admin-system-tabs__item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  width: 100%;
-  padding: 16px 18px;
-  border: 1px solid var(--line-divider, #00000014);
-  border-radius: 16px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.admin-system-tabs__item:hover,
-.admin-system-tabs__item.is-active {
-  border-color: color-mix(in srgb, var(--brand-primary, #6b8cff) 32%, transparent);
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 10%, var(--bg-surface));
-  color: var(--text-primary);
-}
-
-.admin-system-tabs__title {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.admin-system-tabs__desc {
-  font-size: 12px;
-  line-height: 1.5;
+  min-width: 0;
 }
 
 .admin-system-progress-summary {
@@ -574,7 +535,7 @@ onMounted(() => {
 
 .admin-system-stage-card {
   border: 1px solid var(--line-divider, #00000014);
-  border-radius: 18px;
+  border-radius: var(--admin-radius-panel);
   padding: 18px;
   background: var(--bg-surface);
   display: flex;
@@ -637,7 +598,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: var(--admin-radius-panel);
   background: var(--bg-block-primary-default);
   border: 1px solid var(--line-divider, #00000014);
 }
@@ -666,25 +627,14 @@ onMounted(() => {
   padding-top: 2px;
 }
 
-@media (max-width: 1200px) {
-  .admin-system-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .admin-system-nav {
-    position: static;
-  }
-
-  .admin-system-nav__content {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 900px) {
+  .admin-system-tabs-bar__item {
+    min-width: 120px;
+    padding: 10px 12px;
+  }
 
-  .admin-system-section-head__inner {
-    flex-direction: column;
+  .admin-system-tabs-bar__desc {
+    display: none;
   }
 
   .admin-system-stage-card__header {
@@ -696,5 +646,17 @@ onMounted(() => {
     width: 100%;
     justify-content: flex-start;
   }
+}
+</style>
+
+<style>
+/* 系统设置页在 admin-page-view(height:100%) 内自建滚动，避免长表单/协议编辑被裁切 */
+.admin-page.admin-system-page {
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 </style>

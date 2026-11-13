@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200" fill="none">
+  <defs>
+    <linearGradient id="boxFront" x1="48" y1="92" x2="192" y2="176" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8EEF8"/>
+      <stop offset="1" stop-color="#C9D6EC"/>
+    </linearGradient>
+    <linearGradient id="boxSide" x1="156" y1="80" x2="210" y2="160" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B7C7E0"/>
+      <stop offset="1" stop-color="#8FA6C8"/>
+    </linearGradient>
+    <linearGradient id="boxLid" x1="40" y1="48" x2="168" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F7FC"/>
+      <stop offset="1" stop-color="#D5E0F0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="98" y1="70" x2="142" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6B8CFF"/>
+      <stop offset="1" stop-color="#3D6BFF"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="120" cy="168" rx="58" ry="10" fill="#0F172A" opacity="0.08"/>
+  <path d="M48 92 L120 66 L192 92 L120 118 Z" fill="url(#boxLid)"/>
+  <path d="M48 92 L48 148 L120 176 L120 118 Z" fill="url(#boxFront)"/>
+  <path d="M192 92 L192 148 L120 176 L120 118 Z" fill="url(#boxSide)"/>
+  <path d="M72 58 L148 36 L176 58 L100 82 Z" fill="url(#boxLid)" opacity="0.95"/>
+  <path d="M148 36 L176 58 L176 72 L148 50 Z" fill="#9BB0D0" opacity="0.85"/>
+  <path d="M100 78 L140 92 L140 112 L100 98 Z" fill="url(#accent)" opacity="0.22"/>
+  <circle cx="120" cy="104" r="14" fill="#FFFFFF" opacity="0.72"/>
+  <path d="M114 104 H126 M120 98 V110" stroke="#5B7CFF" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

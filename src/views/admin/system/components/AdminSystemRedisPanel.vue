@@ -53,29 +53,13 @@
               <small>TTL: {{ formatTtl(overview?.caches.providerCatalog.ttlSeconds) }}</small>
             </div>
             <div class="admin-redis-panel__metric">
-              <span>公开技能缓存</span>
-              <strong>{{ overview?.caches.publicEnabledSkills.count ?? 0 }}</strong>
-              <small>TTL: {{ formatTtl(overview?.caches.publicEnabledSkills.ttlSeconds) }}</small>
-            </div>
-            <div class="admin-redis-panel__metric">
               <span>模型发现缓存</span>
               <strong>{{ overview?.caches.providerDiscover.count ?? 0 }}</strong>
-            </div>
-            <div class="admin-redis-panel__metric">
-              <span>技能运行时缓存</span>
-              <strong>{{ overview?.caches.runtimeSkills.count ?? 0 }}</strong>
-            </div>
-            <div class="admin-redis-panel__metric">
-              <span>工作台技能缓存</span>
-              <strong>{{ overview?.caches.workspaceRuntimeSkills.count ?? 0 }}</strong>
             </div>
           </div>
           <div class="admin-redis-panel__button-row">
             <button class="admin-button admin-button--ghost" type="button" :disabled="actionLoading" @click="onClearScope('provider-model-catalog')">
               清理模型缓存
-            </button>
-            <button class="admin-button admin-button--ghost" type="button" :disabled="actionLoading" @click="onClearScope('skill-runtime')">
-              清理技能缓存
             </button>
           </div>
         </article>
@@ -144,10 +128,6 @@
           <code>{{ overview?.tasks.lock.sampleKeys?.[0] || '--' }}</code>
         </div>
         <div class="admin-redis-panel__sample">
-          <div class="admin-redis-panel__sample-title">技能缓存当前样本 Key</div>
-          <code>{{ overview?.caches.runtimeSkills.sampleKeys?.[0] || '--' }}</code>
-        </div>
-        <div class="admin-redis-panel__sample">
           <div class="admin-redis-panel__sample-title">模型发现缓存当前样本 Key</div>
           <code>{{ overview?.caches.providerDiscover.sampleKeys?.[0] || '--' }}</code>
         </div>
@@ -184,7 +164,7 @@ defineProps<{
   loading: boolean
   actionLoading: boolean
   onRefresh: () => void
-  onClearScope: (scope: 'provider-model-catalog' | 'skill-runtime' | 'task-runtime') => void
+  onClearScope: (scope: 'provider-model-catalog' | 'task-runtime') => void
 }>()
 
 const formatTtl = (ttlSeconds?: number) => {
@@ -229,7 +209,7 @@ const formatTtl = (ttlSeconds?: number) => {
   gap: 6px;
   padding: 14px;
   border: 1px solid var(--line-divider, #00000014);
-  border-radius: 12px;
+  border-radius: var(--admin-radius-control);
   background: var(--bg-surface);
 }
 

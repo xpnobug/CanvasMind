@@ -52,7 +52,7 @@ export const useAuthStore = () => {
   // 当前是否具备后台管理员权限。
   const isAdmin = computed(() => currentUser.value?.role === 'ADMIN')
 
-  // 公开版暂无细粒度权限码，预留空数组以对接工作标签可见性。
+  // 暂无细粒度权限码，预留空数组以对接工作标签可见性。
   const permissions = computed(() => [] as string[])
 
   // 当前用户按钮文案。

@@ -21,7 +21,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     title: '总览',
     items: [
       {
-        label: '仪表盘',
+        label: '数据看板',
         path: '/admin/dashboard',
         description: '查看整体运行概览与趋势',
         icon: 'ri-dashboard-line',
@@ -41,12 +41,24 @@ export const adminNavGroups: AdminNavGroup[] = [
         label: '视频项目',
         path: '/admin/video-projects',
         description: '查看与管理用户的视频编辑器工程',
+        icon: 'ri-video-line',
       },
       {
         label: '营销中心',
         path: '/admin/marketing',
         description: '管理会员订阅、积分充值与奖励活动',
         icon: 'ri-megaphone-line',
+      },
+    ],
+  },
+  {
+    title: '用户与团队',
+    items: [
+      {
+        label: '用户管理',
+        path: '/admin/users',
+        description: '查看用户列表并调整后台角色',
+        icon: 'ri-user-3-line',
       },
     ],
   },
@@ -65,10 +77,27 @@ export const adminNavGroups: AdminNavGroup[] = [
         description: '统一维护会话规则、入口展示与管理策略',
         icon: 'ri-settings-3-line',
       },
+      {
+        label: '调用日志',
+        path: '/admin/generations',
+        description: '查看每次生成请求、错误诊断与上游摘要',
+        icon: 'ri-file-list-3-line',
+      },
     ],
   },
   {
-    title: '系统配置',
+    title: '模型配置',
+    items: [
+      {
+        label: '厂商配置',
+        path: '/admin/providers',
+        description: '管理 AI 厂商地址、密钥与请求端点',
+        icon: 'ri-building-2-line',
+      },
+    ],
+  },
+  {
+    title: '技能与资产',
     items: [
       {
         label: '技能配置',
@@ -76,23 +105,16 @@ export const adminNavGroups: AdminNavGroup[] = [
         description: '管理技能目录、提示词模板与工作流模板',
         icon: 'ri-puzzle-line',
       },
-      {
-        label: '厂商配置',
-        path: '/admin/providers',
-        description: '管理 AI 厂商地址、密钥与请求端点',
-        icon: 'ri-building-2-line',
-      },
+    ],
+  },
+  {
+    title: '系统配置',
+    items: [
       {
         label: '存储配置',
         path: '/admin/storage',
         description: '管理本地与对象存储方案',
         icon: 'ri-hard-drive-2-line',
-      },
-      {
-        label: '用户管理',
-        path: '/admin/users',
-        description: '查看用户列表并调整后台角色',
-        icon: 'ri-user-3-line',
       },
       {
         label: '系统设置',
@@ -124,7 +146,7 @@ export const adminNavGroups: AdminNavGroup[] = [
 
 export const ADMIN_DASHBOARD_PATH = '/admin/dashboard'
 
-/** 公开版暂无细粒度权限码：能进后台即可见全部导航（路由守卫另做鉴权） */
+/** 暂无细粒度权限码：能进后台即可见全部导航（路由守卫另做鉴权） */
 export const isAdminNavItemVisible = (
   _item: AdminNavItem,
   _context: AdminNavVisibilityContext = {},

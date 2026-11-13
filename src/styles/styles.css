@@ -6,6 +6,9 @@
 @layer theme, base, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+/* 将 --el-* 映射到 lv-theme，否则暗色下 el-table 表头仍用浅色默认白底 */
+@import "./element-plus-overrides.css";
+@import "./brand-ui-tokens.css";
 
 /*
  * Tailwind v4 默认仅扫描 CSS 入口同级目录（src/）下的源码生成 utility class。

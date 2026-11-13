@@ -1,187 +1,219 @@
 <template>
-	<div class="admin-video-projects">
-		<header class="page-header">
-			<h2 class="title">视频项目管理</h2>
-			<div class="filters">
-				<el-input
-					v-model="keyword"
-					placeholder="按项目名搜索"
-					clearable
-					:prefix-icon="Search"
-					style="width: 240px"
-					@change="handleSearch"
-				/>
-				<el-button @click="refresh">刷新</el-button>
-			</div>
-		</header>
+  <AdminPageContainer
+    class="admin-list-page"
+    title="视频项目"
+    description="查看与管理用户的视频编辑器工程。"
+    compact
+  >
+    <AdminListFrame>
+      <template #toolbar>
+        <AdminListToolbar
+          :disabled="loading || acting"
+          :has-active-filters="hasActiveFilters"
+          @clear="resetFilters"
+        >
+          <input
+            v-model.trim="keyword"
+            class="admin-list-toolbar__input is-wide"
+            type="text"
+            placeholder="搜索项目名"
+            :disabled="loading || acting"
+            @keydown.enter="handleSearch"
+          >
+        </AdminListToolbar>
+      </template>
 
-		<el-table
-			v-loading="loading"
-			:data="items"
-			border
-			stripe
-			style="width: 100%"
-		>
-			<el-table-column label="项目名" min-width="200">
-				<template #default="{ row }">
-					<div class="name-cell">
-						<img
-							v-if="row.thumbnail"
-							:src="row.thumbnail"
-							class="thumb"
-							alt=""
-						/>
-						<div v-else class="thumb thumb-placeholder">—</div>
-						<span class="name">{{ row.metadata.name || '未命名项目' }}</span>
-					</div>
-				</template>
-			</el-table-column>
-			<el-table-column label="所属用户" min-width="160">
-				<template #default="{ row }">
-					<div v-if="row.owner">
-						<div>{{ row.owner.name }}</div>
-						<div class="email">{{ row.owner.email }}</div>
-					</div>
-					<span v-else>—</span>
-				</template>
-			</el-table-column>
-			<el-table-column label="时长" width="100">
-				<template #default="{ row }">
-					{{ formatDuration(row.metadata.duration) }}
-				</template>
-			</el-table-column>
-			<el-table-column prop="version" label="版本" width="80" align="center" />
-			<el-table-column label="更新时间" width="180">
-				<template #default="{ row }">
-					{{ formatTime(row.updatedAt) }}
-				</template>
-			</el-table-column>
-		</el-table>
+      <AdminArtTable
+        :loading="loading"
+        :data="items"
+        row-key="id"
+        empty-text="当前筛选条件下还没有视频项目"
+      >
+        <el-table-column label="项目" min-width="280">
+          <template #default="{ row }">
+            <div class="admin-vp-row">
+              <div class="admin-vp-row__thumb">
+                <img
+                  v-if="resolveThumb(row)"
+                  :src="resolveThumb(row)"
+                  :alt="row.metadata.name || '项目封面'"
+                  class="admin-vp-row__media"
+                >
+                <span v-else class="admin-vp-row__media admin-vp-row__media--empty">无封面</span>
+              </div>
+              <div class="admin-vp-row__main">
+                <div class="admin-vp-row__title" :title="row.metadata.name || '未命名项目'">
+                  {{ row.metadata.name || '未命名项目' }}
+                </div>
+                <div class="admin-vp-row__id">{{ row.id }}</div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
 
-		<div class="pagination">
-			<el-pagination
-				v-model:current-page="page"
-				v-model:page-size="pageSize"
-				:page-sizes="[20, 50, 100]"
-				:total="totalCount"
-				layout="total, sizes, prev, pager, next, jumper"
-				background
-				@change="refresh"
-				@size-change="refresh"
-			/>
-		</div>
-	</div>
+        <el-table-column label="所属用户" min-width="180">
+          <template #default="{ row }">
+            <div v-if="row.owner" class="admin-vp-owner">
+              <div class="admin-vp-owner__name">{{ row.owner.name || '未命名用户' }}</div>
+              <div v-if="row.owner.email" class="admin-vp-owner__email">{{ row.owner.email }}</div>
+            </div>
+            <span v-else class="admin-vp-muted">—</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="时长" width="88">
+          <template #default="{ row }">
+            <span class="admin-vp-mono">{{ formatDuration(row.metadata.duration ?? row.durationSeconds) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="版本" width="72">
+          <template #default="{ row }">
+            <span class="admin-vp-mono">v{{ row.version }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="更新时间" width="148">
+          <template #default="{ row }">
+            <span class="admin-vp-time">{{ formatTime(row.updatedAt || row.metadata.updatedAt) }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="88" fixed="right">
+          <template #default="{ row }">
+            <div class="admin-vp-ops">
+              <button
+                class="admin-vp-ops__btn is-danger"
+                type="button"
+                :disabled="acting"
+                @click="handleDelete(row)"
+              >
+                删除
+              </button>
+            </div>
+          </template>
+        </el-table-column>
+      </AdminArtTable>
+
+      <template #pagination>
+        <AdminPagination
+          v-model:page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :disabled="loading || acting"
+          @change="handlePaginationChange"
+        />
+      </template>
+    </AdminListFrame>
+  </AdminPageContainer>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { Search } from '@element-plus/icons-vue'
+defineOptions({ name: 'AdminVideoProjects' })
+import './admin-video-projects.css'
+import { computed, onMounted, ref } from 'vue'
+import { ElMessageBox } from 'element-plus'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar from '@/components/admin/common/AdminListToolbar.vue'
+import AdminPagination from '@/components/admin/common/AdminPagination.vue'
+import AdminArtTable from '@/components/admin/table/AdminArtTable.vue'
+import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
+import { useAdminList } from '@/composables/admin/useAdminList'
 import {
-	listAllVideoProjects,
-	type VideoProjectListItem,
+  deleteVideoProject,
+  listAllVideoProjects,
+  type VideoProjectListItem,
 } from '@/api/video-projects'
+import { cananaMessageBoxOptions } from '@/utils/canana-message-box'
 
-const items = ref<VideoProjectListItem[]>([])
-const totalCount = ref(0)
-const loading = ref(false)
-const page = ref(1)
-const pageSize = ref(20)
+type AdminVideoProjectRow = VideoProjectListItem & { id: string }
+
 const keyword = ref('')
+const acting = ref(false)
 
-const refresh = async () => {
-	loading.value = true
-	try {
-		const result = await listAllVideoProjects({
-			page: page.value,
-			pageSize: pageSize.value,
-			keyword: keyword.value || undefined,
-		})
-		items.value = result.items
-		totalCount.value = result.summary.totalCount
-	} finally {
-		loading.value = false
-	}
+const hasActiveFilters = computed(() => Boolean(keyword.value.trim()))
+
+const {
+  loading,
+  items,
+  pagination,
+  loadList,
+  resetAndLoad,
+  handlePaginationChange,
+} = useAdminList<AdminVideoProjectRow>({
+  initialPageSize: 20,
+  fetcher: async ({ page, pageSize }) => {
+    const result = await listAllVideoProjects({
+      page,
+      pageSize,
+      keyword: keyword.value.trim() || undefined,
+    })
+    return {
+      items: result.items.map((item) => ({
+        ...item,
+        id: item.metadata.id,
+      })),
+      summary: result.summary,
+    }
+  },
+})
+
+const resolveThumb = (row: AdminVideoProjectRow) => {
+  return String(row.thumbnail || row.metadata.thumbnail || '').trim()
 }
 
 const handleSearch = () => {
-	page.value = 1
-	void refresh()
+  void resetAndLoad()
+}
+
+const resetFilters = () => {
+  keyword.value = ''
+  void resetAndLoad()
+}
+
+const handleDelete = async (row: AdminVideoProjectRow) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除视频项目「${row.metadata.name || '未命名项目'}」吗？删除后不可恢复。`,
+      '删除视频项目',
+      cananaMessageBoxOptions({
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+      }),
+    )
+  } catch {
+    return
+  }
+
+  acting.value = true
+  try {
+    await deleteVideoProject(row.id)
+    await loadList()
+  } finally {
+    acting.value = false
+  }
+}
+
+const formatDuration = (seconds?: number) => {
+  const total = Math.max(0, Math.round(Number(seconds || 0)))
+  const m = Math.floor(total / 60)
+  const s = total % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+const formatTime = (iso?: string) => {
+  if (!iso) {
+    return '—'
+  }
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) {
+    return '—'
+  }
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 onMounted(() => {
-	void refresh()
+  void loadList()
 })
-
-const formatDuration = (seconds: number) => {
-	const total = Math.max(0, Math.round(seconds || 0))
-	const m = Math.floor(total / 60)
-	const s = total % 60
-	return `${m}:${String(s).padStart(2, '0')}`
-}
-
-const formatTime = (iso: string) => {
-	const ts = new Date(iso).getTime()
-	if (!Number.isFinite(ts)) return '—'
-	return new Date(ts).toLocaleString('zh-CN', { hour12: false })
-}
 </script>
-
-<style scoped>
-.admin-video-projects {
-	padding: 24px;
-}
-
-.page-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 16px;
-	gap: 16px;
-}
-
-.title {
-	margin: 0;
-	font-size: 18px;
-	font-weight: 600;
-}
-
-.filters {
-	display: flex;
-	gap: 12px;
-	align-items: center;
-}
-
-.name-cell {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.thumb {
-	width: 56px;
-	height: 32px;
-	object-fit: cover;
-	border-radius: 4px;
-	flex-shrink: 0;
-}
-
-.thumb-placeholder {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--el-bg-color-page);
-	color: var(--el-text-color-placeholder);
-	font-size: 12px;
-}
-
-.email {
-	font-size: 12px;
-	color: var(--el-text-color-secondary);
-}
-
-.pagination {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 16px;
-}
-</style>

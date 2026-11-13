@@ -1,35 +1,17 @@
 <template>
-  <div class="admin-system-panel">
-    <div class="admin-card">
-      <div class="admin-card__header">
-        <div>
-          <h4 class="admin-card__title">登录方式概览</h4>
-          <div class="admin-card__desc">统一维护登录入口展示、验证码参数以及 OAuth 基础参数。</div>
-        </div>
-      </div>
-      <div class="admin-card__content">
-        <div class="admin-system-login-overview">
-          <div class="admin-system-login-overview__item">
-            <div class="admin-system-login-overview__title">配置说明</div>
-            <div class="admin-system-login-overview__desc">
-              验证码登录可填写短信或邮件发送参数；OAuth 登录支持授权地址生成，回调换 Token 与用户绑定逻辑需后端继续接入。
-            </div>
-          </div>
-          <div class="admin-system-login-overview__item">
-            <div class="admin-system-login-overview__title">当前状态</div>
-            <div class="admin-system-login-overview__desc">
-              已配置 {{ authMethods.length }} 项登录方式，其中 {{ enabledMethodCount }} 项处于启用状态。
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="admin-system-panel admin-login-panel">
+    <div class="admin-login-panel__intro">
+      <p class="admin-login-panel__intro-title">登录设置</p>
+      <p class="admin-login-panel__intro-desc">
+        维护登录入口展示、验证码 / OAuth 参数与启用状态。已配置 {{ authMethods.length }} 项，其中 {{ enabledMethodCount }} 项启用。
+      </p>
     </div>
 
     <div class="admin-card admin-system-methods-card">
       <div class="admin-card__header">
         <div>
           <h4 class="admin-card__title">登录方式</h4>
-          <div class="admin-card__desc">按卡片管理登录入口，弹窗内完成新增、编辑和参数配置，提交时会立即保存到后端。</div>
+          <div class="admin-card__desc">按卡片管理登录入口，弹窗内完成新增、编辑和参数配置；顶栏「保存登录方式」会批量写回后端。</div>
         </div>
         <div class="admin-page__actions">
           <button class="admin-button admin-button--secondary" type="button" @click="openCreateMethodDialog" :disabled="loading || methodSaving || !creatableMethodTemplates.length">
@@ -254,37 +236,22 @@ defineProps({
   gap: 16px;
 }
 
-.admin-system-login-overview {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.admin-login-panel__intro {
+  padding: 2px 2px 0;
 }
 
-.admin-system-login-overview__item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid var(--line-divider, #00000014);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--bg-surface) 92%, var(--bg-block-secondary-default));
-}
-
-.admin-system-login-overview__title {
-  color: var(--text-primary);
-  font-size: 14px;
+.admin-login-panel__intro-title {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
-.admin-system-login-overview__desc {
-  color: var(--text-tertiary);
+.admin-login-panel__intro-desc {
+  margin: 8px 0 0;
+  max-width: 720px;
   font-size: 13px;
   line-height: 1.7;
-}
-
-@media (max-width: 900px) {
-  .admin-system-login-overview {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  color: var(--text-secondary);
 }
 </style>

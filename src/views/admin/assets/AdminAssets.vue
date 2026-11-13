@@ -1,235 +1,213 @@
 <template>
-  <AdminPageContainer title="资源管理" description="统一管理全站资源与我的资源，支持按用户维度检索，并保留管理员批量发布、下架和删除能力。">
-    <template #actions>
-      <button class="admin-button admin-button--secondary" type="button" @click="loadAssets" :disabled="loading || acting">
-        {{ loading ? '刷新中...' : '刷新列表' }}
-      </button>
-    </template>
-
-    <AdminFilterToolbar
-      title="筛选条件"
-      description="按范围、类型、发布状态和用户身份筛选资产。"
-      :active-count="activeFilterCount"
-      :disabled="loading || acting"
-      show-reset
-      show-apply
-      reset-label="重置"
-      apply-label="搜索"
-      @reset="resetFilters"
-      @apply="handleSearch"
-    >
-      <template #search>
-        <input
-          v-if="filters.scope === 'all'"
-          v-model.trim="filters.ownerKeyword"
-          class="admin-input"
-          type="text"
-          placeholder="搜索用户 ID / 昵称 / 邮箱"
+  <AdminPageContainer
+    class="admin-list-page"
+    title="资源管理"
+    description="统一管理全站资源与我的资源，支持按用户维度检索，并保留管理员批量发布、下架和删除能力。"
+    compact
+  >
+    <AdminListFrame>
+      <template #toolbar>
+        <AdminListToolbar
           :disabled="loading || acting"
-          @keydown.enter="handleSearch"
+          :has-active-filters="hasActiveFilters"
+          :facets="listFacets"
+          @update:facet="handleFacetUpdate"
+          @clear="resetFilters"
         >
+          <input
+            v-if="filters.scope === 'all'"
+            v-model.trim="filters.ownerKeyword"
+            class="admin-list-toolbar__input is-wide"
+            type="text"
+            placeholder="搜索用户 ID / 昵称 / 邮箱"
+            :disabled="loading || acting"
+            @keydown.enter="handleSearch"
+          >
+        </AdminListToolbar>
       </template>
-      <template #filters>
-        <AdminFilterChips :groups="filterChipGroups" :disabled="loading || acting" @select="handleChipSelect" />
-      </template>
-      <template #meta>
-        <span class="admin-skill-toolbar__summary">
-          共 {{ assetSummary.totalCount }} 条资源
-          <em>，{{ scopeSummaryText }}</em>
-        </span>
-      </template>
-    </AdminFilterToolbar>
 
-    <div class="admin-card admin-asset-ops-card">
-      <div class="admin-card__content">
-        <div class="admin-bulk-bar admin-asset-bulk-bar">
-          <label class="admin-switch-row">
-            <input ref="selectAllCheckboxRef" :checked="isAllSelected" type="checkbox" @change="handleToggleAll">
-            <span>全选当前页</span>
-          </label>
-          <div class="admin-bulk-bar__meta">
-            已选择 {{ selectedIds.length }} 项，当前页 {{ assets.length }} 项，共 {{ assetSummary.totalCount }} 项
-            <template v-if="selectedIds.length">
-              · 已发布 {{ selectedPublishedCount }} 项
-              · 待审核 {{ selectedPendingCount }} 项
-              · 草稿 {{ selectedDraftCount }} 项
-            </template>
+      <template v-if="selectedIds.length > 0" #meta>
+        <div class="admin-asset-bulk-bar has-selection">
+          <div class="admin-asset-bulk-bar__meta">
+            <span class="admin-asset-bulk-bar__count">
+              已选 <strong>{{ selectedIds.length }}</strong>
+            </span>
+            <span class="admin-asset-bulk-bar__sep">
+              已发布 {{ selectedPublishedCount }} · 待审 {{ selectedPendingCount }} · 草稿 {{ selectedDraftCount }}
+            </span>
           </div>
-          <div class="admin-bulk-bar__actions admin-asset-bulk-bar__actions">
+          <div class="admin-asset-bulk-bar__actions">
             <button class="admin-inline-button" type="button" :disabled="acting || publishableSelectedIds.length === 0" @click="handleBatchAction('publish')">
-              {{ actingAction === 'publish' ? '审核中...' : `批量通过 ${publishableSelectedIds.length}` }}
+              {{ actingAction === 'publish' ? '审核中...' : `通过 ${publishableSelectedIds.length}` }}
             </button>
             <button class="admin-inline-button" type="button" :disabled="acting || unpublishableSelectedIds.length === 0" @click="handleBatchAction('unpublish')">
-              {{ actingAction === 'unpublish' ? '下架中...' : `批量下架 ${unpublishableSelectedIds.length}` }}
+              {{ actingAction === 'unpublish' ? '下架中...' : `下架 ${unpublishableSelectedIds.length}` }}
             </button>
-            <button class="admin-inline-button admin-inline-button--danger" type="button" :disabled="acting || selectedIds.length === 0" @click="handleBatchAction('delete')">
-              {{ actingAction === 'delete' ? '删除中...' : `批量删除 ${selectedIds.length}` }}
+            <button class="admin-inline-button admin-inline-button--danger" type="button" :disabled="acting" @click="handleBatchAction('delete')">
+              {{ actingAction === 'delete' ? '删除中...' : `删除 ${selectedIds.length}` }}
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <div class="admin-card">
-      <div class="admin-card__header">
-        <div>
-          <h4 class="admin-card__title">资源列表</h4>
-          <div class="admin-card__desc">展示封面、提示词、模型、比例、统计与发布状态，便于快速运营处理。</div>
-        </div>
-      </div>
-      <div class="admin-card__content">
-        <div v-if="loading" class="admin-empty">正在加载资源列表...</div>
-        <div v-else-if="assets.length === 0" class="admin-empty">当前筛选条件下还没有资源记录。</div>
-        <div v-else class="admin-asset-list">
-          <div class="admin-asset-table">
-            <div class="admin-asset-table__head">
-              <span>资源</span>
-              <span>状态</span>
-              <span>规格</span>
-              <span>数据</span>
-              <span>时间</span>
-              <span>操作</span>
+      <AdminArtTable
+        ref="artTableRef"
+        :loading="loading"
+        :data="assets"
+        row-key="id"
+        empty-text="当前筛选条件下还没有资源"
+        @selection-change="handleTableSelectionChange"
+      >
+        <el-table-column type="selection" width="44" reserve-selection />
+        <el-table-column label="资源" min-width="280">
+          <template #default="{ row }">
+            <div class="admin-asset-row">
+              <button
+                class="admin-asset-row__thumb"
+                type="button"
+                :disabled="acting || !(
+                  (row.assetType === 'video' && resolveAssetVideoUrl(row))
+                  || resolveAssetImagePreviewUrl(row)
+                )"
+                @click="openImagePreview(row)"
+              >
+                <video
+                  v-if="row.assetType === 'video' && resolveAssetVideoUrl(row)"
+                  :src="resolveAssetVideoUrl(row)"
+                  :poster="resolveAssetVideoPosterUrl(row) || undefined"
+                  class="admin-asset-row__media"
+                  muted
+                  playsinline
+                  preload="metadata"
+                />
+                <img
+                  v-else-if="resolveAssetImagePreviewUrl(row)"
+                  :src="resolveAssetImagePreviewUrl(row)"
+                  :alt="row.title || '资源预览'"
+                  class="admin-asset-row__media"
+                >
+                <span v-else class="admin-asset-row__media admin-asset-row__media--empty">无预览</span>
+                <span class="admin-asset-row__type">{{ row.assetType === 'video' ? '视频' : '图片' }}</span>
+              </button>
+
+              <div class="admin-asset-row__main">
+                <div class="admin-asset-row__title-line">
+                  <span class="admin-asset-row__title" :title="row.title || buildAssetFallbackTitle(row)">
+                    {{ row.title || buildAssetFallbackTitle(row) }}
+                  </span>
+                  <span class="admin-asset-row__source">{{ getSourceLabel(row.source) }}</span>
+                </div>
+                <div class="admin-asset-row__meta" :title="buildAssetMetaTitle(row)">
+                  <span>{{ row.owner.name || '创作者' }}</span>
+                  <span v-if="row.owner.email" class="admin-asset-row__dot">{{ row.owner.email }}</span>
+                </div>
+              </div>
             </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="108">
+          <template #default="{ row }">
+            <div class="admin-asset-status">
+              <AdminStatusBadge category="assetPublishStatus" :value="getAssetDisplayStatus(row)" />
+              <span class="admin-asset-status__sub">
+                {{ getVisibilityLabel(row.visibility) }} · {{ getReviewStatusLabel(row.reviewStatus) }}
+              </span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="规格" min-width="150">
+          <template #default="{ row }">
+            <div class="admin-asset-spec" :title="buildSpecTitle(row)">
+              <div class="admin-asset-spec__primary">{{ formatSpecPrimary(row) }}</div>
+              <div class="admin-asset-spec__secondary">{{ formatSpecSecondary(row) }}</div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="互动" width="132">
+          <template #default="{ row }">
+            <div class="admin-asset-stats">
+              <span>{{ formatCount(row.viewCount) }} 浏览</span>
+              <span>{{ formatCount(row.favoriteCount) }} 赞</span>
+              <span>{{ formatCount(row.downloadCount) }} 下载</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="148">
+          <template #default="{ row }">
+            <span class="admin-asset-time">{{ formatDate(row.createdAt) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <div class="admin-asset-ops">
+              <button
+                v-if="row.publishStatus !== 'published'"
+                class="admin-asset-ops__btn"
+                type="button"
+                :disabled="acting"
+                @click="handleSingleAction('publish', row.id)"
+              >
+                {{ row.reviewStatus === 'pending' ? '通过' : '发布' }}
+              </button>
+              <button
+                v-else
+                class="admin-asset-ops__btn"
+                type="button"
+                :disabled="acting"
+                @click="handleSingleAction('unpublish', row.id)"
+              >
+                下架
+              </button>
+              <button
+                class="admin-asset-ops__btn is-danger"
+                type="button"
+                :disabled="acting"
+                @click="handleSingleAction('delete', row.id)"
+              >
+                删除
+              </button>
+            </div>
+          </template>
+        </el-table-column>
+      </AdminArtTable>
 
-            <article v-for="item in assets" :key="item.id" class="admin-asset-card">
-              <div class="admin-asset-card__main">
-                <label class="admin-asset-card__select" :aria-label="`选择资源 ${item.title || item.id}`">
-                  <input :checked="selectedMap[item.id] === true" type="checkbox" @change="handleToggleItem(item.id, $event)">
-                </label>
-
-                <div class="admin-asset-card__preview">
-                  <button
-                    v-if="item.previewUrl || item.coverUrl || item.fileUrl"
-                    class="admin-asset-card__image-button"
-                    type="button"
-                    :disabled="acting"
-                    @click="openImagePreview(item)"
-                  >
-                    <img
-                      :src="resolveAssetPreviewUrl(item)"
-                      :alt="item.title || '资源预览'"
-                      class="admin-asset-card__image"
-                    >
-                  </button>
-                  <div v-else class="admin-asset-card__image admin-asset-card__image--empty">无预览</div>
-                  <span class="admin-asset-card__type">{{ item.assetType === 'video' ? '视频' : '图片' }}</span>
-                </div>
-
-                <div class="admin-asset-card__identity">
-                  <div class="admin-asset-card__title-row">
-                    <div class="admin-asset-card__title">{{ item.title || buildAssetFallbackTitle(item) }}</div>
-                    <span class="admin-chip">{{ getSourceLabel(item.source) }}</span>
-                  </div>
-                  <div class="admin-asset-card__owner">
-                    {{ item.owner.name || '创作者' }}
-                    <template v-if="item.owner.email"> · {{ item.owner.email }}</template>
-                    <template v-if="item.owner.id"> · {{ item.owner.id }}</template>
-                  </div>
-                  <div class="admin-asset-card__prompt">{{ item.promptText || item.description || '暂无提示词或描述信息' }}</div>
-                  <div class="admin-asset-card__id">资源 ID {{ item.id }}</div>
-                </div>
-              </div>
-
-              <div class="admin-asset-card__status">
-                <AdminStatusBadge category="assetPublishStatus" :value="getAssetDisplayStatus(item)" />
-                <span class="admin-asset-card__state">可见性：{{ getVisibilityLabel(item.visibility) }}</span>
-                <span class="admin-asset-card__state">审核：{{ getReviewStatusLabel(item.reviewStatus) }}</span>
-              </div>
-
-              <div class="admin-asset-card__specs">
-                <div>
-                  <span>尺寸</span>
-                  <strong>{{ formatDimensions(item) }}</strong>
-                </div>
-                <div>
-                  <span>{{ item.assetType === 'video' ? '时长' : '比例' }}</span>
-                  <strong>{{ item.assetType === 'video' ? formatDuration(item.durationSeconds) : (item.aspectRatio || '未记录') }}</strong>
-                </div>
-                <div>
-                  <span>大小</span>
-                  <strong>{{ formatFileSize(item.fileSizeBytes) }}</strong>
-                </div>
-                <div>
-                  <span>模型</span>
-                  <strong>{{ item.modelLabel || '未记录' }}</strong>
-                </div>
-              </div>
-
-              <div class="admin-asset-card__metrics">
-                <div>
-                  <strong>{{ item.viewCount }}</strong>
-                  <span>浏览</span>
-                </div>
-                <div>
-                  <strong>{{ item.favoriteCount }}</strong>
-                  <span>点赞</span>
-                </div>
-                <div>
-                  <strong>{{ item.downloadCount }}</strong>
-                  <span>下载</span>
-                </div>
-              </div>
-
-              <div class="admin-asset-card__times">
-                <span>创建 {{ formatDate(item.createdAt) }}</span>
-                <span>更新 {{ formatDate(item.updatedAt || item.createdAt) }}</span>
-                <span v-if="item.publishedAt">发布 {{ formatDate(item.publishedAt) }}</span>
-              </div>
-
-              <div class="admin-list-item__actions admin-asset-card__actions">
-                <button
-                  v-if="item.publishStatus !== 'published'"
-                  class="admin-inline-button"
-                  type="button"
-                  :disabled="acting"
-                  @click="handleSingleAction('publish', item.id)"
-                >
-                  {{ item.reviewStatus === 'pending' ? '通过' : '发布' }}
-                </button>
-                <button
-                  v-else
-                  class="admin-inline-button"
-                  type="button"
-                  :disabled="acting"
-                  @click="handleSingleAction('unpublish', item.id)"
-                >
-                  下架
-                </button>
-                <button class="admin-inline-button admin-inline-button--danger" type="button" :disabled="acting" @click="handleSingleAction('delete', item.id)">
-                  删除
-                </button>
-              </div>
-            </article>
-          </div>
-          <AdminPagination
-            v-model:page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :total="assetSummary.totalCount"
-            :disabled="loading || acting"
-            @change="handlePaginationChange"
-          />
-        </div>
-      </div>
-    </div>
+      <template #pagination>
+        <AdminPagination
+          v-model:page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="assetSummary.totalCount"
+          :disabled="loading || acting"
+          @change="handlePaginationChange"
+        />
+      </template>
+    </AdminListFrame>
 
     <CommonImagePreview
       v-model:visible="imagePreview.visible"
       :src="imagePreview.src"
+      :asset-id="imagePreview.assetId"
+      :poster="imagePreview.poster"
+      :media-type="imagePreview.mediaType"
+      :aspect-ratio="imagePreview.aspectRatio"
       :title="imagePreview.title"
       :description="imagePreview.description"
       :download-name="imagePreview.downloadName"
       :meta="imagePreview.meta"
+      @downloaded="handlePreviewDownloaded"
     />
   </AdminPageContainer>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+defineOptions({ name: 'AdminAssets' })
+import './admin-assets.css'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import AdminFilterChips, { type AdminFilterChipGroup } from '@/components/admin/common/AdminFilterChips.vue'
-import AdminFilterToolbar from '@/components/admin/common/AdminFilterToolbar.vue'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar from '@/components/admin/common/AdminListToolbar.vue'
 import AdminPagination from '@/components/admin/common/AdminPagination.vue'
 import AdminStatusBadge from '@/components/admin/common/AdminStatusBadge.vue'
+import AdminArtTable from '@/components/admin/table/AdminArtTable.vue'
 import CommonImagePreview from '@/components/common/CommonImagePreview.vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
 import { useAdminList } from '@/composables/admin/useAdminList'
@@ -244,20 +222,35 @@ import {
   type AssetScope,
   type PersistedAssetItem,
 } from '@/api/asset-items'
+import type { CommonImagePreviewMediaType } from '@/components/common/CommonImagePreview.vue'
+import {
+  isVideoFileUrl,
+  resolveAssetImagePreviewUrl,
+  resolveAssetVideoPosterUrl,
+  resolveAssetVideoUrl,
+} from '@/shared/asset-preview-url'
 
 const acting = ref(false)
 const actingAction = ref<AssetActionType | ''>('')
-const selectAllCheckboxRef = ref<HTMLInputElement | null>(null)
+const artTableRef = ref<InstanceType<typeof AdminArtTable> | null>(null)
 const imagePreview = reactive<{
   visible: boolean
+  assetId: string
   src: string
+  poster: string
+  mediaType: CommonImagePreviewMediaType
+  aspectRatio: string
   title: string
   description: string
   downloadName: string
   meta: Array<{ label: string; value: string | number }>
 }>({
   visible: false,
+  assetId: '',
   src: '',
+  poster: '',
+  mediaType: 'image',
+  aspectRatio: '16:9',
   title: '',
   description: '',
   downloadName: '',
@@ -281,7 +274,7 @@ const filterDefaults = {
   publishState: 'all' as AssetPublishState,
   ownerKeyword: '',
 }
-const { activeFilterCount, resetFilters: resetFilterValues } = useAdminListFilters({
+const { resetFilters: resetFilterValues } = useAdminListFilters({
   filters,
   defaults: filterDefaults,
 })
@@ -292,15 +285,11 @@ const {
   selectedMap,
   selectedIds,
   selectedItems: selectedAssets,
-  isAllSelected,
-  isPartiallySelected,
-  loadList: loadAssets,
+  loadList: loadAssetList,
   resetAndLoad,
   handlePaginationChange,
-  toggleSelect,
-  toggleSelectAll,
 } = useAdminList<PersistedAssetItem>({
-  initialPageSize: 12,
+  initialPageSize: 20,
   fetcher: ({ page, pageSize }) => listAdminAssetItems({
     scope: filters.scope,
     assetType: filters.assetType,
@@ -321,35 +310,43 @@ const scopeOptions: Array<{ label: string; value: Extract<AssetScope, 'mine' | '
   { label: '我的资源', value: 'mine' },
 ]
 
-const publishStateOptions: Array<{ label: string; value: AssetPublishState }> = [
-  { label: '全部状态', value: 'all' },
+const publishStateFacetOptions = [
   { label: resolveAdminDictionaryItem('assetPublishStatus', 'published').label, value: 'published' },
   { label: resolveAdminDictionaryItem('assetPublishStatus', 'pending').label, value: 'pending' },
   { label: resolveAdminDictionaryItem('assetPublishStatus', 'draft').label, value: 'draft' },
 ]
-const filterChipGroups = computed<AdminFilterChipGroup[]>(() => [
+
+const listFacets = computed(() => [
   {
     key: 'scope',
-    label: '资源范围',
-    modelValue: filters.scope,
+    title: '资源范围',
     options: scopeOptions,
+    modelValue: filters.scope,
+    emptyValue: 'all',
   },
   {
     key: 'assetType',
-    label: '资源类型',
-    modelValue: filters.assetType,
+    title: '资源类型',
     options: typeOptions,
+    modelValue: filters.assetType,
+    emptyValue: 'image',
   },
   {
     key: 'publishState',
-    label: '发布状态',
+    title: '发布状态',
+    options: publishStateFacetOptions,
     modelValue: filters.publishState,
-    options: publishStateOptions,
+    emptyValue: 'all',
   },
 ])
-const scopeSummaryText = computed(() => filters.scope === 'all'
-  ? `当前查看全站资源${filters.ownerKeyword ? `，用户筛选：${filters.ownerKeyword}` : ''}`
-  : '当前只管理我的资源')
+
+const hasActiveFilters = computed(() => (
+  Boolean(filters.ownerKeyword?.trim())
+  || filters.scope !== 'all'
+  || filters.assetType !== 'image'
+  || filters.publishState !== 'all'
+))
+
 const assetSummary = computed(() => ({
   totalCount: pagination.total,
   totalPages: pagination.totalPages,
@@ -399,28 +396,38 @@ const setPublishState = (publishState: AssetPublishState) => {
   void resetAndLoad()
 }
 
-const handleChipSelect = (payload: { groupKey: string; value: string }) => {
-  if (payload.groupKey === 'scope') {
-    setScope(payload.value as Extract<AssetScope, 'mine' | 'all'>)
+const handleFacetUpdate = ({ key, value }: { key: string; value: string }) => {
+  if (key === 'scope') {
+    setScope((value || 'all') as Extract<AssetScope, 'mine' | 'all'>)
     return
   }
-  if (payload.groupKey === 'assetType') {
-    setAssetType(payload.value as AssetKind)
+  if (key === 'assetType') {
+    setAssetType((value || 'image') as AssetKind)
     return
   }
-  if (payload.groupKey === 'publishState') {
-    setPublishState(payload.value as AssetPublishState)
+  if (key === 'publishState') {
+    setPublishState((value || 'all') as AssetPublishState)
   }
 }
 
-const handleToggleAll = (event: Event) => {
-  const target = event.target as HTMLInputElement | null
-  toggleSelectAll(Boolean(target?.checked))
+const handleTableSelectionChange = (rows: PersistedAssetItem[]) => {
+  const selectedSet = new Set(rows.map((row) => row.id))
+  const nextMap = { ...selectedMap.value }
+
+  assets.value.forEach((item) => {
+    if (selectedSet.has(item.id)) {
+      nextMap[item.id] = true
+    } else {
+      delete nextMap[item.id]
+    }
+  })
+
+  selectedMap.value = nextMap
 }
 
-const handleToggleItem = (id: string, event: Event) => {
-  const target = event.target as HTMLInputElement | null
-  toggleSelect(id, Boolean(target?.checked))
+const loadAssets = async () => {
+  await loadAssetList()
+  artTableRef.value?.clearSelection()
 }
 
 const resolveActionableIds = (action: Extract<AssetActionType, 'publish' | 'unpublish' | 'delete'>) => {
@@ -472,8 +479,53 @@ const handleSingleAction = async (action: Extract<AssetActionType, 'publish' | '
   await runAssetAction(action, [id])
 }
 
-const resolveAssetPreviewUrl = (item: PersistedAssetItem) => {
-  return item.previewUrl || item.coverUrl || item.thumbnailUrl || item.fileUrl
+const resolveAssetPreviewRawUrl = (item: PersistedAssetItem) => {
+  if (item.assetType === 'video') {
+    return item.fileUrl || item.previewUrl || item.coverUrl || item.thumbnailUrl
+  }
+  return item.thumbnailUrl || item.coverUrl || item.previewUrl || item.fileUrl
+}
+
+const resolveAssetPreviewPosterRawUrl = (item: PersistedAssetItem) => {
+  const candidates = [item.thumbnailUrl, item.coverUrl, item.previewUrl]
+  for (const raw of candidates) {
+    const value = String(raw || '').trim()
+    if (value && !isVideoFileUrl(value)) {
+      return value
+    }
+  }
+  return ''
+}
+
+const openImagePreview = (item: PersistedAssetItem) => {
+  const isVideo = item.assetType === 'video'
+  imagePreview.assetId = item.id
+  imagePreview.mediaType = isVideo ? 'video' : 'image'
+  imagePreview.src = resolveAssetPreviewRawUrl(item)
+  imagePreview.poster = isVideo ? resolveAssetPreviewPosterRawUrl(item) : ''
+  imagePreview.aspectRatio = item.aspectRatio || (isVideo ? '16:9' : '1:1')
+  imagePreview.title = item.title || buildAssetFallbackTitle(item)
+  imagePreview.description = item.promptText || item.description || ''
+  imagePreview.downloadName = `${item.id}.${isVideo ? 'mp4' : 'png'}`
+  imagePreview.meta = [
+    { label: '类型', value: isVideo ? '视频' : '图片' },
+    { label: '尺寸', value: formatDimensions(item) || '未记录' },
+    { label: '大小', value: formatFileSize(item.fileSizeBytes) || '未记录' },
+    { label: '模型', value: item.modelLabel || '未记录' },
+    { label: isVideo ? '时长' : '比例', value: isVideo ? (formatDuration(item.durationSeconds) || '未记录') : (item.aspectRatio || '未记录') },
+    { label: '来源', value: getSourceLabel(item.source) },
+    { label: '发布', value: getAssetDisplayStatus(item) === 'published' ? '已发布' : getAssetDisplayStatus(item) === 'pending' ? '待审核' : '草稿' },
+    { label: '审核', value: getReviewStatusLabel(item.reviewStatus) },
+  ]
+  imagePreview.visible = true
+}
+
+const handlePreviewDownloaded = async () => {
+  if (!imagePreview.assetId) {
+    return
+  }
+
+  await loadAssets()
 }
 
 const formatDate = (value?: string) => {
@@ -493,17 +545,27 @@ const buildAssetFallbackTitle = (item: PersistedAssetItem) => {
   return `${item.assetType === 'video' ? '视频' : '图片'}资源`
 }
 
+const buildAssetMetaTitle = (item: PersistedAssetItem) => {
+  const parts = [
+    item.owner.name || '创作者',
+    item.owner.email || '',
+    item.id,
+    item.promptText || item.description || '',
+  ].filter(Boolean)
+  return parts.join('\n')
+}
+
 const formatDimensions = (item: PersistedAssetItem) => {
   if (!item.width || !item.height) {
-    return '未记录'
+    return ''
   }
-  return `${item.width}x${item.height}`
+  return `${item.width}×${item.height}`
 }
 
 const formatDuration = (value?: number) => {
   const totalSeconds = Math.max(0, Number(value || 0))
   if (!totalSeconds) {
-    return '未记录'
+    return ''
   }
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
@@ -513,7 +575,7 @@ const formatDuration = (value?: number) => {
 const formatFileSize = (value?: number) => {
   const size = Number(value || 0)
   if (!Number.isFinite(size) || size <= 0) {
-    return '未记录'
+    return ''
   }
   const units = ['B', 'KB', 'MB', 'GB']
   let currentSize = size
@@ -523,6 +585,43 @@ const formatFileSize = (value?: number) => {
     unitIndex += 1
   }
   return `${currentSize >= 10 || unitIndex === 0 ? currentSize.toFixed(0) : currentSize.toFixed(1)} ${units[unitIndex]}`
+}
+
+/** 规格主行：尺寸/比例/时长；缺省用 — */
+const formatSpecPrimary = (item: PersistedAssetItem) => {
+  const parts = [
+    formatDimensions(item) || '—',
+    item.assetType === 'video'
+      ? (formatDuration(item.durationSeconds) || '—')
+      : (item.aspectRatio || '—'),
+  ]
+  return parts.join(' · ')
+}
+
+/** 规格次行：强制展示模型；有文件大小则前置 */
+const formatSpecSecondary = (item: PersistedAssetItem) => {
+  const model = item.modelLabel?.trim() || '未记录'
+  const size = formatFileSize(item.fileSizeBytes)
+  return size ? `${size} · 模型 ${model}` : `模型 ${model}`
+}
+
+const buildSpecTitle = (item: PersistedAssetItem) => {
+  return [
+    `尺寸 ${formatDimensions(item) || '未记录'}`,
+    item.assetType === 'video'
+      ? `时长 ${formatDuration(item.durationSeconds) || '未记录'}`
+      : `比例 ${item.aspectRatio || '未记录'}`,
+    formatFileSize(item.fileSizeBytes) && `大小 ${formatFileSize(item.fileSizeBytes)}`,
+    `模型 ${item.modelLabel?.trim() || '未记录'}`,
+  ].filter(Boolean).join('\n')
+}
+
+const formatCount = (value?: number) => {
+  const count = Math.max(0, Math.floor(Number(value || 0)))
+  if (!Number.isFinite(count)) {
+    return '0'
+  }
+  return count.toLocaleString('zh-CN')
 }
 
 const getVisibilityLabel = (value?: string) => {
@@ -552,318 +651,7 @@ const getSourceLabel = (value?: string) => {
   return normalizedValue || '来源未知'
 }
 
-const openImagePreview = (item: PersistedAssetItem) => {
-  imagePreview.src = resolveAssetPreviewUrl(item)
-  imagePreview.title = item.title || buildAssetFallbackTitle(item)
-  imagePreview.description = item.promptText || item.description || ''
-  imagePreview.downloadName = `${item.id}.${item.assetType === 'video' ? 'jpg' : 'png'}`
-  imagePreview.meta = [
-    { label: '类型', value: item.assetType === 'video' ? '视频封面' : '图片' },
-    { label: '尺寸', value: formatDimensions(item) },
-    { label: '大小', value: formatFileSize(item.fileSizeBytes) },
-    { label: '模型', value: item.modelLabel || '未记录' },
-    { label: '比例', value: item.aspectRatio || '未记录' },
-    { label: '来源', value: getSourceLabel(item.source) },
-    { label: '发布', value: getAssetDisplayStatus(item) === 'published' ? '已发布' : getAssetDisplayStatus(item) === 'pending' ? '待审核' : '草稿' },
-    { label: '审核', value: getReviewStatusLabel(item.reviewStatus) },
-  ]
-  imagePreview.visible = true
-}
-
 onMounted(() => {
   void loadAssets()
 })
-
-watch(isPartiallySelected, (value) => {
-  if (selectAllCheckboxRef.value) {
-    selectAllCheckboxRef.value.indeterminate = value
-  }
-}, { immediate: true })
 </script>
-
-<style scoped>
-.admin-asset-ops-card {
-  border-color: color-mix(in srgb, var(--brand-main-default) 14%, var(--line-divider, #00000014));
-}
-
-.admin-asset-bulk-bar {
-  align-items: center;
-}
-
-.admin-asset-bulk-bar__actions {
-  justify-content: flex-end;
-}
-
-.admin-asset-table {
-  display: grid;
-  gap: 8px;
-}
-
-.admin-asset-table__head,
-.admin-asset-card {
-  display: grid;
-  grid-template-columns: minmax(360px, 1fr) 138px minmax(250px, 0.8fr) 132px 184px 132px;
-  gap: 16px;
-  align-items: center;
-}
-
-.admin-asset-table__head {
-  min-height: 38px;
-  padding: 0 16px;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.admin-asset-card {
-  padding: 16px;
-  border: 1px solid var(--line-divider, #00000014);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg-surface) 92%, var(--bg-block-secondary-default));
-  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
-}
-
-.admin-asset-card:hover {
-  border-color: color-mix(in srgb, var(--brand-main-default) 22%, var(--line-divider, #00000014));
-  background: color-mix(in srgb, var(--bg-surface) 96%, var(--bg-block-secondary-default));
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-}
-
-.admin-asset-card__main {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  min-width: 0;
-}
-
-.admin-asset-card__select {
-  flex: 0 0 auto;
-  padding-top: 28px;
-}
-
-.admin-asset-card__select input {
-  width: 16px;
-  height: 16px;
-}
-
-.admin-asset-card__preview {
-  position: relative;
-  flex: 0 0 86px;
-  width: 86px;
-}
-
-.admin-asset-card__image-button {
-  display: block;
-  width: 86px;
-  height: 86px;
-  border: none;
-  padding: 0;
-  border-radius: 8px;
-  background: transparent;
-  cursor: zoom-in;
-}
-
-.admin-asset-card__image-button:disabled {
-  cursor: default;
-}
-
-.admin-asset-card__image {
-  width: 86px;
-  height: 86px;
-  border: 1px solid var(--line-divider, #00000014);
-  border-radius: 8px;
-  background: var(--bg-block-secondary-hover);
-  object-fit: cover;
-}
-
-.admin-asset-card__image-button:hover .admin-asset-card__image {
-  border-color: color-mix(in srgb, var(--brand-main-default) 40%, var(--line-divider, #00000014));
-}
-
-.admin-asset-card__image--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-
-.admin-asset-card__type {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.62);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.admin-asset-card__identity {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.admin-asset-card__title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.admin-asset-card__title {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.45;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-asset-card__owner,
-.admin-asset-card__id,
-.admin-asset-card__state,
-.admin-asset-card__times {
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.admin-asset-card__owner,
-.admin-asset-card__id {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-asset-card__prompt {
-  display: -webkit-box;
-  color: var(--text-primary);
-  font-size: 13px;
-  line-height: 1.55;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.admin-asset-card__status,
-.admin-asset-card__times {
-  display: grid;
-  gap: 6px;
-  align-content: center;
-}
-
-.admin-asset-card__specs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.admin-asset-card__specs div,
-.admin-asset-card__metrics div {
-  min-width: 0;
-  padding: 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-block-secondary-default) 74%, transparent);
-}
-
-.admin-asset-card__specs span,
-.admin-asset-card__metrics span {
-  display: block;
-  color: var(--text-tertiary);
-  font-size: 11px;
-  line-height: 1.25;
-}
-
-.admin-asset-card__specs strong,
-.admin-asset-card__metrics strong {
-  display: block;
-  margin-top: 3px;
-  overflow: hidden;
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-asset-card__metrics {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
-
-.admin-asset-card__metrics div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 8px;
-}
-
-.admin-asset-card__metrics strong,
-.admin-asset-card__metrics span {
-  margin: 0;
-}
-
-.admin-asset-card__actions {
-  justify-content: flex-end;
-}
-
-@media (max-width: 1280px) and (min-width: 961px) {
-  .admin-asset-table__head,
-  .admin-asset-card {
-    grid-template-columns: minmax(340px, 1fr) 128px minmax(220px, 0.8fr) 120px;
-  }
-
-  .admin-asset-table__head span:nth-child(5),
-  .admin-asset-table__head span:nth-child(6),
-  .admin-asset-card__times,
-  .admin-asset-card__actions {
-    grid-column: 1 / -1;
-  }
-
-  .admin-asset-card__actions {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 960px) {
-  .admin-asset-table__head {
-    display: none;
-  }
-
-  .admin-asset-card {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .admin-asset-card__main {
-    flex-wrap: wrap;
-  }
-
-  .admin-asset-card__preview,
-  .admin-asset-card__image-button,
-  .admin-asset-card__image {
-    width: 96px;
-    height: 96px;
-  }
-
-  .admin-asset-card__identity {
-    flex: 1 1 220px;
-  }
-
-  .admin-asset-card__specs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-asset-card__actions {
-    justify-content: flex-start;
-  }
-}
-</style>

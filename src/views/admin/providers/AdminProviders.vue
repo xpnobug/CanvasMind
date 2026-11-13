@@ -1,55 +1,57 @@
 <template>
-  <AdminPageContainer title="模型厂商" description="集中管理多个 AI 厂商，并在厂商维度下维护模型列表与模型能力。">
-    <AdminFilterToolbar>
-      <template #search>
-        <input
-          v-model.trim="providerFilters.keyword"
-          class="admin-input admin-provider-toolbar__search"
-          type="text"
-          placeholder="搜索供应商名称或厂商标识"
-        >
-      </template>
-      <template #filters>
-        <select v-model="providerFilters.status" class="admin-input admin-provider-toolbar__status">
-          <option value="ALL">供应商状态</option>
-          <option value="ENABLED">已启用</option>
-          <option value="DISABLED">已禁用</option>
-        </select>
-      </template>
-      <template #meta>
-        <span class="admin-skill-toolbar__summary">
-          共 {{ filteredProviders.length }} 个厂商
-          <em v-if="providerActiveFilterCount">，已启用 {{ providerActiveFilterCount }} 个筛选</em>
-        </span>
-      </template>
-      <template #actions>
-        <button
-          v-if="providerActiveFilterCount"
-          class="admin-button admin-button--secondary"
-          type="button"
+  <AdminPageContainer
+    class="admin-list-page"
+    compact title="模型厂商" description="集中管理多个 AI 厂商，并在厂商维度下维护模型列表与模型能力。">
+    <AdminListFrame>
+      <template #toolbar>
+        <AdminListToolbar
           :disabled="providerLoading || providerSaving || modelLoading || modelSaving"
-          @click="resetProviderFilters"
+          :has-active-filters="providerActiveFilterCount > 0"
+          :facets="providerListFacets"
+          @update:facet="handleProviderFacetUpdate"
+          @clear="resetProviderFilters"
         >
-          清空筛选
-        </button>
-        <button class="admin-button admin-button--secondary" type="button" @click="loadProviders" :disabled="providerLoading || providerSaving || modelLoading || modelSaving">
-          {{ providerLoading ? '刷新中...' : '刷新列表' }}
-        </button>
+          <input
+            v-model.trim="providerFilters.keyword"
+            class="admin-list-toolbar__input is-wide"
+            type="text"
+            placeholder="搜索供应商名称或厂商标识"
+          >
+          <template #actions>
+            <button
+              class="admin-button admin-button--secondary"
+              type="button"
+              :disabled="providerLoading || providerSaving || modelLoading || modelSaving"
+              @click="loadProviders"
+            >
+              {{ providerLoading ? '刷新中...' : '刷新列表' }}
+            </button>
+          </template>
+        </AdminListToolbar>
       </template>
-    </AdminFilterToolbar>
 
-    <div class="admin-provider-grid">
-      <button class="admin-provider-create-card" type="button" @click="openCreateProviderDialog">
-        <div class="admin-provider-create-card__plus">+</div>
-        <div class="admin-provider-create-card__title">新增厂商</div>
-        <div class="admin-provider-create-card__desc">添加新的自定义模型厂商</div>
-        <div class="admin-provider-create-card__footer-actions">
-          <span class="admin-provider-create-card__action admin-provider-create-card__action--muted">从配置文件导入</span>
-          <span class="admin-provider-create-card__action">手动创建</span>
-        </div>
-      </button>
+      <div class="admin-provider-grid admin-console-grid">
+        <button class="admin-provider-create-card admin-console-create-card" type="button" @click="openCreateProviderDialog">
+          <div class="admin-provider-create-card__main">
+            <div class="admin-provider-create-card__plus">+</div>
+            <div class="admin-provider-create-card__copy">
+              <div class="admin-provider-create-card__title">新增厂商</div>
+              <div class="admin-provider-create-card__desc">添加新的自定义模型厂商</div>
+            </div>
+          </div>
+          <div class="admin-provider-create-card__footer-actions">
+            <span class="admin-provider-create-card__action admin-provider-create-card__action--muted">从配置文件导入</span>
+            <span class="admin-provider-create-card__action">手动创建</span>
+          </div>
+        </button>
 
-      <div v-for="provider in paginatedProviders" :key="provider.id" class="admin-provider-tile">
+        <AdminEmptyState
+          v-if="!providerLoading && !filteredProviders.length"
+          class="admin-console-grid-span"
+          message="当前筛选条件下暂无厂商，可清空筛选或新增厂商。"
+        />
+
+        <div v-for="provider in paginatedProviders" :key="provider.id" class="admin-provider-tile admin-console-card">
         <div class="admin-provider-tile__header">
           <div class="admin-provider-tile__brand">
             <div class="admin-provider-avatar">
@@ -114,14 +116,18 @@
           <span>启用模型 {{ provider.enabledModelCount }}/{{ provider.modelCount }}</span>
         </div>
       </div>
-    </div>
-    <AdminPagination
-      v-if="filteredProviders.length > 0"
-      v-model:page="providerPagination.page"
-      v-model:page-size="providerPagination.pageSize"
-      :total="filteredProviders.length"
-      :disabled="providerLoading || providerSaving || modelLoading || modelSaving"
-    />
+      </div>
+
+      <template #pagination>
+        <AdminPagination
+          v-if="filteredProviders.length > 0"
+          v-model:page="providerPagination.page"
+          v-model:page-size="providerPagination.pageSize"
+          :total="filteredProviders.length"
+          :disabled="providerLoading || providerSaving || modelLoading || modelSaving"
+        />
+      </template>
+    </AdminListFrame>
   </AdminPageContainer>
 
   <div v-if="providerDialogVisible" class="admin-dialog-mask" @click="closeProviderDialog">
@@ -534,11 +540,15 @@
 </template>
 
 <script setup lang="ts">
+import './admin-providers.css'
+import './admin-providers.scoped.css'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { Edit, MoreFilled, Setting, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import AdminPagination from '@/components/admin/common/AdminPagination.vue'
-import AdminFilterToolbar from '@/components/admin/common/AdminFilterToolbar.vue'
+import AdminEmptyState from '@/components/admin/common/AdminEmptyState.vue'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar, { type AdminListToolbarFacet } from '@/components/admin/common/AdminListToolbar.vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
 import ModelCapabilityEditor from '@/components/admin/common/ModelCapabilityEditor.vue'
 import { matchesAdminKeyword, useAdminListFilters } from '@/composables/useAdminListFilters'
@@ -637,6 +647,26 @@ const { activeFilterCount: providerActiveFilterCount, resetFilters: resetProvide
   filters: providerFilters,
   defaults: providerFilterDefaults,
 })
+
+const providerListFacets = computed<AdminListToolbarFacet[]>(() => [
+  {
+    key: 'status',
+    title: '供应商状态',
+    options: [
+      { label: '已启用', value: 'ENABLED' },
+      { label: '已禁用', value: 'DISABLED' },
+    ],
+    modelValue: providerFilters.status,
+    emptyValue: 'ALL',
+  },
+])
+
+const handleProviderFacetUpdate = ({ key, value }: { key: string; value: string }) => {
+  if (key === 'status') {
+    providerFilters.status = value as typeof providerFilters.status
+  }
+}
+
 const { pagination: providerPagination, sliceItems: sliceProviderItems, resetPage: resetProviderPage } = useAdminPagination({
   initialPageSize: 8,
 })

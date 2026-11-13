@@ -257,7 +257,7 @@ export interface SystemHomeLayoutHeaderConfig {
   showBanner: boolean
 }
 
-/** 创作区顶背景默认值（对齐 Pro 壳层 SVG / CSS） */
+/** 创作区顶背景默认值 */
 export const DEFAULT_HEADER_BACKGROUND_GLOW_COLOR = '#008EE5'
 export const DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY = 0.28
 export const DEFAULT_HEADER_BACKGROUND_GLOW_OPACITY_LIGHT = 0.12
@@ -1259,7 +1259,7 @@ const normalizeHomeSideMenuSettings = (value?: SystemHomeSideMenuSettingsConfig 
   }
 }
 
-/** 与 Pro 对齐：公开/后台包统一补齐 topBanner，避免前台读到半残布局 */
+/** 公开/后台包统一补齐 topBanner，避免前台读到半残布局 */
 export const normalizeHomeLayoutSettings = (
   value?: SystemHomeLayoutSettingsConfig | null,
 ): SystemHomeLayoutSettingsConfig => {

@@ -2,7 +2,7 @@
   <el-drawer
     v-model="visible"
     class="admin-settings-drawer"
-    size="300px"
+    size="min(840px, 96vw)"
     :with-header="false"
     :lock-scroll="true"
     :destroy-on-close="false"

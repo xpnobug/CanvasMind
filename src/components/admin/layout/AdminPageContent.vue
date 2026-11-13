@@ -25,6 +25,8 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAdminLayoutContext } from './useAdminLayout'
 import { useAdminWorktabStore } from '@/stores/admin-worktab'
+// 加载 .admin-page-view 高度链，列表页标题区 / sticky 表头 / 底部分页才能铺满
+import '@/components/admin/styles/admin-router-transition.css'
 
 const route = useRoute()
 const { contentRefreshTick } = useAdminLayoutContext()

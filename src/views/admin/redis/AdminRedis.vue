@@ -325,7 +325,7 @@
       <div class="admin-card__header">
         <div>
           <h4 class="admin-card__title">任务明细查询</h4>
-          <div class="admin-card__desc">输入生成记录 `recordId`，查看 Redis 中该任务的运行态、停止标记和快照摘要。</div>
+          <div class="admin-card__desc">输入生成记录 recordId，查看 Redis 中该任务的运行态、停止标记和快照摘要。</div>
         </div>
       </div>
       <div class="admin-card__content admin-redis-query-card__content">
@@ -521,6 +521,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'AdminRedis' })
+import './admin-redis.css'
 import { computed, onMounted, ref } from 'vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
 import AdminStatCard from '@/components/admin/common/AdminStatCard.vue'

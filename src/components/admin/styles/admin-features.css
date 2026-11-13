@@ -1,0 +1,50 @@
+.admin-status--danger {
+  background: rgba(255, 77, 79, 0.12);
+  color: #d9363e;
+}
+
+.admin-button--ghost {
+  border: 1px solid var(--line-divider, #00000014);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.admin-button--ghost:hover {
+  border-color: color-mix(in srgb, var(--brand-main-default) 20%, var(--line-divider, #00000014));
+  color: var(--brand-main-default);
+}
+
+.admin-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.admin-section-head__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-section-head__desc {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.admin-form__field--checkbox {
+  justify-content: flex-end;
+}
+
+.admin-form__field--checkbox .admin-form__label {
+  margin-top: 30px;
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}

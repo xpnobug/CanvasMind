@@ -35,7 +35,7 @@ export const useHomeLayoutConfig = () => {
     }
   })
 
-  /** 与 Pro 一致：开启且有主文案才上屏（编辑态请填主文案） */
+  /** 开启且有主文案才上屏（编辑态请填主文案） */
   const showTopBanner = computed(() => {
     return topBannerSettings.value.enabled === true
       && !!String(topBannerSettings.value.contentText || '').trim()

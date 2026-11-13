@@ -733,8 +733,6 @@ onMounted(() => {
 }
 
 .admin-theme-shell__body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   height: 100%;
 }

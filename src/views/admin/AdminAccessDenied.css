@@ -1,0 +1,38 @@
+.admin-access-denied {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--bg-body);
+}
+
+.admin-access-denied__card {
+  width: min(560px, 100%);
+  padding: 32px;
+  border-radius: var(--admin-radius-panel);
+  background: var(--bg-surface);
+  border: 1px solid var(--line-divider, #00000014);
+  box-shadow: 0 12px 40px rgba(15, 15, 18, 0.06);
+}
+
+.admin-access-denied__title {
+  margin: 0;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+
+.admin-access-denied__desc {
+  margin: 16px 0 0;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.admin-access-denied__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,77 @@
+.admin-login-config-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-login-config-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-login-config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-login-config-section__title {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-login-config-required {
+  color: var(--functional-error, #f53f3f);
+  margin-right: 4px;
+}
+
+.admin-login-config-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.admin-login-config-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.admin-login-config-hint {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-login-config-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line-divider, #00000014) 80%, transparent);
+}
+
+.admin-login-config-switch-row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.admin-login-config-switch-row:first-of-type {
+  padding-top: 0;
+}
+
+.admin-login-config-link {
+  color: var(--brand-main-default);
+  text-decoration: none;
+}
+
+.admin-login-config-link:hover {
+  text-decoration: underline;
+}

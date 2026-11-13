@@ -7,7 +7,15 @@
   >
     <div class="admin-sidebar__brand">
       <div class="admin-sidebar__brand-row">
-        <span v-if="isDesktopCollapsed" class="admin-sidebar__collapsed-mark" aria-hidden="true">
+        <img
+          v-if="siteLogoUrl"
+          class="admin-sidebar__brand-logo"
+          :src="siteLogoUrl"
+          :alt="siteName"
+          :width="isDesktopCollapsed ? 28 : 32"
+          :height="isDesktopCollapsed ? 28 : 32"
+        >
+        <span v-else-if="isDesktopCollapsed" class="admin-sidebar__collapsed-mark" aria-hidden="true">
           <i class="ri-admin-line" />
         </span>
         <h1 v-if="!isDesktopCollapsed" class="admin-sidebar__title">{{ adminBrandTitle }}</h1>
@@ -34,16 +42,11 @@
         >
           <span class="admin-sidebar__link-mark" aria-hidden="true">
             <i v-if="getAdminNavItemIcon(item)" :class="getAdminNavItemIcon(item)" />
-            <template v-else>{{ getShortLabel(item.label) }}</template>
           </span>
           <span v-if="!isDesktopCollapsed" class="admin-sidebar__link-text">{{ item.label }}</span>
         </RouterLink>
       </div>
     </nav>
-
-    <div v-if="!isDesktopCollapsed" class="admin-sidebar__footer">
-      当前阶段优先完成配置与数据页，后续再补权限与统计增强。
-    </div>
   </aside>
 </template>
 
@@ -66,6 +69,7 @@ const siteName = computed(() => {
   const name = String(systemSettingsStore.publicSystemSettings.value.siteInfo.siteName || '').trim()
   return name || 'Canana'
 })
+const siteLogoUrl = computed(() => String(systemSettingsStore.publicSystemSettings.value.siteInfo.siteLogoUrl || '').trim())
 const adminBrandTitle = computed(() => `${siteName.value} 管理台`)
 
 const rememberNavScroll = () => {
@@ -109,9 +113,14 @@ const getActivePath = () => {
 }
 
 const isActive = (path: string) => getActivePath() === path
-
-const getShortLabel = (label: string) => {
-  const normalizedLabel = String(label || '').trim()
-  return normalizedLabel.slice(0, 1) || '•'
-}
 </script>
+
+<style scoped>
+/* 侧栏品牌图尺寸 */
+.admin-sidebar__brand-logo {
+  display: block;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+</style>

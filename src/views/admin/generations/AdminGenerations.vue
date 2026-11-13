@@ -1,24 +1,12 @@
 <template>
-  <AdminPageContainer title="生成记录" description="先打通生成记录后台列表、状态筛选、结果预览和错误排查，便于定位线上生成链路问题。">
+  <AdminPageContainer
+    class="admin-list-page"
+    compact title="生成记录" description="先打通生成记录后台列表、状态筛选、结果预览和错误排查，便于定位线上生成链路问题。">
     <template #actions>
       <button class="admin-button admin-button--secondary" type="button" @click="loadRecords" :disabled="loading">
         {{ loading ? '刷新中...' : '刷新列表' }}
       </button>
     </template>
-
-    <AdminFilterToolbar
-      title="筛选条件"
-      description="当前展示全站生成记录，筛选与分页均由服务端完成。"
-      :active-count="activeFilterCount"
-      collapsible
-    >
-      <template #filters>
-        <AdminFilterChips :groups="filterChipGroups" compact @select="handleChipSelect" />
-      </template>
-      <template #meta>
-        <span class="admin-skill-toolbar__summary">共 {{ pagination.total }} 条记录</span>
-      </template>
-    </AdminFilterToolbar>
 
     <div class="admin-grid admin-grid--stats">
       <AdminStatCard label="记录总数" :value="pagination.total" hint="当前筛选条件命中的全站记录数" />
@@ -27,17 +15,24 @@
       <AdminStatCard label="失败记录" :value="failedCount" hint="当前页优先用于排查厂商、落盘和入库问题" />
     </div>
 
-    <div class="admin-card">
-      <div class="admin-card__header">
-        <div>
-          <h4 class="admin-card__title">记录列表</h4>
-          <div class="admin-card__desc">展示 prompt、模型、生成状态、结果图与错误信息，帮助后台快速排查生成链路。</div>
-        </div>
-      </div>
-      <div class="admin-card__content">
-        <div v-if="loading" class="admin-empty">正在加载生成记录...</div>
-        <div v-else-if="records.length === 0" class="admin-empty">当前筛选条件下还没有生成记录。</div>
-        <div v-else class="admin-generation-list">
+    <AdminListFrame>
+      <template #toolbar>
+        <AdminListToolbar
+          :disabled="loading"
+          :has-active-filters="activeFilterCount > 0"
+          :facets="listFacets"
+          @update:facet="handleFacetUpdate"
+          @clear="clearFilters"
+        >
+          <template #actions>
+            <span class="admin-skill-toolbar__summary">共 {{ pagination.total }} 条记录</span>
+          </template>
+        </AdminListToolbar>
+      </template>
+
+      <AdminEmptyState v-if="loading && !records.length" message="正在加载生成记录..." :illustrated="false" compact />
+      <AdminEmptyState v-else-if="!records.length" message="当前筛选条件下还没有生成记录。" />
+      <div v-else class="admin-generation-list">
           <div v-for="record in records" :key="record.id" class="admin-generation-card">
             <div class="admin-generation-card__preview">
               <img
@@ -95,23 +90,27 @@
               </div>
             </div>
           </div>
-          <AdminPagination
-            v-model:page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :total="pagination.total"
-            :disabled="loading"
-            @change="handlePaginationChange"
-          />
-        </div>
       </div>
-    </div>
+
+      <template #pagination>
+        <AdminPagination
+          v-model:page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :disabled="loading"
+          @change="handlePaginationChange"
+        />
+      </template>
+    </AdminListFrame>
   </AdminPageContainer>
 </template>
 
 <script setup lang="ts">
+import './admin-generations.css'
 import { computed, onMounted, reactive } from 'vue'
-import AdminFilterChips, { type AdminFilterChipGroup } from '@/components/admin/common/AdminFilterChips.vue'
-import AdminFilterToolbar from '@/components/admin/common/AdminFilterToolbar.vue'
+import AdminEmptyState from '@/components/admin/common/AdminEmptyState.vue'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar, { type AdminListToolbarFacet } from '@/components/admin/common/AdminListToolbar.vue'
 import AdminPagination from '@/components/admin/common/AdminPagination.vue'
 import AdminStatCard from '@/components/admin/common/AdminStatCard.vue'
 import AdminStatusBadge from '@/components/admin/common/AdminStatusBadge.vue'
@@ -175,18 +174,26 @@ const statusOptions: Array<{ label: string; value: GenerationStatusFilter }> = [
   { label: resolveAdminDictionaryItem('generationStatus', 'running').label, value: 'running' },
 ]
 
-const filterChipGroups = computed<AdminFilterChipGroup[]>(() => [
+const listFacets = computed<AdminListToolbarFacet[]>(() => [
   {
     key: 'type',
-    label: '类型',
+    title: '类型',
+    options: typeOptions.filter((item) => item.value !== 'all').map((item) => ({
+      label: item.label,
+      value: item.value,
+    })),
     modelValue: filters.type,
-    options: typeOptions,
+    emptyValue: 'all',
   },
   {
     key: 'status',
-    label: '状态',
+    title: '状态',
+    options: statusOptions.filter((item) => item.value !== 'all').map((item) => ({
+      label: item.label,
+      value: item.value,
+    })),
     modelValue: filters.status,
-    options: statusOptions,
+    emptyValue: 'all',
   },
 ])
 
@@ -211,25 +218,22 @@ const activeFilterCount = computed(() => {
   ].filter(Boolean).length
 })
 
-const setType = (type: GenerationTypeFilter) => {
-  filters.type = type
-  void resetAndLoad()
-}
-
-const setStatus = (status: GenerationStatusFilter) => {
-  filters.status = status
-  void resetAndLoad()
-}
-
-const handleChipSelect = (payload: { groupKey: string; value: string }) => {
-  if (payload.groupKey === 'type') {
-    setType(payload.value as GenerationTypeFilter)
+const handleFacetUpdate = ({ key, value }: { key: string; value: string }) => {
+  if (key === 'type') {
+    filters.type = value as GenerationTypeFilter
+    void resetAndLoad()
     return
   }
-
-  if (payload.groupKey === 'status') {
-    setStatus(payload.value as GenerationStatusFilter)
+  if (key === 'status') {
+    filters.status = value as GenerationStatusFilter
+    void resetAndLoad()
   }
+}
+
+const clearFilters = () => {
+  filters.type = 'all'
+  filters.status = 'all'
+  void resetAndLoad()
 }
 
 const getPreviewUrl = (record: AdminGenerationRecordItem) => {

@@ -59,7 +59,7 @@ const createDefaultDraft = (): SystemConfigPayload => ({
   homeLayoutSettings: createDefaultHomeLayoutSettings(),
 })
 
-// 模块级单例，对齐公开版 auth / worktab 写法（不依赖 Pinia）
+// 模块级单例（不依赖 Pinia）
 const drawerVisible = ref(false)
 const loading = ref(false)
 const saving = ref(false)

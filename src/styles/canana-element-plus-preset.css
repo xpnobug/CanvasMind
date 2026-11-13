@@ -1,0 +1,344 @@
+/**
+ * Canana 创作区 Element Plus 浮层预设（opt-in）
+ * 用于 dialog / message-box / tooltip 等需要毛玻璃风格的场景
+ */
+
+.canana-ep-overlay {
+  background: rgba(0, 0, 0, 0.58) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+html[data-theme='light'] .canana-ep-overlay,
+body[lv-theme='light'] .canana-ep-overlay {
+  background: rgba(15, 20, 25, 0.52) !important;
+}
+
+.canana-ep-dialog.el-dialog,
+.canana-ep-message-box.el-message-box {
+  /*
+   * 弹窗必须用不透明底：--canvas-float-block-default 在部分主题是 #202127b8（半透明毛玻璃），
+   * 叠在页面上会透出背后文案，看起来像「脏底 / 套了两层」。
+   * Toast 同理已改用实色 --bg-float。
+   */
+  --el-dialog-bg-color: var(--bg-float, #22252a);
+  --el-dialog-title-font-size: 15px;
+  --el-dialog-padding-primary: 20px;
+  --el-dialog-border-radius: 12px;
+  --el-text-color-primary: var(--text-primary, #f5f5f5);
+  --el-text-color-regular: var(--text-secondary, #a3a3a3);
+  background: var(--bg-float, #22252a) !important;
+  border: 1px solid var(--stroke-secondary, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme='light'] .canana-ep-dialog.el-dialog,
+html[data-theme='light'] .canana-ep-message-box.el-message-box,
+body[lv-theme='light'] .canana-ep-dialog.el-dialog,
+body[lv-theme='light'] .canana-ep-message-box.el-message-box {
+  --el-dialog-bg-color: #ffffff;
+  background: #ffffff !important;
+  border-color: var(--stroke-primary, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 16px 48px rgba(15, 20, 25, 0.14);
+}
+
+.canana-ep-dialog .el-dialog__header,
+.canana-ep-dialog .el-dialog__body,
+.canana-ep-dialog .el-dialog__footer {
+  background: transparent;
+}
+
+.canana-ep-message-box.el-message-box {
+  --el-messagebox-width: 420px;
+  padding-bottom: 16px;
+}
+
+.canana-ep-dialog .el-dialog__header,
+.canana-ep-message-box .el-message-box__header {
+  padding: 16px 20px 8px;
+  margin-right: 0;
+}
+
+.canana-ep-dialog .el-dialog__title,
+.canana-ep-message-box .el-message-box__title {
+  color: var(--text-primary, #f5f5f5);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.canana-ep-dialog .el-dialog__headerbtn,
+.canana-ep-message-box .el-message-box__headerbtn {
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+}
+
+.canana-ep-dialog .el-dialog__headerbtn .el-dialog__close,
+.canana-ep-message-box .el-message-box__headerbtn .el-message-box__close {
+  color: var(--text-secondary, #a3a3a3);
+  font-size: 16px;
+}
+
+.canana-ep-dialog .el-dialog__headerbtn:hover .el-dialog__close,
+.canana-ep-message-box .el-message-box__headerbtn:hover .el-message-box__close {
+  color: var(--text-primary, #f5f5f5);
+}
+
+.canana-ep-dialog .el-dialog__body,
+.canana-ep-message-box .el-message-box__content {
+  padding: 4px 20px 16px;
+  color: var(--text-secondary, #a3a3a3);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.canana-ep-message-box .el-message-box__container {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.canana-ep-message-box .el-message-box__status {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 18px;
+}
+
+.canana-ep-message-box .el-message-box__status.el-message-box-icon--warning {
+  color: #fbbf24;
+}
+
+.canana-ep-message-box .el-message-box__status.el-message-box-icon--info {
+  color: var(--brand-main-default, #00cae0);
+}
+
+.canana-ep-message-box .el-message-box__status.el-message-box-icon--success {
+  color: #34d399;
+}
+
+.canana-ep-message-box .el-message-box__status.el-message-box-icon--error {
+  color: #f87171;
+}
+
+.canana-ep-message-box .el-message-box__message {
+  color: var(--text-secondary, #a3a3a3);
+}
+
+.canana-ep-message-box .el-message-box__message p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.canana-ep-dialog .el-dialog__footer,
+.canana-ep-message-box .el-message-box__btns {
+  padding: 8px 20px 0;
+}
+
+.canana-ep-dialog__footer,
+.canana-ep-message-box .el-message-box__btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.canana-ep-dialog .el-button,
+.canana-ep-message-box .el-button {
+  --el-button-bg-color: transparent;
+  --el-button-border-color: var(--stroke-secondary, rgba(255, 255, 255, 0.14));
+  --el-button-text-color: var(--text-primary, #f5f5f5);
+  --el-button-hover-bg-color: var(--canvas-float-block-hover, rgba(255, 255, 255, 0.08));
+  --el-button-hover-border-color: var(--stroke-secondary, rgba(255, 255, 255, 0.18));
+  --el-button-hover-text-color: var(--text-primary, #f5f5f5);
+  --el-button-active-bg-color: var(--canvas-float-block-hover, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  min-width: 72px;
+  height: 32px;
+  font-size: 13px;
+  margin-left: 0 !important;
+}
+
+.canana-ep-dialog .el-button--danger,
+.canana-ep-message-box .el-button--danger {
+  --el-button-bg-color: rgba(239, 68, 68, 0.14);
+  --el-button-border-color: rgba(239, 68, 68, 0.38);
+  --el-button-text-color: #f87171;
+  --el-button-hover-bg-color: rgba(239, 68, 68, 0.26);
+  --el-button-hover-border-color: rgba(239, 68, 68, 0.55);
+  --el-button-hover-text-color: #fca5a5;
+  --el-button-active-bg-color: rgba(239, 68, 68, 0.32);
+}
+
+.canana-ep-dialog .el-button--primary,
+.canana-ep-message-box .el-button--primary {
+  --el-button-bg-color: var(--brand-main-default, #00cae0);
+  --el-button-border-color: transparent;
+  --el-button-text-color: var(--brand-bright-text, #f5fbff);
+  --el-button-hover-bg-color: var(--brand-main-hover, #00b8cc);
+  --el-button-hover-border-color: transparent;
+  --el-button-hover-text-color: var(--brand-bright-text, #f5fbff);
+}
+
+.canana-ep-dialog .el-input__wrapper,
+.canana-ep-message-box .el-input__wrapper {
+  background: var(--canvas-bg-block-default, rgba(0, 0, 0, 0.22));
+  box-shadow: 0 0 0 1px var(--stroke-secondary, rgba(255, 255, 255, 0.12)) inset;
+}
+
+.canana-ep-dialog .el-input__wrapper.is-focus,
+.canana-ep-message-box .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--brand-main-default, #00cae0) inset;
+}
+
+.canana-ep-dialog .el-input__inner,
+.canana-ep-message-box .el-input__inner {
+  color: var(--text-primary, #f5f5f5);
+}
+
+.canana-ep-dialog .el-input__inner::placeholder,
+.canana-ep-message-box .el-input__inner::placeholder {
+  color: var(--text-tertiary, #737373);
+}
+
+.canana-ep-message-box .el-message-box__input {
+  padding-top: 12px;
+}
+
+.canana-ep-message-box .el-message-box__errormsg {
+  color: #f87171;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.canana-ep-tooltip.el-popper.is-dark,
+.canana-ep-tooltip.el-popper {
+  --el-bg-color-overlay: rgba(38, 38, 38, 0.96);
+  background: rgba(38, 38, 38, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f5fbff !important;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+}
+
+.canana-ep-tooltip.el-popper .el-popper__arrow::before {
+  background: rgba(38, 38, 38, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-theme='light'] .canana-ep-tooltip.el-popper.is-dark,
+html[data-theme='light'] .canana-ep-tooltip.el-popper,
+body[lv-theme='light'] .canana-ep-tooltip.el-popper.is-dark,
+body[lv-theme='light'] .canana-ep-tooltip.el-popper {
+  --el-bg-color-overlay: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid var(--stroke-primary, rgba(0, 0, 0, 0.12)) !important;
+  color: var(--text-primary, #0f1419) !important;
+  box-shadow: 0 4px 16px rgba(15, 20, 25, 0.1);
+}
+
+html[data-theme='light'] .canana-ep-tooltip.el-popper .el-popper__arrow::before,
+body[lv-theme='light'] .canana-ep-tooltip.el-popper .el-popper__arrow::before {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid var(--stroke-primary, rgba(0, 0, 0, 0.12)) !important;
+}
+
+/* Toast：ElMessage 专属样式（对齐画布浮层，无边框）
+ * 深色：实色深底浅字；浅色：浅底深字（常见轻提示样式，避免半透明 token 洗灰）。 */
+.el-message,
+.canana-ep-message.el-message {
+  z-index: 2147483647 !important;
+  min-width: auto;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: none !important;
+  border-radius: var(--lv-border-radius-large, 8px);
+  background: var(--bg-float, #1a1b1e) !important;
+  backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
+  -webkit-backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.el-message .el-message__icon,
+.canana-ep-message.el-message .el-message__icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.el-message .el-message__content,
+.canana-ep-message.el-message .el-message__content {
+  color: var(--text-primary, #f5fbff) !important;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.el-message--success .el-message__icon,
+.canana-ep-message.el-message--success .el-message__icon {
+  color: var(--functional-success, var(--brand-success-default, #18b566)) !important;
+}
+
+.el-message--error .el-message__icon,
+.canana-ep-message.el-message--error .el-message__icon {
+  color: var(--functional-error, var(--brand-danger-default, #f04438)) !important;
+}
+
+.el-message--warning .el-message__icon,
+.canana-ep-message.el-message--warning .el-message__icon {
+  color: var(--functional-warning, var(--brand-warning-default, #ffb020)) !important;
+}
+
+.el-message--info .el-message__icon,
+.canana-ep-message.el-message--info .el-message__icon {
+  color: var(--brand-main-default, #00cae0) !important;
+}
+
+/* 浅色主题：半透明浅底 + 毛玻璃，深字 */
+html[data-theme='light'] .el-message,
+html[data-theme='light'] .canana-ep-message.el-message,
+body[lv-theme='light'] .el-message,
+body[lv-theme='light'] .canana-ep-message.el-message {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(15, 20, 25, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(15, 20, 25, 0.1);
+  backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
+  -webkit-backdrop-filter: blur(var(--canvas-float-backdrop-blur, 32px));
+}
+
+html[data-theme='light'] .el-message .el-message__content,
+html[data-theme='light'] .canana-ep-message.el-message .el-message__content,
+body[lv-theme='light'] .el-message .el-message__content,
+body[lv-theme='light'] .canana-ep-message.el-message .el-message__content {
+  color: #0f1419 !important;
+}
+
+html[data-theme='light'] .el-message--success .el-message__icon,
+html[data-theme='light'] .canana-ep-message.el-message--success .el-message__icon,
+body[lv-theme='light'] .el-message--success .el-message__icon,
+body[lv-theme='light'] .canana-ep-message.el-message--success .el-message__icon {
+  color: #18b566 !important;
+}
+
+html[data-theme='light'] .el-message--error .el-message__icon,
+html[data-theme='light'] .canana-ep-message.el-message--error .el-message__icon,
+body[lv-theme='light'] .el-message--error .el-message__icon,
+body[lv-theme='light'] .canana-ep-message.el-message--error .el-message__icon {
+  color: #f04438 !important;
+}
+
+html[data-theme='light'] .el-message--warning .el-message__icon,
+html[data-theme='light'] .canana-ep-message.el-message--warning .el-message__icon,
+body[lv-theme='light'] .el-message--warning .el-message__icon,
+body[lv-theme='light'] .canana-ep-message.el-message--warning .el-message__icon {
+  color: #d97706 !important;
+}
+
+html[data-theme='light'] .el-message--info .el-message__icon,
+html[data-theme='light'] .canana-ep-message.el-message--info .el-message__icon,
+body[lv-theme='light'] .el-message--info .el-message__icon,
+body[lv-theme='light'] .canana-ep-message.el-message--info .el-message__icon {
+  color: #0891b2 !important;
+}

@@ -19,7 +19,8 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import '@/components/admin/admin.css'
+import '@/components/admin/styles/admin-primitives.css'
+import './AdminAccessDenied.css'
 
 const router = useRouter()
 

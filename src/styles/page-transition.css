@@ -1,0 +1,110 @@
+/* 前后台统一：主内容区进入动画（侧栏/顶栏不参与） */
+.page-content-stage,
+.app-page-stage,
+.frontstage-content-stage,
+.admin-page-stage {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  animation: none;
+}
+
+.app-page-view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.app-page-shell {
+  width: 100%;
+  min-height: 0;
+}
+
+.admin-page-view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+}
+
+.page-content-stage--enter,
+.app-page-stage--enter,
+.frontstage-content-stage--enter,
+.admin-page-stage--enter {
+  will-change: opacity, transform;
+}
+
+.page-content-stage--enter.page-transition--fade {
+  animation: page-transition-fade-in 0.25s cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+
+.page-content-stage--enter.page-transition--slide-left {
+  animation: page-transition-slide-left-in 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+.page-content-stage--enter.page-transition--slide-bottom {
+  animation: page-transition-slide-bottom-in 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+.page-content-stage--enter.page-transition--slide-top {
+  animation: page-transition-slide-top-in 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+@keyframes page-transition-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes page-transition-slide-left-in {
+  from {
+    opacity: 0;
+    transform: translate3d(15px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes page-transition-slide-bottom-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 15px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes page-transition-slide-top-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -15px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-content-stage--enter {
+    animation: none !important;
+  }
+}

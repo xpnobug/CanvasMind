@@ -4,34 +4,51 @@
       <div class="common-image-preview__panel" @click.stop>
         <header class="common-image-preview__header">
           <div class="common-image-preview__heading">
-            <h3>{{ title || '图片预览' }}</h3>
+            <h3>{{ title || defaultTitle }}</h3>
             <p v-if="description">{{ description }}</p>
           </div>
           <div class="common-image-preview__actions">
             <a
-              v-if="resolvedSrc"
+              v-if="resolvedMediaSrc"
               class="common-image-preview__button"
-              :href="resolvedSrc"
+              :href="resolvedMediaSrc"
               target="_blank"
               rel="noreferrer"
             >
-              打开原图
+              {{ openOriginalLabel }}
             </a>
-            <a
-              v-if="resolvedSrc"
+            <button
+              v-if="resolvedMediaSrc"
               class="common-image-preview__button"
-              :href="resolvedSrc"
-              :download="downloadName || title || 'image'"
+              type="button"
+              :disabled="downloading"
+              @click="handleDownload"
             >
-              下载
-            </a>
+              {{ downloading ? '下载中…' : '下载' }}
+            </button>
             <button class="common-image-preview__close" type="button" @click="closePreview">×</button>
           </div>
         </header>
 
         <main class="common-image-preview__stage">
-          <img v-if="resolvedSrc" :src="resolvedSrc" :alt="title || '图片预览'">
-          <div v-else class="common-image-preview__empty">暂无可预览图片</div>
+          <CanvasVideoPlayer
+            v-if="isVideo && resolvedMediaSrc"
+            class="common-image-preview__video"
+            :src="resolvedMediaSrc"
+            :poster="resolvedPoster || undefined"
+            :aspect-ratio="aspectRatio || '16:9'"
+            fill="contain"
+            :show-controls="true"
+            :show-badge="false"
+            :loop="false"
+            :muted="false"
+          />
+          <img
+            v-else-if="resolvedMediaSrc"
+            :src="resolvedMediaSrc"
+            :alt="title || defaultTitle"
+          >
+          <div v-else class="common-image-preview__empty">{{ emptyLabel }}</div>
         </main>
 
         <footer v-if="metaItems.length" class="common-image-preview__meta">
@@ -48,15 +65,23 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, watch } from 'vue'
 import { buildAssetUrl } from '@/api/http'
+import CanvasVideoPlayer from '@/components/common/CanvasVideoPlayer.vue'
+import { useMediaDownloadFeedback } from '@/composables/useMediaDownloadFeedback'
 
 export interface CommonImagePreviewMetaItem {
   label: string
   value: string | number
 }
 
+export type CommonImagePreviewMediaType = 'image' | 'video'
+
 const props = withDefaults(defineProps<{
   visible: boolean
   src?: string
+  assetId?: string
+  poster?: string
+  mediaType?: CommonImagePreviewMediaType
+  aspectRatio?: string
   title?: string
   description?: string
   downloadName?: string
@@ -64,6 +89,10 @@ const props = withDefaults(defineProps<{
   closeOnMask?: boolean
 }>(), {
   src: '',
+  assetId: '',
+  poster: '',
+  mediaType: 'image',
+  aspectRatio: '16:9',
   title: '',
   description: '',
   downloadName: '',
@@ -74,9 +103,17 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:visible': [value: boolean]
   close: []
+  downloaded: []
 }>()
 
-const resolvedSrc = computed(() => buildAssetUrl(props.src || ''))
+const { downloading, downloadWithFeedback } = useMediaDownloadFeedback()
+
+const isVideo = computed(() => props.mediaType === 'video')
+const resolvedMediaSrc = computed(() => buildAssetUrl(props.src || ''))
+const resolvedPoster = computed(() => buildAssetUrl(props.poster || ''))
+const defaultTitle = computed(() => (isVideo.value ? '视频预览' : '图片预览'))
+const openOriginalLabel = computed(() => (isVideo.value ? '打开原视频' : '打开原图'))
+const emptyLabel = computed(() => (isVideo.value ? '暂无可预览视频' : '暂无可预览图片'))
 const metaItems = computed(() => props.meta.filter(item => item.label && String(item.value || '').trim()))
 
 const closePreview = () => {
@@ -87,6 +124,24 @@ const closePreview = () => {
 const handleMaskClick = () => {
   if (props.closeOnMask) {
     closePreview()
+  }
+}
+
+const handleDownload = async () => {
+  if (!resolvedMediaSrc.value || downloading.value) {
+    return
+  }
+
+  const ok = await downloadWithFeedback({
+    assetId: props.assetId || undefined,
+    url: props.src || resolvedMediaSrc.value,
+    filename: props.downloadName || undefined,
+    kind: props.mediaType,
+    prompt: props.title || props.description,
+    recordId: props.assetId || undefined,
+  })
+  if (ok) {
+    emit('downloaded')
   }
 }
 
@@ -212,11 +267,16 @@ onBeforeUnmount(() => {
   background: #080a0f;
 }
 
-.common-image-preview__stage img {
+.common-image-preview__stage img,
+.common-image-preview__video {
   display: block;
   max-width: 100%;
   max-height: calc(100vh - 240px);
   object-fit: contain;
+}
+
+.common-image-preview__video {
+  width: min(100%, 960px);
 }
 
 .common-image-preview__empty {

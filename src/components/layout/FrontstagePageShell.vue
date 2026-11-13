@@ -11,7 +11,7 @@
       <div class="global-dreamina-container">
         <div id="dreamina" class="root_bf55f">
           <div class="top-down-layer">
-            <!-- 对齐 Pro FrontstageAppLayout：顶通挂在壳层最上方，仅首页展示 -->
+            <!-- 顶通挂在壳层最上方，仅首页展示 -->
             <HomeTopBanner
               v-if="showHomeTopBanner"
               class="frontstage-page-shell__top-banner"
@@ -73,7 +73,7 @@ const {
 const isTopMenuLayout = computed(() => layoutMode.value === 'top')
 const layoutModeClass = computed(() => (isTopMenuLayout.value ? 'top' : 'side'))
 
-/** 与 Pro 一致：仅首页挂顶通（path 或路由名） */
+/** 仅首页挂顶通（path 或路由名） */
 const showHomeTopBanner = computed(() => {
   const isHome = route.path === '/' || route.name === 'Home'
   return isHome && showTopBanner.value

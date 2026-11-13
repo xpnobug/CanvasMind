@@ -1,0 +1,641 @@
+.admin-redis-hero-card {
+  overflow: hidden;
+}
+
+.admin-redis-hero-card__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.admin-redis-hero-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-redis-hero-card__eyebrow {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-hero-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-redis-hero-card__title {
+  margin: 0;
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.admin-redis-hero-card__status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-redis-hero-card__status.is-healthy {
+  background: color-mix(in srgb, var(--brand-success-default, #34c759) 18%, transparent);
+  color: var(--brand-success-default, #34c759);
+  border-color: color-mix(in srgb, var(--brand-success-default, #34c759) 28%, transparent);
+}
+
+.admin-redis-hero-card__status.is-risky {
+  background: color-mix(in srgb, var(--brand-danger-default, #ff5f57) 16%, transparent);
+  color: var(--brand-danger-default, #ff5f57);
+  border-color: color-mix(in srgb, var(--brand-danger-default, #ff5f57) 26%, transparent);
+}
+
+.admin-redis-hero-card__desc {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.admin-redis-hero-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-redis-hero-card__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-redis-hero-card__meta-item span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-hero-card__meta-item strong {
+  color: var(--text-primary);
+  font-size: 15px;
+  word-break: break-word;
+}
+
+.admin-redis-stats-grid {
+  margin-top: 16px;
+}
+
+.admin-redis-tabs-card__content {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-redis-business-card__content,
+.admin-redis-business-card__modules,
+.admin-redis-business-card__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-redis-business-card__summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-redis-business-card__toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-redis-business-card__toolbar-search,
+.admin-redis-business-card__toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-redis-business-card__toolbar-search span,
+.admin-redis-business-card__toolbar-field span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-business-card__toolbar-group {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-redis-business-card__toolbar-field {
+  min-width: 168px;
+}
+
+.admin-select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 36px 0 12px;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--line-divider, #00000014);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 40px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-select:hover {
+  border-color: color-mix(in srgb, var(--brand-main-default, #5c8dff) 32%, var(--line-divider, #00000014));
+  background-color: var(--bg-block-primary-hover, rgba(204, 221, 255, 0.08));
+}
+
+.admin-select:focus {
+  border-color: var(--brand-main-default, #5c8dff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-main-default, #5c8dff) 18%, transparent);
+}
+
+.admin-redis-business-card__summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-redis-business-card__summary-item span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-business-card__summary-item strong {
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.admin-redis-business-card__stats,
+.admin-redis-business-card__module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-redis-business-card__workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.admin-redis-business-card__diagnostics {
+  display: none;
+}
+
+.admin-redis-business-card__modules {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.admin-redis-business-card__stat,
+.admin-redis-business-card__panel,
+.admin-redis-business-card__module,
+.admin-redis-business-card__module-block {
+  padding: 12px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-redis-business-card__module {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-redis-business-card__stat.is-attention,
+.admin-redis-business-card__module.is-attention {
+  border-color: color-mix(in srgb, var(--brand-warning-default, #ffb020) 38%, var(--line-divider, #00000014));
+}
+
+.admin-redis-business-card__stat.is-risk,
+.admin-redis-business-card__module.is-risk {
+  border-color: color-mix(in srgb, var(--brand-danger-default, #ff5f57) 40%, var(--line-divider, #00000014));
+}
+
+.admin-redis-business-card__stat-title,
+.admin-redis-business-card__module-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-redis-business-card__health-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-redis-business-card__health-badge.is-healthy {
+  background: color-mix(in srgb, var(--brand-success-default, #34c759) 16%, transparent);
+  color: var(--brand-success-default, #34c759);
+  border-color: color-mix(in srgb, var(--brand-success-default, #34c759) 26%, transparent);
+}
+
+.admin-redis-business-card__health-badge.is-attention {
+  background: color-mix(in srgb, var(--brand-warning-default, #ffb020) 16%, transparent);
+  color: var(--brand-warning-default, #ffb020);
+  border-color: color-mix(in srgb, var(--brand-warning-default, #ffb020) 26%, transparent);
+}
+
+.admin-redis-business-card__health-badge.is-risk {
+  background: color-mix(in srgb, var(--brand-danger-default, #ff5f57) 16%, transparent);
+  color: var(--brand-danger-default, #ff5f57);
+  border-color: color-mix(in srgb, var(--brand-danger-default, #ff5f57) 26%, transparent);
+}
+
+.admin-redis-business-card__stat-header,
+.admin-redis-business-card__module-header,
+.admin-redis-business-card__list-item,
+.admin-redis-business-card__module-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-redis-business-card__stat-header,
+.admin-redis-business-card__module-header,
+.admin-redis-business-card__module-footer {
+  align-items: flex-start;
+}
+
+.admin-redis-business-card__stat-header span,
+.admin-redis-business-card__panel-title,
+.admin-redis-business-card__block-title,
+.admin-redis-business-card__module-header p,
+.admin-redis-business-card__module-badges span,
+.admin-redis-business-card__list-item small,
+.admin-redis-business-card__empty,
+.admin-redis-business-card__module-footer span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-business-card__stat-metrics,
+.admin-redis-business-card__module-badges,
+.admin-redis-business-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.admin-redis-business-card__module-header,
+.admin-redis-business-card__module-block,
+.admin-redis-business-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+.admin-redis-business-card__module-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-redis-business-card__module-alert {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--bg-block-primary-hover, rgba(204, 221, 255, 0.12));
+  color: var(--brand-main-default, var(--text-primary));
+  font-size: 12px;
+  border: 1px solid color-mix(in srgb, var(--brand-main-default, #5c8dff) 24%, transparent);
+}
+
+.admin-redis-business-card__warning {
+  padding: 12px 14px;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-redis-business-card__warning.is-info {
+  background: var(--bg-block-primary-hover, rgba(204, 221, 255, 0.12));
+}
+
+.admin-redis-business-card__warning.is-warning {
+  background: color-mix(in srgb, var(--brand-warning-default, #ffb020) 12%, transparent);
+  border-color: color-mix(in srgb, var(--brand-warning-default, #ffb020) 24%, var(--line-divider, #00000014));
+}
+
+.admin-redis-business-card__chip {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--bg-block-primary-hover, rgba(204, 221, 255, 0.12));
+  color: var(--text-primary);
+  font-size: 12px;
+  word-break: break-all;
+  border: 1px solid color-mix(in srgb, var(--brand-main-default, #5c8dff) 18%, transparent);
+}
+
+.admin-redis-business-card__list-item span {
+  color: var(--text-primary);
+  word-break: break-all;
+  line-height: 1.45;
+}
+
+.admin-redis-business-card__module-header h5 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.admin-redis-business-card__module-header p {
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+
+.admin-redis-business-card__module-grid {
+  align-items: start;
+}
+
+.admin-redis-business-card__module-block {
+  min-height: 178px;
+}
+
+.admin-redis-business-card__module-footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--line-divider, #00000014);
+  margin-top: 2px;
+}
+
+.admin-redis-business-card__empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 16px;
+  border: 1px dashed var(--line-divider, #0000001f);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+.admin-redis-business-card__empty-state strong {
+  color: var(--text-primary);
+}
+
+.admin-redis-settings-card__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-redis-settings-card__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-redis-settings-card__section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-redis-settings-card__section-header h5 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.admin-redis-settings-card__section-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-redis-settings-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-redis-settings-card__field span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-risk-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-redis-risk-card__item {
+  padding: 12px 14px;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-redis-risk-card__item.is-info {
+  background: #f6f7fb;
+}
+
+.admin-redis-risk-card__item.is-warning {
+  background: #fff7e8;
+}
+
+.admin-redis-risk-card__item.is-danger {
+  background: #fff1f1;
+}
+
+.admin-redis-query-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-redis-query-card__search-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(420px, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-redis-query-card__search-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-redis-query-card__search-title {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-redis-query-card__search-desc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-redis-query-card__toolbar {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-redis-query-card__input {
+  flex: 1 1 auto;
+}
+
+.admin-redis-query-card__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-redis-query-card__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-redis-query-card__compare-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-redis-query-card__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-redis-query-card__item span,
+.admin-redis-query-card__prompt-title {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.admin-redis-query-card__item strong {
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.admin-redis-query-card__prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+}
+
+.admin-redis-query-card__prompt-text {
+  color: var(--text-primary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-redis-query-card__event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-redis-query-card__event-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-redis-query-card__event-item small {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1080px) {
+  .admin-redis-hero-card__content,
+  .admin-redis-business-card__summary,
+  .admin-redis-business-card__toolbar,
+  .admin-redis-tabs-card__content,
+  .admin-redis-business-card__stats,
+  .admin-redis-business-card__diagnostics-grid,
+  .admin-redis-business-card__modules-grid,
+  .admin-redis-business-card__module-grid,
+  .admin-redis-settings-card__grid,
+  .admin-redis-query-card__search-card,
+  .admin-redis-query-card__toolbar,
+  .admin-redis-query-card__grid,
+  .admin-redis-query-card__compare-grid {
+    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column;
+  }
+
+  .admin-redis-hero-card__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-redis-business-card__diagnostics {
+    position: static;
+  }
+
+  .admin-redis-business-card__toolbar-group {
+    flex-direction: column;
+  }
+
+}

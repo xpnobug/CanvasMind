@@ -1,0 +1,367 @@
+.admin-marketing-list-item {
+  grid-template-columns: minmax(0, 1.5fr) auto auto;
+}
+
+.admin-marketing-list-item--batch {
+  grid-template-columns: minmax(0, 1.8fr) auto auto;
+}
+
+.admin-marketing-list-item__badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 会员 SKU：按等级分组 */
+.admin-marketing-plan-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-marketing-plan-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-marketing-plan-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--line-divider, #00000014);
+  background: color-mix(in srgb, var(--bg-block-secondary-default) 88%, transparent);
+}
+
+.admin-marketing-plan-group__identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.admin-marketing-plan-group__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-marketing-plan-group__code {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.admin-marketing-plan-group__stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.admin-marketing-plan-group__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-marketing-plan-card__sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.admin-marketing-plan-card__origin {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.admin-marketing-plan-renew {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.admin-marketing-plan-actions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+html[data-theme='dark'] .admin-marketing-plan-group__head {
+  border-color: color-mix(in srgb, var(--text-primary) 14%, transparent);
+}
+
+.admin-marketing-code-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* 卡密弹窗“加载更多”按钮容器（分页拉取） */
+.admin-marketing-code-grid__more {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.admin-marketing-code-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--admin-radius-panel);
+  background: var(--bg-block-secondary-default);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-marketing-code-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+.admin-marketing-code-card__meta {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+html[data-theme='dark'] .admin-marketing-code-card,
+html[data-theme='dark'] .admin-list-item.admin-marketing-list-item {
+  border-color: color-mix(in srgb, var(--text-primary) 14%, transparent);
+}
+
+@media (max-width: 960px) {
+  .admin-marketing-list-item,
+  .admin-marketing-list-item--batch {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-marketing-list-item__badges,
+  .admin-row-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-marketing-code-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 营销 CRUD 弹窗：分区块表单 */
+.admin-dialog.admin-marketing-dialog {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: min(860px, calc(100vh - 48px));
+}
+
+.admin-marketing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  flex: 1;
+  padding: 0 !important;
+}
+
+.admin-marketing-form__scroll {
+  display: grid;
+  gap: 14px;
+  padding: 16px 20px 8px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.admin-marketing-form__section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--admin-radius-panel);
+  background: color-mix(in srgb, var(--bg-block-secondary-default) 72%, transparent);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-marketing-form__section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-marketing-form__section-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-main-default) 14%, var(--bg-surface));
+  color: var(--brand-main-default);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-marketing-form__section-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.admin-marketing-form__section-desc {
+  margin: 4px 0 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.admin-marketing-form__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-marketing-form__field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-marketing-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.admin-marketing-form__label {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.admin-marketing-form__label .is-required {
+  color: var(--status-danger-default, #dc2626);
+}
+
+.admin-marketing-form__hint {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-marketing-form__field :deep(.el-input),
+.admin-marketing-form__field :deep(.el-textarea),
+.admin-marketing-form__field :deep(.el-date-editor),
+.admin-marketing-form__field :deep(.admin-select),
+.admin-marketing-form__control {
+  width: 100%;
+}
+
+.admin-marketing-form__control--date {
+  width: 100% !important;
+}
+
+.admin-marketing-form__field :deep(.el-input__wrapper),
+.admin-marketing-form__field :deep(.el-textarea__inner) {
+  border-radius: var(--admin-radius-control);
+  box-shadow: 0 0 0 1px var(--line-divider, #00000014) inset;
+}
+
+.admin-marketing-form__field :deep(.el-input__wrapper.is-focus),
+.admin-marketing-form__field :deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 1px var(--brand-main-default) inset;
+}
+
+.admin-marketing-form__field :deep(.admin-select__trigger) {
+  min-height: 36px;
+  border-radius: var(--admin-radius-control);
+}
+
+.admin-marketing-form__switch-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+}
+
+.admin-marketing-form__switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-marketing-form__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--line-divider, #00000014);
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+}
+
+.admin-marketing-form__footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+html[data-theme='dark'] .admin-marketing-form__section {
+  border-color: color-mix(in srgb, var(--text-primary) 14%, transparent);
+}
+
+@media (max-width: 720px) {
+  .admin-marketing-form__fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-marketing-form__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-marketing-form__footer-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .admin-marketing-form__footer-actions .admin-button {
+    flex: 1;
+  }
+}

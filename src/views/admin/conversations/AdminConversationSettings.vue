@@ -1,5 +1,7 @@
 <template>
-  <AdminPageContainer title="会话配置" description="统一维护会话规则、后台列表展示与创作入口展示，优先沉淀可运营、可复用的通用会话配置。">
+  <AdminPageContainer
+    class="admin-list-page"
+    compact title="会话配置" description="统一维护会话规则、后台列表展示与创作入口展示，优先沉淀可运营、可复用的通用会话配置。">
     <template #actions>
       <button class="admin-button admin-button--secondary" type="button" :disabled="loading || saving" @click="handleReset">
         恢复默认
@@ -21,14 +23,13 @@
     </div>
 
     <div class="admin-conversation-settings-shell">
-      <aside class="admin-conversation-settings-nav admin-card">
-        <div class="admin-card__header">
-          <div>
-            <h4 class="admin-card__title">配置分组</h4>
-            <div class="admin-card__desc">按规则、展示和治理三类视角维护会话体系。</div>
-          </div>
-        </div>
-        <div class="admin-card__content admin-conversation-settings-nav__content">
+      <aside class="admin-conversation-settings-nav">
+        <AdminSectionCard
+          title="配置分组"
+          description="按规则、展示和治理三类视角维护会话体系。"
+          compact
+        >
+        <div class="admin-conversation-settings-nav__content">
           <button
             v-for="item in tabItems"
             :key="item.key"
@@ -41,11 +42,11 @@
             <span class="admin-conversation-settings-tabs__desc">{{ item.description }}</span>
           </button>
         </div>
+        </AdminSectionCard>
       </aside>
 
       <div class="admin-conversation-settings-main">
-        <div class="admin-conversation-settings-section-head admin-card">
-          <div class="admin-card__content">
+        <AdminSectionCard compact card-class="admin-conversation-settings-section-head">
             <div class="admin-conversation-settings-section-head__inner">
               <div>
                 <div class="admin-conversation-settings-section-head__eyebrow">当前分组</div>
@@ -56,17 +57,14 @@
                 <span class="admin-conversation-settings-section-head__tip">保存后立即影响后台展示与前台入口默认行为</span>
               </div>
             </div>
-          </div>
-        </div>
+        </AdminSectionCard>
 
-        <div v-if="currentTab === 'basic'" class="admin-card">
-          <div class="admin-card__header">
-            <div>
-              <h4 class="admin-card__title">基础规则</h4>
-              <div class="admin-card__desc">控制会话默认命名、默认排序，以及后台允许执行的基础管理动作。</div>
-            </div>
-          </div>
-          <div class="admin-card__content">
+        <AdminSectionCard
+          v-if="currentTab === 'basic'"
+          title="基础规则"
+          description="控制会话默认命名、默认排序，以及后台允许执行的基础管理动作。"
+          compact
+        >
             <div class="admin-conversation-setting-grid">
               <section class="admin-conversation-setting-section">
                 <div class="admin-conversation-setting-section__head">
@@ -131,17 +129,14 @@
                 </div>
               </section>
             </div>
-          </div>
-        </div>
+        </AdminSectionCard>
 
-        <div v-else-if="currentTab === 'list'" class="admin-card">
-          <div class="admin-card__header">
-            <div>
-              <h4 class="admin-card__title">列表展示</h4>
-              <div class="admin-card__desc">控制后台会话列表首次加载的分页大小，以及卡片上默认显示的信息维度。</div>
-            </div>
-          </div>
-          <div class="admin-card__content">
+        <AdminSectionCard
+          v-else-if="currentTab === 'list'"
+          title="列表展示"
+          description="控制后台会话列表首次加载的分页大小，以及卡片上默认显示的信息维度。"
+          compact
+        >
             <div class="admin-conversation-setting-grid">
               <section class="admin-conversation-setting-section admin-conversation-setting-section--compact">
                 <div class="admin-conversation-setting-section__head">
@@ -218,13 +213,11 @@
                 </div>
               </section>
             </div>
-          </div>
-        </div>
+        </AdminSectionCard>
 
         <div v-else-if="currentTab === 'entry'" class="admin-conversation-entry-layout">
           <div class="admin-conversation-entry-editor">
-            <div class="admin-card">
-              <div class="admin-card__content">
+            <AdminSectionCard compact card-class="admin-conversation-entry-tabs-card">
                 <div class="admin-conversation-entry-tabs">
                   <button
                     v-for="item in entryTabItems"
@@ -238,17 +231,14 @@
                     <span class="admin-conversation-entry-tabs__desc">{{ item.description }}</span>
                   </button>
                 </div>
-              </div>
-            </div>
+            </AdminSectionCard>
 
-            <div v-if="currentEntryTab === 'hero'" class="admin-card">
-              <div class="admin-card__header">
-                <div>
-                  <h4 class="admin-card__title">欢迎区</h4>
-                  <div class="admin-card__desc">维护创作入口首屏标题、副标题与输入区提示文案。</div>
-                </div>
-              </div>
-              <div class="admin-card__content">
+            <AdminSectionCard
+              v-if="currentEntryTab === 'hero'"
+              title="欢迎区"
+              description="维护创作入口首屏标题、副标题与输入区提示文案。"
+              compact
+            >
                 <div class="admin-form__grid">
                   <div class="admin-form__field admin-form__field--full">
                     <label class="admin-form__label">欢迎区</label>
@@ -317,17 +307,14 @@
                     <input v-model.number="form.entryDisplay.input.maxWidth" class="admin-input" type="number" min="320" max="1600">
                   </div>
                 </div>
-              </div>
-            </div>
+            </AdminSectionCard>
 
-            <div v-else-if="currentEntryTab === 'mode'" class="admin-card">
-              <div class="admin-card__header">
-                <div>
-                  <h4 class="admin-card__title">模式与模型</h4>
-                  <div class="admin-card__desc">控制模式选择、模型选择器、助手选择器及默认值。</div>
-                </div>
-              </div>
-              <div class="admin-card__content">
+            <AdminSectionCard
+              v-else-if="currentEntryTab === 'mode'"
+              title="模式与模型"
+              description="控制模式选择、模型选择器、助手选择器及默认值。"
+              compact
+            >
                 <div class="admin-form__grid">
                   <div class="admin-form__field">
                     <label class="admin-form__label">默认模式</label>
@@ -523,17 +510,14 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+            </AdminSectionCard>
 
-            <div v-else class="admin-card">
-              <div class="admin-card__header">
-                <div>
-                  <h4 class="admin-card__title">功能按钮</h4>
-                  <div class="admin-card__desc">控制底部能力条的显示与默认状态，便于统一入口交互策略。</div>
-                </div>
-              </div>
-              <div class="admin-card__content">
+            <AdminSectionCard
+              v-else
+              title="功能按钮"
+              description="控制底部能力条的显示与默认状态，便于统一入口交互策略。"
+              compact
+            >
                 <div class="admin-form__field admin-form__field--full">
                   <label class="admin-form__label">功能按钮</label>
                   <div class="admin-conversation-action-grid">
@@ -572,18 +556,15 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+            </AdminSectionCard>
           </div>
 
-          <div class="admin-card admin-conversation-preview-card">
-            <div class="admin-card__header">
-              <div>
-                <h4 class="admin-card__title">实时预览</h4>
-                <div class="admin-card__desc">预览创作页输入区的欢迎语、输入框和底部工具栏显隐效果。</div>
-              </div>
-            </div>
-            <div class="admin-card__content">
+          <AdminSectionCard
+            title="实时预览"
+            description="预览创作页输入区的欢迎语、输入框和底部工具栏显隐效果。"
+            compact
+            card-class="admin-conversation-preview-card"
+          >
               <div class="conversation-preview">
                 <div v-if="form.entryDisplay.hero.enabled" class="conversation-preview__hero">
                   <h3>{{ form.entryDisplay.hero.title || '你好，想创作什么？' }}</h3>
@@ -617,23 +598,20 @@
                   <div v-if="form.entryDisplay.workbench.bannerEnabled" class="conversation-preview__placeholder">Banner 区域 · 展示中</div>
                 </div>
               </div>
-            </div>
-          </div>
+          </AdminSectionCard>
         </div>
 
-        <div v-else-if="currentTab === 'progress'" class="admin-card">
-          <div class="admin-card__header">
-            <div>
-              <h4 class="admin-card__title">生成进度文案</h4>
-              <div class="admin-card__desc">按阶段配置前台“造梦中”徽章展示文案、百分比和说明，实时影响生成过程反馈。</div>
-            </div>
-            <div class="admin-page__actions">
+        <AdminSectionCard
+          v-else-if="currentTab === 'progress'"
+          title="生成进度文案"
+          description="按阶段配置前台“造梦中”徽章展示文案、百分比和说明，实时影响生成过程反馈。"
+          compact
+        >
+            <template #actions>
               <button class="admin-button admin-button--secondary" type="button" @click="expandAllProgressStages">全部展开</button>
               <button class="admin-button admin-button--secondary" type="button" @click="collapseAllProgressStages">全部折叠</button>
               <button class="admin-button admin-button--secondary" type="button" @click="resetGenerationProgressSettings">恢复默认文案</button>
-            </div>
-          </div>
-          <div class="admin-card__content">
+            </template>
             <div class="admin-conversation-progress-summary">
               <div class="admin-conversation-progress-summary__item">
                 <span class="admin-conversation-progress-summary__label">配置开关</span>
@@ -697,17 +675,14 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </AdminSectionCard>
 
-        <div v-else class="admin-card">
-          <div class="admin-card__header">
-            <div>
-              <h4 class="admin-card__title">管理策略</h4>
-              <div class="admin-card__desc">控制后台批量操作权限，以及后续自动清理与导出类能力的治理边界。</div>
-            </div>
-          </div>
-          <div class="admin-card__content">
+        <AdminSectionCard
+          v-else
+          title="管理策略"
+          description="控制后台批量操作权限，以及后续自动清理与导出类能力的治理边界。"
+          compact
+        >
             <div class="admin-conversation-setting-grid">
               <section class="admin-conversation-setting-section">
                 <div class="admin-conversation-setting-section__head">
@@ -771,8 +746,7 @@
                 </div>
               </section>
             </div>
-          </div>
-        </div>
+        </AdminSectionCard>
       </div>
     </div>
   </AdminPageContainer>
@@ -780,6 +754,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import AdminSectionCard from '@/components/admin/common/AdminSectionCard.vue'
 import AdminStatCard from '@/components/admin/common/AdminStatCard.vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
 import {
@@ -1339,9 +1314,9 @@ onMounted(() => {
   align-items: center;
   min-height: 36px;
   padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--brand-primary, #6b8cff) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-main-default) 22%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 8%, var(--bg-surface));
+  background: color-mix(in srgb, var(--brand-main-default) 8%, var(--bg-surface));
   color: var(--text-secondary);
   font-size: 12px;
 }
@@ -1363,8 +1338,8 @@ onMounted(() => {
 
 .admin-conversation-settings-tabs__item:hover,
 .admin-conversation-settings-tabs__item.is-active {
-  border-color: color-mix(in srgb, var(--brand-primary, #6b8cff) 32%, transparent);
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 10%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--brand-main-default) 32%, transparent);
+  background: color-mix(in srgb, var(--brand-main-default) 10%, var(--bg-surface));
   color: var(--text-primary);
 }
 
@@ -1433,8 +1408,8 @@ onMounted(() => {
 
 .admin-conversation-entry-tabs__item:hover,
 .admin-conversation-entry-tabs__item.is-active {
-  border-color: color-mix(in srgb, var(--brand-primary, #6b8cff) 32%, transparent);
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 10%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--brand-main-default) 32%, transparent);
+  background: color-mix(in srgb, var(--brand-main-default) 10%, var(--bg-surface));
   color: var(--text-primary);
 }
 
@@ -1531,8 +1506,8 @@ onMounted(() => {
 }
 
 .admin-conversation-selector-card.is-active {
-  border-color: color-mix(in srgb, var(--brand-primary, #6b8cff) 34%, transparent);
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 10%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--brand-main-default) 34%, transparent);
+  background: color-mix(in srgb, var(--brand-main-default) 10%, var(--bg-surface));
 }
 
 .admin-conversation-selector-card__main {
@@ -1574,8 +1549,8 @@ onMounted(() => {
 }
 
 .admin-conversation-mode-item.is-active {
-  border-color: color-mix(in srgb, var(--brand-primary, #6b8cff) 34%, transparent);
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 8%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--brand-main-default) 34%, transparent);
+  background: color-mix(in srgb, var(--brand-main-default) 8%, var(--bg-surface));
 }
 
 .admin-conversation-mode-item__main {
@@ -1659,14 +1634,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--text-primary) 4%, transparent);
   transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .admin-conversation-progress-card:hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--brand-primary, #6b8cff) 18%, var(--line-divider, #00000014));
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--brand-main-default) 18%, var(--line-divider, #00000014));
+  box-shadow: 0 16px 32px color-mix(in srgb, var(--text-primary) 8%, transparent);
 }
 
 .admin-conversation-progress-card__header {
@@ -1734,11 +1709,11 @@ onMounted(() => {
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-primary, #6b8cff) 10%, var(--bg-surface));
-  color: var(--brand-primary, #6b8cff);
+  background: color-mix(in srgb, var(--brand-main-default) 10%, var(--bg-surface));
+  color: var(--brand-main-default);
   font-size: 13px;
   font-weight: 600;
-  border: 1px solid color-mix(in srgb, var(--brand-primary, #6b8cff) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-main-default) 18%, transparent);
 }
 
 .admin-conversation-progress-card__body {

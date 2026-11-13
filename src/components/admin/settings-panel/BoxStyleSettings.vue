@@ -1,27 +1,36 @@
 <template>
-  <div>
-    <SectionTitle
-      title="盒子样式"
-      tip="统一设置前台卡片、Banner 等盒状区域的圆角（单位 px）。保存后写入主题变量 --theme-card-radius，主题预览即时生效。"
-    />
-    <div class="admin-settings-segment">
-      <button
-        v-for="option in options"
-        :key="option.value"
-        type="button"
-        class="admin-settings-segment__item"
-        :class="{ 'is-active': cardRadius === option.value }"
-        @click="cardRadius = option.value"
+  <div class="admin-settings-pane">
+    <div class="admin-settings-group">
+      <p class="admin-settings-group__title">
+        卡片圆角
+        <SettingHelpTip content="写入 --theme-card-radius；影响卡片、Banner 等盒状区域。" />
+      </p>
+      <div class="admin-settings-segment">
+        <button
+          v-for="option in options"
+          :key="option.value"
+          type="button"
+          class="admin-settings-segment__item"
+          :class="{ 'is-active': cardRadius === option.value }"
+          @click="cardRadius = option.value"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+      <div
+        class="admin-settings-radius-demo"
+        :style="{ borderRadius: `${cardRadius}px` }"
+        aria-hidden="true"
       >
-        {{ option.label }}
-      </button>
+        {{ cardRadius }}px
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import SectionTitle from './SectionTitle.vue'
+import SettingHelpTip from './SettingHelpTip.vue'
 import { useAdminAppearanceSettingsStore } from '@/stores/admin-appearance-settings'
 
 const appearanceStore = useAdminAppearanceSettingsStore()

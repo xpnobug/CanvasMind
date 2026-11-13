@@ -1,0 +1,32 @@
+@import '../../../styles/page-transition.css';
+
+/* 保留 art 风格命名，供后续若接入 Vue Transition 时使用 */
+.admin-slide-left-enter-active {
+  transition:
+    opacity 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: opacity, transform;
+}
+
+.admin-slide-left-leave-active {
+  transition:
+    opacity 0.175s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.175s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: opacity, transform;
+}
+
+.admin-slide-left-enter-from {
+  opacity: 0;
+  transform: translate3d(15px, 0, 0);
+}
+
+.admin-slide-left-enter-to,
+.admin-slide-left-leave-from {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.admin-slide-left-leave-to {
+  opacity: 0;
+  transform: translate3d(-15px, 0, 0);
+}

@@ -1,0 +1,279 @@
+/* ---------- 批量选择条：仅有选中时出现 ---------- */
+
+.admin-asset-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid color-mix(in srgb, var(--brand-main-default) 28%, var(--line-divider, #00000014));
+  background: color-mix(in srgb, var(--brand-main-default) 6%, var(--bg-surface));
+}
+
+.admin-asset-bulk-bar__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  flex: 1;
+  min-width: 160px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.admin-asset-bulk-bar__count strong {
+  color: var(--text-primary);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-asset-bulk-bar__sep::before {
+  content: '·';
+  margin-right: 10px;
+  color: var(--text-tertiary);
+}
+
+.admin-asset-bulk-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* ---------- 紧凑资源行（扁平行高） ---------- */
+
+.admin-asset-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.admin-asset-row__thumb {
+  position: relative;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-control);
+  overflow: hidden;
+  background: var(--bg-block-secondary-default);
+  cursor: zoom-in;
+}
+
+.admin-asset-row__thumb:disabled {
+  cursor: default;
+}
+
+.admin-asset-row__thumb:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--brand-main-default) 40%, var(--line-divider, #00000014));
+}
+
+.admin-asset-row__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #0a0a0a;
+}
+
+.admin-asset-row__media--empty {
+  display: grid;
+  place-items: center;
+  background: var(--bg-block-secondary-hover);
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.admin-asset-row__type {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 1px 4px;
+  border-radius: var(--admin-radius-control);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+.admin-asset-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-asset-row__title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-asset-row__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-asset-row__source {
+  flex-shrink: 0;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bg-block-secondary-default);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.admin-asset-row__meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.admin-asset-row__meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-asset-row__dot::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--text-tertiary);
+}
+
+/* 行高与订单列表一致：垂直居中 */
+.admin-list-frame__body .admin-art-table .el-table__body td.el-table__cell {
+  vertical-align: middle;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* ---------- 状态 ---------- */
+
+.admin-asset-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-asset-status__sub {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* ---------- 规格 ---------- */
+
+.admin-asset-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.admin-asset-spec__primary {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-asset-spec__secondary {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 互动 ---------- */
+
+.admin-asset-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+/* ---------- 时间 ---------- */
+
+.admin-asset-time {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- 操作：横排轻按钮 ---------- */
+
+.admin-asset-ops {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.admin-asset-ops__btn {
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--admin-radius-panel);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-asset-ops__btn:hover:not(:disabled) {
+  background: var(--bg-block-secondary-default);
+}
+
+.admin-asset-ops__btn.is-danger {
+  color: #d9363e;
+}
+
+.admin-asset-ops__btn.is-danger:hover:not(:disabled) {
+  background: rgba(255, 79, 79, 0.1);
+}
+
+.admin-asset-ops__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

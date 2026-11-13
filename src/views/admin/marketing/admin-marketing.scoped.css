@@ -1,0 +1,384 @@
+.admin-marketing-kpis {
+  flex: 0 0 auto;
+}
+
+.admin-marketing-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+}
+
+.admin-marketing-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-panel);
+  background: color-mix(in srgb, var(--bg-block-secondary-default) 72%, var(--bg-surface));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.admin-marketing-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-marketing-tabs__item {
+  flex: 1 1 0;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.admin-marketing-tabs__item:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+}
+
+.admin-marketing-tabs__item.is-active {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--brand-main-default) 28%, var(--line-divider, #00000014));
+  background: var(--bg-surface);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.admin-marketing-tabs__label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.admin-marketing-tabs__meta {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-marketing-tabs__item.is-active .admin-marketing-tabs__meta {
+  color: var(--text-secondary);
+}
+
+.admin-marketing-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-marketing-section-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 10px;
+}
+
+.admin-marketing-frame-hint {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-marketing-subtabs {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-block-secondary-default);
+  width: fit-content;
+}
+
+.admin-marketing-subtabs__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--admin-radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-marketing-subtabs__item span {
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-marketing-subtabs__item.is-active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.admin-marketing-section-shell :deep(.admin-list-frame) {
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-marketing-section-shell :deep(.admin-list-frame__body .el-table__body td.el-table__cell) {
+  vertical-align: middle;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.admin-marketing-table__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.admin-marketing-table__meta,
+.admin-marketing-table__muted {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-marketing-package-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 2px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-marketing-package-card__footer-text {
+  white-space: nowrap;
+}
+
+.admin-marketing-log-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line-divider, #00000014);
+  border-radius: var(--admin-radius-panel);
+  background: var(--bg-block-secondary-default);
+}
+
+.admin-marketing-log-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-marketing-log-toolbar__search {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.admin-marketing-log-toolbar__search :deep(.el-input__wrapper) {
+  min-height: 38px;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px var(--line-divider, #00000014) inset;
+}
+
+.admin-marketing-log-toolbar__select {
+  flex: 0 1 140px;
+  min-width: 128px;
+  width: 140px;
+}
+
+.admin-marketing-log-toolbar__select :deep(.admin-select__trigger) {
+  min-height: 38px;
+  height: 38px;
+  border-radius: var(--admin-radius-control);
+}
+
+.admin-marketing-log-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.admin-marketing-log-toolbar__meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.admin-marketing-log-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-marketing-log-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid var(--line-divider, #00000014);
+  background: var(--bg-block-secondary-default);
+}
+
+.admin-marketing-log-kpi__label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.admin-marketing-log-kpi__value {
+  font-size: 20px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.admin-marketing-log-kpi.is-warning .admin-marketing-log-kpi__value {
+  color: #e6a23c;
+}
+
+.admin-marketing-log-kpi.is-success .admin-marketing-log-kpi__value {
+  color: var(--brand-main-default);
+}
+
+.admin-marketing-log-amount {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-marketing-log-amount.is-increase {
+  color: var(--brand-main-default);
+}
+
+.admin-marketing-log-amount.is-decrease {
+  color: #ff8a65;
+}
+
+.admin-marketing-table__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.admin-marketing-log-table__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 4px 0;
+}
+
+.admin-point-log-item__copy-button {
+  margin-left: 6px;
+  padding: 0;
+  min-height: auto;
+  border: none;
+  background: transparent;
+  color: var(--brand-main-default);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-membership-billing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-membership-billing-item {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: var(--admin-radius-control);
+  background: var(--bg-block-primary-default);
+  border: 1px solid var(--line-divider, #00000014);
+}
+
+.admin-form__label--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-membership-billing-switch {
+  white-space: nowrap;
+}
+
+
+
+
+
+
+.admin-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-secondary, rgba(15, 23, 42, 0.68));
+}
+
+@media (max-width: 1100px) {
+  .admin-marketing-tabs__item {
+    flex: 0 0 auto;
+  }
+
+  .admin-membership-billing-item {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-marketing-log-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-marketing-log-toolbar__actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+}
+
+@media (max-width: 720px) {
+  .admin-marketing-log-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-marketing-log-toolbar__select,
+  .admin-marketing-log-toolbar__search {
+    flex: 1 1 100%;
+  }
+}

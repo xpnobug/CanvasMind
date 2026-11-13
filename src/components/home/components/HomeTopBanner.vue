@@ -114,7 +114,7 @@ const isActionable = computed(() => {
     && !!String(props.config.actionValue || '').trim()
 })
 const shouldRender = computed(() => {
-  // 与 Pro 一致：必须有主文案（预览层用 \u00A0 占位时 trim 后仍为空，故对预览放宽空白字符）
+  // 必须有主文案（预览层用 \u00A0 占位时 trim 后仍为空，故对预览放宽空白字符）
   const raw = String(props.config.contentText || '')
   const hasContent = props.previewReadonly
     ? !!raw

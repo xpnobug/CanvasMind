@@ -1,162 +1,194 @@
 <template>
-  <AdminPageContainer title="审计日志" description="查看后台关键操作记录，快速定位操作者、目标对象、来源 IP 与变更摘要。">
-    <template #actions>
-      <button class="admin-button admin-button--secondary" type="button" :disabled="loading" @click="loadLogs">
-        {{ loading ? '刷新中...' : '刷新列表' }}
-      </button>
-    </template>
-
-    <AdminFilterToolbar
-      title="筛选条件"
-      description="支持按操作者、动作、目标对象定位后台操作记录，按 Enter 可直接应用筛选。"
-      :active-count="activeFilterCount"
-      :disabled="loading"
-      show-reset
-      show-apply
-      reset-label="清空筛选"
-      apply-label="查询"
-      @reset="handleResetFilters"
-      @apply="resetAndLoad"
-    >
-      <template #search>
-        <input v-model.trim="filters.operatorKeyword" class="admin-input admin-provider-toolbar__search" type="text" placeholder="搜索操作者姓名、邮箱、手机号">
-      </template>
-      <template #filters>
-        <input v-model.trim="filters.action" class="admin-input" type="text" placeholder="操作类型">
-        <input v-model.trim="filters.targetType" class="admin-input" type="text" placeholder="目标类型">
-        <input v-model.trim="filters.targetId" class="admin-input" type="text" placeholder="目标 ID">
-        <input v-model="filters.createdFrom" class="admin-input" type="datetime-local" title="开始时间">
-        <input v-model="filters.createdTo" class="admin-input" type="datetime-local" title="结束时间">
-      </template>
-      <template #meta>
-        <span class="admin-skill-toolbar__summary">
-          共 {{ pagination.total }} 条记录
-        </span>
-      </template>
-    </AdminFilterToolbar>
-
-    <div class="admin-grid admin-grid--stats">
+  <AdminPageContainer
+    class="admin-list-page"
+    title="审计日志"
+    description="查看后台关键操作记录，快速定位操作者、目标对象、来源 IP 与变更摘要。"
+    compact
+  >
+    <div class="admin-grid admin-grid--stats admin-audit-kpis">
       <AdminStatCard label="命中记录" :value="pagination.total" hint="当前筛选条件下的审计日志数量" />
       <AdminStatCard label="当前页" :value="logs.length" hint="当前页已加载的操作记录" />
       <AdminStatCard label="操作类型" :value="actionCount" hint="当前页涉及的 action 数量" />
       <AdminStatCard label="目标类型" :value="targetTypeCount" hint="当前页涉及的 targetType 数量" />
     </div>
 
-    <div class="admin-card">
-      <div class="admin-card__header">
-        <div>
-          <h4 class="admin-card__title">操作记录</h4>
-          <div class="admin-card__desc">变更内容展示为脱敏后的 JSON 摘要，便于排查而不暴露密钥。</div>
-        </div>
-      </div>
-      <div class="admin-card__content">
-        <div v-if="loading" class="admin-empty">正在加载审计日志...</div>
-        <div v-else-if="logs.length === 0" class="admin-empty">当前筛选条件下没有审计日志。</div>
-        <div v-else class="admin-audit-list">
-          <div class="admin-audit-table-wrap">
-            <table class="admin-audit-table">
-              <thead>
-                <tr>
-                  <th>created_at</th>
-                  <th>action</th>
-                  <th>operator_user_id</th>
-                  <th>target_type</th>
-                  <th>target_id</th>
-                  <th>ip_address</th>
-                  <th>snapshot</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-for="log in logs" :key="log.id">
-                  <tr class="admin-audit-table__row">
-                    <td class="admin-audit-table__time">
-                      <div class="admin-audit-time-stack">
-                        <strong>{{ formatDatePart(log.createdAt) }}</strong>
-                        <span>{{ formatTimePart(log.createdAt) }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="admin-audit-action-cell">
-                        <strong>{{ log.action }}</strong>
-                        <span>{{ log.id }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="admin-audit-principal">
-                        <div class="admin-audit-principal__avatar">{{ formatOperatorInitial(log) }}</div>
-                        <div class="admin-audit-principal__body">
-                          <strong>{{ formatOperator(log) }}</strong>
-                          <span>{{ log.operatorUserId }}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span class="admin-audit-type">{{ log.targetType || 'unknown' }}</span>
-                    </td>
-                    <td class="admin-audit-table__mono">{{ log.targetId || '未记录' }}</td>
-                    <td>
-                      <div class="admin-audit-source">
-                        <strong>{{ log.ipAddress || '未记录' }}</strong>
-                        <span :title="log.userAgent">{{ formatUserAgent(log.userAgent) }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="admin-audit-snapshot-cell">
-                        <button
-                          class="admin-audit-snapshot-button"
-                          type="button"
-                          :class="{ 'is-active': isAuditExpanded(log.id) }"
-                          @click="toggleAuditExpanded(log.id)"
-                        >
-                          {{ isAuditExpanded(log.id) ? '收起' : '展开' }}
-                        </button>
-                        <span class="admin-audit-snapshot-state">
-                          {{ formatJsonState(log.beforeJsonPreview) }} / {{ formatJsonState(log.afterJsonPreview) }}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr v-if="isAuditExpanded(log.id)" class="admin-audit-table__detail-row">
-                    <td colspan="7">
-                      <div class="admin-audit-detail">
-                        <header class="admin-audit-detail__head">
-                          <span>before_json {{ formatJsonState(log.beforeJsonPreview) }}</span>
-                          <span>after_json {{ formatJsonState(log.afterJsonPreview) }}</span>
-                        </header>
-                        <div class="admin-audit-json-grid">
-                          <section class="admin-audit-json">
-                            <header>before_json</header>
-                            <pre>{{ formatJsonPreview(log.beforeJsonPreview) }}</pre>
-                          </section>
-                          <section class="admin-audit-json">
-                            <header>after_json</header>
-                            <pre>{{ formatJsonPreview(log.afterJsonPreview) }}</pre>
-                          </section>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-
-          <AdminPagination
-            v-model:page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :total="pagination.total"
+    <AdminListFrame>
+      <template #toolbar>
+        <AdminListToolbar
+          :disabled="loading"
+          :has-active-filters="activeFilterCount > 0"
+          @clear="handleResetFilters"
+        >
+          <input
+            v-model.trim="filters.operatorKeyword"
+            class="admin-list-toolbar__input is-wide"
+            type="text"
+            placeholder="搜索操作者姓名、邮箱、手机号"
             :disabled="loading"
-            @change="handlePaginationChange"
-          />
+            @keydown.enter="resetAndLoad"
+          >
+          <input
+            v-model.trim="filters.action"
+            class="admin-list-toolbar__input"
+            type="text"
+            placeholder="操作类型"
+            :disabled="loading"
+            @keydown.enter="resetAndLoad"
+          >
+          <input
+            v-model.trim="filters.targetType"
+            class="admin-list-toolbar__input"
+            type="text"
+            placeholder="目标类型"
+            :disabled="loading"
+            @keydown.enter="resetAndLoad"
+          >
+          <input
+            v-model.trim="filters.targetId"
+            class="admin-list-toolbar__input"
+            type="text"
+            placeholder="目标 ID"
+            :disabled="loading"
+            @keydown.enter="resetAndLoad"
+          >
+          <input
+            v-model="filters.createdFrom"
+            class="admin-list-toolbar__input is-wide"
+            type="datetime-local"
+            title="开始时间"
+            :disabled="loading"
+          >
+          <input
+            v-model="filters.createdTo"
+            class="admin-list-toolbar__input is-wide"
+            type="datetime-local"
+            title="结束时间"
+            :disabled="loading"
+          >
+          <template #actions>
+            <button
+              class="admin-button admin-button--primary"
+              type="button"
+              :disabled="loading"
+              @click="resetAndLoad"
+            >
+              查询
+            </button>
+          </template>
+        </AdminListToolbar>
+      </template>
+
+      <AdminEmptyState v-if="loading && !logs.length" message="正在加载审计日志..." />
+      <AdminEmptyState v-else-if="!logs.length" message="当前筛选条件下没有审计日志" />
+      <div v-else class="admin-audit-list">
+        <div class="admin-audit-table-wrap">
+          <table class="admin-audit-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>操作</th>
+                <th>操作者</th>
+                <th>目标类型</th>
+                <th>目标 ID</th>
+                <th>来源</th>
+                <th>变更</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="log in logs" :key="log.id">
+                <tr class="admin-audit-table__row">
+                  <td class="admin-audit-table__time">
+                    <div class="admin-audit-time-stack">
+                      <strong>{{ formatDatePart(log.createdAt) }}</strong>
+                      <span>{{ formatTimePart(log.createdAt) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="admin-audit-action-cell">
+                      <strong>{{ log.action }}</strong>
+                      <span>{{ log.id }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="admin-audit-principal">
+                      <div class="admin-audit-principal__avatar">{{ formatOperatorInitial(log) }}</div>
+                      <div class="admin-audit-principal__body">
+                        <strong>{{ formatOperator(log) }}</strong>
+                        <span>{{ log.operatorUserId }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="admin-audit-type">{{ log.targetType || 'unknown' }}</span>
+                  </td>
+                  <td class="admin-audit-table__mono">{{ log.targetId || '—' }}</td>
+                  <td>
+                    <div class="admin-audit-source">
+                      <strong>{{ log.ipAddress || '—' }}</strong>
+                      <span :title="log.userAgent">{{ formatUserAgent(log.userAgent) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="admin-audit-snapshot-cell">
+                      <button
+                        class="admin-audit-snapshot-button"
+                        type="button"
+                        :class="{ 'is-active': isAuditExpanded(log.id) }"
+                        @click="toggleAuditExpanded(log.id)"
+                      >
+                        {{ isAuditExpanded(log.id) ? '收起' : '展开' }}
+                      </button>
+                      <span class="admin-audit-snapshot-state">
+                        {{ formatJsonState(log.beforeJsonPreview) }} / {{ formatJsonState(log.afterJsonPreview) }}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="isAuditExpanded(log.id)" class="admin-audit-table__detail-row">
+                  <td colspan="7">
+                    <div class="admin-audit-detail">
+                      <header class="admin-audit-detail__head">
+                        <span>before_json {{ formatJsonState(log.beforeJsonPreview) }}</span>
+                        <span>after_json {{ formatJsonState(log.afterJsonPreview) }}</span>
+                      </header>
+                      <div class="admin-audit-json-grid">
+                        <section class="admin-audit-json">
+                          <header>before_json</header>
+                          <pre>{{ formatJsonPreview(log.beforeJsonPreview) }}</pre>
+                        </section>
+                        <section class="admin-audit-json">
+                          <header>after_json</header>
+                          <pre>{{ formatJsonPreview(log.afterJsonPreview) }}</pre>
+                        </section>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+
+      <template #pagination>
+        <AdminPagination
+          v-model:page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :disabled="loading"
+          @change="handlePaginationChange"
+        />
+      </template>
+    </AdminListFrame>
   </AdminPageContainer>
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'AdminAuditLogs' })
 import { computed, onMounted, reactive, ref } from 'vue'
-import AdminFilterToolbar from '@/components/admin/common/AdminFilterToolbar.vue'
+import AdminEmptyState from '@/components/admin/common/AdminEmptyState.vue'
+import AdminListFrame from '@/components/admin/common/AdminListFrame.vue'
+import AdminListToolbar from '@/components/admin/common/AdminListToolbar.vue'
 import AdminPagination from '@/components/admin/common/AdminPagination.vue'
 import AdminStatCard from '@/components/admin/common/AdminStatCard.vue'
 import AdminPageContainer from '@/components/admin/layout/AdminPageContainer.vue'
@@ -287,6 +319,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.admin-audit-kpis {
+  flex: 0 0 auto;
+}
+
+:deep(.admin-list-frame__body) {
+  overflow: auto;
+}
+
 .admin-audit-list {
   display: grid;
   gap: 14px;
@@ -296,7 +336,7 @@ onMounted(() => {
   min-width: 0;
   overflow-x: auto;
   border: 1px solid var(--line-divider, rgba(0, 0, 0, 0.08));
-  border-radius: 8px;
+  border-radius: var(--admin-radius-control);
   background: var(--bg-surface);
 }
 

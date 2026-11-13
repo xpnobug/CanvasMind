@@ -1,0 +1,223 @@
+/**
+ * 品牌辅助色 / 强调色：菜单角标、标签、次按钮等前台 UI。
+ * 颜色值由 theme-runtime 注入 --brand-* / --component-secondary-button-*。
+ */
+
+.badge-wrapper.badge-tone--primary:not(:empty),
+.badge-wrapper[data-badge-tone='primary']:not(:empty) {
+  color: var(--brand-main-default);
+  background: var(--brand-main-block-default);
+}
+
+.badge-wrapper.badge-tone--secondary:not(:empty),
+.badge-wrapper[data-badge-tone='secondary']:not(:empty),
+.badge-wrapper.badge-tone--default:not(:empty),
+.badge-wrapper[data-badge-tone='default']:not(:empty) {
+  color: var(--brand-secondary-default);
+  background: var(--brand-secondary-block-default);
+}
+
+.badge-wrapper.badge-tone--accent:not(:empty),
+.badge-wrapper[data-badge-tone='accent']:not(:empty) {
+  color: var(--brand-accent-default);
+  background: var(--brand-accent-block-default);
+}
+
+.badge-wrapper.badge-tone--success:not(:empty),
+.badge-wrapper[data-badge-tone='success']:not(:empty) {
+  color: var(--brand-success-default);
+  background: color-mix(in srgb, var(--brand-success-default) 14%, transparent);
+}
+
+.badge-wrapper.badge-tone--warning:not(:empty),
+.badge-wrapper[data-badge-tone='warning']:not(:empty) {
+  color: var(--brand-warning-default);
+  background: color-mix(in srgb, var(--brand-warning-default) 16%, transparent);
+}
+
+.badge-wrapper.badge-tone--danger:not(:empty),
+.badge-wrapper[data-badge-tone='danger']:not(:empty) {
+  color: var(--brand-danger-default);
+  background: color-mix(in srgb, var(--brand-danger-default) 14%, transparent);
+}
+
+.badge-wrapper:not(:empty) {
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.side-menu-label-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 56px;
+}
+
+.side-menu-label-block--with-badge {
+  gap: 0;
+}
+
+.side-menu-label-block--with-badge .text-HLQFZY {
+  line-height: 18px;
+}
+
+.side-menu-caption-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 56px;
+  margin-top: 0;
+  padding: 0 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-menu-caption-badge.badge-tone--primary:not(:empty),
+.side-menu-caption-badge[data-badge-tone='primary']:not(:empty) {
+  color: var(--brand-main-default);
+  background: var(--brand-main-block-default);
+}
+
+.side-menu-caption-badge.badge-tone--secondary:not(:empty),
+.side-menu-caption-badge[data-badge-tone='secondary']:not(:empty),
+.side-menu-caption-badge.badge-tone--default:not(:empty),
+.side-menu-caption-badge[data-badge-tone='default']:not(:empty) {
+  color: var(--brand-secondary-default);
+  background: var(--brand-secondary-block-default);
+}
+
+.side-menu-caption-badge.badge-tone--accent:not(:empty),
+.side-menu-caption-badge[data-badge-tone='accent']:not(:empty) {
+  color: var(--brand-accent-default);
+  background: var(--brand-accent-block-default);
+}
+
+.side-menu-caption-badge.badge-tone--success:not(:empty),
+.side-menu-caption-badge[data-badge-tone='success']:not(:empty) {
+  color: var(--brand-success-default);
+  background: color-mix(in srgb, var(--brand-success-default) 14%, transparent);
+}
+
+.side-menu-caption-badge.badge-tone--warning:not(:empty),
+.side-menu-caption-badge[data-badge-tone='warning']:not(:empty) {
+  color: var(--brand-warning-default);
+  background: color-mix(in srgb, var(--brand-warning-default) 16%, transparent);
+}
+
+.side-menu-caption-badge.badge-tone--danger:not(:empty),
+.side-menu-caption-badge[data-badge-tone='danger']:not(:empty) {
+  color: var(--brand-danger-default);
+  background: color-mix(in srgb, var(--brand-danger-default) 14%, transparent);
+}
+
+.badge-wrapper.badge-tone--accent:empty::before,
+.badge-wrapper.badge-tone--primary:empty::before,
+.badge-wrapper.badge-tone--secondary:empty::before,
+.badge-wrapper.badge-tone--default:empty::before,
+.badge-wrapper.badge-tone--success:empty::before,
+.badge-wrapper.badge-tone--warning:empty::before,
+.badge-wrapper.badge-tone--danger:empty::before,
+.container-juKD6_ > .badge-wrapper:empty::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bg-body, #0b1020) 40%, transparent);
+}
+
+.badge-wrapper.badge-tone--primary:empty::before,
+.badge-wrapper[data-badge-tone='primary']:empty::before {
+  background: var(--brand-main-default);
+}
+
+.badge-wrapper.badge-tone--secondary:empty::before,
+.badge-wrapper[data-badge-tone='secondary']:empty::before,
+.badge-wrapper.badge-tone--default:empty::before,
+.badge-wrapper[data-badge-tone='default']:empty::before {
+  background: var(--brand-secondary-default);
+}
+
+.badge-wrapper.badge-tone--accent:empty::before,
+.badge-wrapper[data-badge-tone='accent']:empty::before,
+.container-juKD6_ > .badge-wrapper:empty::before {
+  background: var(--brand-accent-default);
+}
+
+.badge-wrapper.badge-tone--success:empty::before,
+.badge-wrapper[data-badge-tone='success']:empty::before {
+  background: var(--brand-success-default);
+}
+
+.badge-wrapper.badge-tone--warning:empty::before,
+.badge-wrapper[data-badge-tone='warning']:empty::before {
+  background: var(--brand-warning-default);
+}
+
+.badge-wrapper.badge-tone--danger:empty::before,
+.badge-wrapper[data-badge-tone='danger']:empty::before {
+  background: var(--brand-danger-default);
+}
+
+.brand-tag--secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-secondary-default);
+  background: var(--brand-secondary-block-default);
+}
+
+.brand-tag--accent {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-accent-default);
+  background: var(--brand-accent-block-default);
+}
+
+.top-menu-bar__action-chip--accent {
+  background: color-mix(in srgb, var(--brand-accent-default) 16%, transparent);
+}
+
+.top-menu-bar__action-chip--secondary {
+  background: color-mix(in srgb, var(--brand-secondary-default) 14%, transparent);
+}
+
+/*
+ * 侧栏 centerMenu 绝对居中，项多时会盖住底部登录/福利；仅菜单项接收点击，空白区域穿透。
+ */
+.sideMenu .centerMenu,
+.sideMenu .centerMenu .lv-menu-inner {
+  pointer-events: none;
+}
+
+.sideMenu .centerMenu .lv-menu-item {
+  pointer-events: auto;
+}
+
+.sideMenu .bottomMenu {
+  position: relative;
+  z-index: 3;
+}
+
+.top-menu-bar__actions {
+  position: relative;
+  z-index: 2;
+}

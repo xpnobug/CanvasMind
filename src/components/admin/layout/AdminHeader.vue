@@ -1,43 +1,56 @@
 <template>
   <header class="admin-header">
     <div class="admin-header__left">
-      <button class="admin-header__menu" type="button" :aria-label="isMobile ? '打开侧边栏' : '折叠侧边栏'" @click="toggleSidebar">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <div class="admin-header__tools">
+        <button
+          class="admin-header__menu"
+          type="button"
+          :aria-label="isMobile ? '打开侧边栏' : '折叠侧边栏'"
+          :aria-expanded="isMobile ? mobileSidebarOpen : undefined"
+          aria-controls="admin-sidebar"
+          @click="toggleSidebar"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <button
+          class="admin-header__icon-btn"
+          type="button"
+          title="刷新当前页"
+          aria-label="刷新当前页"
+          :disabled="refreshDisabled"
+          @click="refreshPage"
+        >
+          ↻
+        </button>
+      </div>
       <div class="admin-header__meta">
+        <AdminBreadcrumb :items="breadcrumbItems" />
         <h2 class="admin-header__title">{{ title }}</h2>
-        <div class="admin-header__description">{{ description }}</div>
+        <div v-if="description" class="admin-header__description">{{ description }}</div>
       </div>
     </div>
 
     <div class="admin-header__right">
       <span class="admin-header__tag">管理后台</span>
-      <span class="admin-header__user">{{ userDisplayName }}</span>
+      <AdminUserMenu />
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import AdminBreadcrumb from './AdminBreadcrumb.vue'
+import AdminUserMenu from './AdminUserMenu.vue'
 import { useAdminLayoutContext } from './useAdminLayout'
+import type { AdminBreadcrumbItem } from './useAdminBreadcrumb'
 
 defineProps<{
   title: string
   description: string
+  breadcrumbItems: AdminBreadcrumbItem[]
+  refreshDisabled?: boolean
 }>()
 
-const authStore = useAuthStore()
-const { toggleSidebar, isMobile } = useAdminLayoutContext()
-
-const userDisplayName = computed(() => {
-  const name = authStore.currentUser.value?.name?.trim()
-  if (name) {
-    return name.slice(0, 8)
-  }
-
-  return '已登录'
-})
+const { toggleSidebar, refreshPage, isMobile, mobileSidebarOpen } = useAdminLayoutContext()
 </script>

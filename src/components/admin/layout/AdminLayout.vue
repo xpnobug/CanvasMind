@@ -30,13 +30,15 @@ import AdminSettingsPanel from '@/components/admin/settings-panel/index.vue'
 import { useAdminAppearanceSettingsStore } from '@/stores/admin-appearance-settings'
 import { useAuthStore } from '@/stores/auth'
 import { useAdminWorktabStore } from '@/stores/admin-worktab'
-// 先保留公开版页面样式，再叠 Pro 壳层样式覆盖顶栏/工作标签布局
-import '@/components/admin/admin.css'
+// 直接引入拆分样式，避免旧版 monolith admin.css 覆盖壳层边框与布局
 import '@/components/admin/styles/admin-shell-base.css'
 import 'remixicon/fonts/remixicon.css'
 import '@/components/admin/styles/admin-primitives.css'
-import '@/components/admin/styles/admin-dialog.css'
 import '@/components/admin/styles/admin-shell-responsive.css'
+import '@/components/admin/styles/admin-dialog.css'
+import '@/components/admin/styles/admin-features.css'
+import '@/views/admin/styles/admin-shared-form-controls.css'
+import '@/views/admin/styles/admin-provider-tile.css'
 import { createAdminLayoutContext, provideAdminLayoutContext } from './useAdminLayout'
 import { getAdminNavItemIcon } from './admin-nav'
 import { useAdminBreadcrumb } from './useAdminBreadcrumb'
@@ -60,8 +62,6 @@ provideAdminLayoutContext({
 const { items: breadcrumbItems, pageTitle } = useAdminBreadcrumb()
 const { matchNavItemByPath } = useAdminNav()
 const worktabStore = useAdminWorktabStore()
-const authStore = useAuthStore()
-const appearanceStore = useAdminAppearanceSettingsStore()
 
 watch(
   () => [route.path, pageTitle.value] as const,
@@ -69,17 +69,6 @@ watch(
     const navItem = matchNavItemByPath(route.path)
     const icon = navItem ? getAdminNavItemIcon(navItem) : undefined
     worktabStore.openFromRoute(route, pageTitle.value, icon)
-  },
-  { immediate: true },
-)
-
-watch(
-  () => [authStore.sessionInitialized.value, authStore.isAdmin.value] as const,
-  () => {
-    if (!authStore.sessionInitialized.value) {
-      return
-    }
-    worktabStore.syncWorktabsWithAccess()
   },
   { immediate: true },
 )
@@ -104,13 +93,25 @@ const handleKeydown = (event: KeyboardEvent) => {
   layoutContext.closeMobileSidebar()
 }
 
+const appearanceStore = useAdminAppearanceSettingsStore()
+const authStore = useAuthStore()
+
+watch(
+  () => [authStore.sessionInitialized.value, authStore.isAdmin.value] as const,
+  () => {
+    if (!authStore.sessionInitialized.value) {
+      return
+    }
+    worktabStore.syncWorktabsWithAccess()
+  },
+  { immediate: true },
+)
+
 onMounted(() => {
   handleResize()
   window.addEventListener('resize', handleResize)
   window.addEventListener('keydown', handleKeydown)
-  if (authStore.isAdmin.value) {
-    void appearanceStore.load()
-  }
+  void appearanceStore.load()
 })
 
 onBeforeUnmount(() => {

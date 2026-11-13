@@ -19,7 +19,7 @@ import {
 export const THEME_CONFIG_BUNDLE_KIND = 'canana-theme-config' as const
 export const THEME_CONFIG_BUNDLE_VERSION = 1 as const
 
-/** 公开版可导入导出的主题分节（不含 Pro 专属 uiMotion / generationUpstream） */
+/** 可导入导出的主题分节 */
 export type ThemeConfigSectionKey =
   | 'globalThemeSettings'
   | 'homeSideMenuSettings'
